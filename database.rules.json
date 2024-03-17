@@ -1,0 +1,50 @@
+{
+  "rules": {
+    "config" : {
+      ".read" : true,
+      ".write": false
+    },
+    "database" : {
+        "dev" : {
+          "Expert" : {
+							".read": true,     
+                ".write": true,
+             "$expert_id" : {
+            	".read" : true,
+            	".write" : "auth.uid == $expert_id || data.parent().child('User').child(auth.uid).child('isAdmin').val() == true || newData.child('simu').val() == true "  
+            	}       
+          }
+        },
+        "demo" : {
+          "Expert" : {
+							".read": true,     
+                ".write": true,
+             "$expert_id" : {
+            	".read" : true,
+            	".write" : "auth.uid == $expert_id || data.parent().child('User').child(auth.uid).child('isAdmin').val() == true || newData.child('simu').val() == true "  
+            	}
+          }
+        },
+        "production" : {
+          "Expert" : {
+							".read": true,     
+                ".write": true,
+             "$expert_id" : {
+            	".read" : true,
+            	".write" : "auth.uid == $expert_id || data.parent().child('User').child(auth.uid).child('isAdmin').val() == true || newData.child('simu').val() == true "  
+            	}         
+          }
+        }
+      },
+  
+    ".read": "auth != null",
+    ".write": "auth != null",
+       "flamelink": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "users": {
+        ".indexOn": ["id", "email"]
+      }
+    }
+  }
+}
