@@ -8,7 +8,7 @@ export default function ExpertListing({expertList} : {expertList: {imageURL: str
             (expert, index) =>  {
             //   console.log("aaaa" + expert.imageURL);
               return <div key={index}>
-                  <ExpertCard expert={expert} />
+                  <ExpertCard expert={expert} key={index}/>
               </div>
             }
           // <Card title={expert.name}/>

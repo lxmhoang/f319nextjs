@@ -85,27 +85,85 @@ export async function addReviewToRestaurant(db: Firestore, restaurantId: string 
 }
 
 function applyQueryFilters(q: Query<DocumentData, DocumentData>, params:any) {
-	if (params.category != "") {
-		q = query(q, where("category", "==", params.category));
+	if (params.visible != undefined) {
+		q = query(q, where("visible", "==", params.visible));
 	}
-	if (params.city) {
-		q = query(q, where("city", "==", params.city));
+	if (params.id) {
+		q = query(q, where("id", "==", params.id));
 	}
 	if (params.price) {
 		q = query(q, where("price", "==", params.price));
 	}
-	if (params.sort === "Rating" || !params.sort) {
-		q = query(q, orderBy("avgRating", "desc"));
-	} else if (params.sort === "Review") {
-		q = query(q, orderBy("numRatings", "desc"));
-	}
+	// if (params.sort === "Rating" || !params.sort) {
+	// 	q = query(q, orderBy("avgRating", "desc"));
+	// } else if (params.sort === "Review") {
+	// 	q = query(q, orderBy("numRatings", "desc"));
+	// }
 	return q;
+}
+
+export async function getAnExpertById(id: string) {
+
+	const docRef = doc(db, "expert", id);
+	try {
+		
+	}
+	catch (error) {
+		
+	}
+	const docSnap = await getDoc(docRef)
+	if (docSnap.data()?.arrayArticle?.[0]?.stockCode) {
+		console.log("bbb"+docSnap.data()?.arrayArticle?.[0]?.stockCode);
+	}
+	const articles : {
+		stockCode: string,
+		cutLossPrice: number, 
+		exitPrice: number,
+		inPrice: number,
+		finalPrice: number,
+		inDate: Timestamp
+	
+	} [] = docSnap.data()?.arrayArticle?.map ((article : {
+		stockCode: string,
+		cutLossPrice: number, 
+		exitPrice: number,
+		inPrice: number,
+		finalPrice: number,
+		inDate: Timestamp
+	
+	}  ) => {
+		return {
+			stockCode : article.stockCode,
+			cutLossPrice : article.cutLossPrice,
+			exitPrice : article.exitPrice,
+			inPrice : article.inPrice,
+			finalPrice : article.finalPrice,
+			inDate : article.inDate,
+		}
+		
+	})
+
+	console.log("vvvv" + articles)
+	// console.log("bbb"+docSnap.data()?.arrayArticle?.[0]?.stockCode);
+	// const 
+	return {
+		id: docSnap.id,
+		imageURL: docSnap.data()?.imageURL,
+		followerNum: docSnap.data()?.followerNum,
+		name: docSnap.data()?.name,
+		selfIntro: docSnap.data()?.selfIntro,
+		shortInfo: docSnap.data()?.shortInfo,
+		articles: articles
+		// ...docSnap.data(),s
+		// timestamp: docSnap.data().timestamp.toDate(),
+	};
+
 }
 
 export async function getExperts(filters = {}) {
 	let q = query(collection(db, "expert"));
 
-	// q = applyQueryFilters(q, filters);
+	q = applyQueryFilters(q, filters);
 	const results = await getDocs(q);
 	return results.docs.map(doc => {
 		return {
@@ -126,7 +184,7 @@ export async function getExperts(filters = {}) {
 }
 
 export async function getRestaurants(filters = {}) {
-	let q = query(collection(db, "restaurants"));
+	let q = query(collection(db, "plans"));
 
 	q = applyQueryFilters(q, filters);
 	const results = await getDocs(q);

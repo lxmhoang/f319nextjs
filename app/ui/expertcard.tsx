@@ -1,9 +1,10 @@
-import { Card, CardBody, CardFooter, CardHeader, Divider, Link, Image } from "@nextui-org/react";
-
+import { Card, CardBody, CardFooter, CardHeader, Divider, Image } from "@nextui-org/react";
+import Link from 'next/link'
 export default function ExpertCard({expert}: {expert: {imageURL: string, id: string, name: string, followerNum: number, selfIntro: string, shortInfo: string}}) {
     return (
-    <div className="border p-5 rounded-sm">
-    <Card className="w-120 h-120 p-4">
+      <Link href={{pathname:`/expertdetails/${expert.id}`}}>
+    <div className="border p-2 rounded-sm">
+    <Card className="">
   <CardHeader className=" gap-3">
     {<Image
       alt="nextui logo"
@@ -11,11 +12,11 @@ export default function ExpertCard({expert}: {expert: {imageURL: string, id: str
       // fill = "true"
       src = {expert.imageURL}
     /> }
-    <div className="flex flex-wrap">
-      <p className="text-md"></p>
+  </CardHeader>
+
+  <div className="flex flex-wrap">
       <p className="text-small text-default-500">{expert.name}</p>
     </div>
-  </CardHeader>
   <Divider/>
   <CardBody>
     <p>Tỷ lệ lãi 12/94</p>
@@ -31,5 +32,5 @@ export default function ExpertCard({expert}: {expert: {imageURL: string, id: str
     </Link> */}
   {/* </CardFooter> */}
 </Card>
-</div>);
+</div></Link>);
 }

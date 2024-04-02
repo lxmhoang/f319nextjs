@@ -29,23 +29,39 @@ export default function TopNav({initialUser}: {initialUser: any}) {
 		signInWithGoogle();
 	};
     return (
-    <Navbar  maxWidth='full'  justify-between="left">
-      <NavbarBrand>
+    <Navbar className="h-[88px] border"  maxWidth='full' height="200px"  justify-between="left">
+      <NavbarBrand className="p-3">
         {/* <AcmeLogo /> */}
-        <p className="font-bold text-inherit">ACME</p>
+        <p className="font-bold text-inherit">KHUYẾN NGHỊ CHỨNG KHOÁN</p>
       </NavbarBrand>
       <NavbarContent className="hidden sm:flex gap-5" justify="start">
-        <NavLinks />
+        {/* <NavLinks /> */}
       </NavbarContent>
       <NavbarContent justify="end">
-        <NavbarItem className="hidden lg:flex">
-          <Link href="#">Login</Link>
+        <NavbarItem className="hidden lg:flex p-2">
+        {user ? (
+				<>
+					<div className="profile p-4">
+          <li>{user.displayName}</li>
+
+          </div>
+
+          {/* <NavbarItem> */}
+            <Button href="#" onClick={handleSignOut}>
+                  Sign Out
+            </Button>
+          {/* </NavbarItem>  */}
+				</>
+			) : (
+				
+        <Link href="#" onClick={handleSignIn} >Login</Link>
+			)}
         </NavbarItem>
-        <NavbarItem>
+        {/* <NavbarItem>
           <Button as={Link} color="primary" href="#" variant="flat">
             Sign Up
           </Button>
-        </NavbarItem>
+        </NavbarItem> */}
       </NavbarContent>
     </Navbar>
     );
@@ -69,6 +85,7 @@ function useUserSession(initialUser: any) {
 
 	useEffect(() => {
 		onAuthStateChanged((authUser) => {
+      return
 			if (user === undefined) return
 
 			// refresh when user changed to ease testing
