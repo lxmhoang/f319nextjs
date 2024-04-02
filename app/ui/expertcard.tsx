@@ -1,23 +1,34 @@
-import { Card, CardBody, CardFooter, CardHeader, Divider, Link, Image } from "@nextui-org/react";
+import { Card, CardBody, CardFooter, CardHeader, Divider, Image } from "@nextui-org/react";
+import Link from 'next/link'
+import { useDownloadURL } from "react-firebase-hooks/storage";
+import { storage } from "../lib/firebase/firebase";
+import { getStorage, ref as storageRef } from 'firebase/storage';
 
-export default function ExpertCard({expert}: {expert: {imageURL: string, id: string, name: string, followerNum: number, selfIntro: string, shortInfo: string}}) {
+export default function ExpertCard({expert}: {expert: {avatar: string,imageURL: string, id: string, name: string, followerNum: number, selfIntro: string, shortInfo: string}}) {
+  
+  const [imagedownloadURL, loading, error] = useDownloadURL(storageRef(storage, expert.avatar));
+  console.log("aaaaaa" + expert.avatar);
+
+
     return (
-    <div className="border p-5 rounded-sm">
-    <Card className="w-120 h-120 p-4">
+      <Link href={{pathname:`/expertdetails/${expert.id}`}}>
+    <div className="border p-2 rounded-sm">
+    <Card className="">
   <CardHeader className=" gap-3">
-    {<Image
+    {<Image className="max-w-72 max-h-72"
       alt="nextui logo"
       radius="sm"
       // fill = "true"
-      src = {expert.imageURL}
+      src = {imagedownloadURL}
     /> }
-    <div className="flex flex-wrap">
-      <p className="text-md"></p>
+  </CardHeader>
+
+  <div className="flex flex-wrap">
       <p className="text-small text-default-500">{expert.name}</p>
     </div>
-  </CardHeader>
   <Divider/>
   <CardBody>
+
     <p>Tỷ lệ lãi 12/94</p>
   </CardBody>
   {/* <Divider/> */}
@@ -31,5 +42,5 @@ export default function ExpertCard({expert}: {expert: {imageURL: string, id: str
     </Link> */}
   {/* </CardFooter> */}
 </Card>
-</div>);
+</div></Link>);
 }

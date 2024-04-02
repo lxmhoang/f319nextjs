@@ -6,8 +6,8 @@ import {
   signInWithCustomToken,
   Auth,
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
+import { connectStorageEmulator, getStorage } from "firebase/storage";
 
 export const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -23,6 +23,10 @@ export const firebaseApp =
 export const auth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp)!;
 export const storage = getStorage(firebaseApp);
+
+connectFirestoreEmulator(db, '127.0.0.1', 8080);
+connectAuthEmulator(auth,  'http://127.0.0.1:9099')
+connectStorageEmulator(storage,  '127.0.0.1', 9199)
 
 
 export async function getAuthenticatedAppForUser(session? : string) {

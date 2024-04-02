@@ -1,8 +1,11 @@
+
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import TopNav from "./ui/topnav";
 import { getAuthenticatedAppForUser } from "./lib/firebase/firebase";
+import Breadcrumbs from "./ui/breadcrumbs";
+// import { getServerSession } from "next-auth";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -17,11 +20,11 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
 
-  const { currentUser } = await getAuthenticatedAppForUser();
+  // const session =  await getServerSession(authOptions)
   return (
     <html lang="en">
       <body className={inter.className}>
-        <TopNav initialUser={currentUser?.toJSON()} />
+          <TopNav />
         
         {children}</body>
     </html>

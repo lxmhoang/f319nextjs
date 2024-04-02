@@ -20,7 +20,7 @@ import {
 	Query,
 } from "firebase/firestore";
 
-import { db } from "@/app/lib/firebase/firebase";
+import { db, getAuthenticatedAppForUser } from "@/app/lib/firebase/firebase";
 
 export async function updateRestaurantImageReference(
 	restaurantId: string | undefined,
@@ -85,27 +85,83 @@ export async function addReviewToRestaurant(db: Firestore, restaurantId: string 
 }
 
 function applyQueryFilters(q: Query<DocumentData, DocumentData>, params:any) {
-	if (params.category != "") {
-		q = query(q, where("category", "==", params.category));
+	if (params.visible != undefined) {
+		q = query(q, where("visible", "==", params.visible));
 	}
-	if (params.city) {
-		q = query(q, where("city", "==", params.city));
+	if (params.id) {
+		q = query(q, where("id", "==", params.id));
 	}
 	if (params.price) {
 		q = query(q, where("price", "==", params.price));
 	}
-	if (params.sort === "Rating" || !params.sort) {
-		q = query(q, orderBy("avgRating", "desc"));
-	} else if (params.sort === "Review") {
-		q = query(q, orderBy("numRatings", "desc"));
-	}
 	return q;
+}
+
+export async function getAnExpertById(id: string) {
+
+	const docRef = doc(db, "expert", id);
+	try {
+		
+	}
+	catch (error) {
+		
+	}
+	const docSnap = await getDoc(docRef)
+	var articles : {
+		stockCode: string,
+		cutLossPrice: number, 
+		exitPrice: number,
+		inPrice: number,
+		finalPrice: number,
+		inDate: Timestamp
+	
+	} [] = []
+
+	if (docSnap.data()?.arrayArticle != null) {
+		// console.log("bbb"+docSnap.data()?.arrayArticle?.[0]?.stockCode);
+		 articles  = docSnap.data()?.arrayArticle?.map ((article : {
+			stockCode: string,
+			cutLossPrice: number, 
+			exitPrice: number,
+			inPrice: number,
+			finalPrice: number,
+			inDate: Timestamp
+		
+		}  ) => {
+			return {
+				stockCode : article.stockCode,
+				cutLossPrice : article.cutLossPrice,
+				exitPrice : article.exitPrice,
+				inPrice : article.inPrice,
+				finalPrice : article.finalPrice,
+				inDate : article.inDate,
+			}
+			
+		})
+	
+		console.log("vvvv" + articles)
+	} else {
+
+	}
+	return {
+		id: docSnap.id,
+		imageURL: docSnap.data()?.imageURL,
+		followerNum: docSnap.data()?.followerNum,
+		name: docSnap.data()?.name,
+		selfIntro: docSnap.data()?.selfIntro,
+		shortInfo: docSnap.data()?.shortInfo,
+		articles: articles
+		// ...docSnap.data(),s
+		// timestamp: docSnap.data().timestamp.toDate(),
+	};
+
 }
 
 export async function getExperts(filters = {}) {
 	let q = query(collection(db, "expert"));
+	
 
-	// q = applyQueryFilters(q, filters);
+	q = applyQueryFilters(q, filters);
 	const results = await getDocs(q);
 	return results.docs.map(doc => {
 		return {
@@ -121,47 +177,4 @@ export async function getExperts(filters = {}) {
 			// timestamp: doc.data().timestamp.toDate(),
 		};
 	});
-
-	
 }
-
-export async function getRestaurants(filters = {}) {
-	let q = query(collection(db, "restaurants"));
-
-	q = applyQueryFilters(q, filters);
-	const results = await getDocs(q);
-	return results.docs.map(doc => {
-		return {
-			id: doc.id,
-			...doc.data(),
-			// Only plain objects can be passed to Client Components from Server Components
-			timestamp: doc.data().timestamp.toDate(),
-		};
-	});
-}
-
-// export function getRestaurantsSnapshot(cb, filters = {}) {
-// 	if (typeof cb !== "function") {
-// 		console.log("Error: The callback parameter is not a function");
-// 		return;
-// 	}
-
-// 	let q = query(collection(db, "restaurants"));
-// 	q = applyQueryFilters(q, filters);
-
-// 	const unsubscribe = onSnapshot(q, querySnapshot => {
-// 		const results = querySnapshot.docs.map(doc => {
-// 			return {
-// 				id: doc.id,
-// 				...doc.data(),
-// 				// Only plain objects can be passed to Client Components from Server Components
-// 				timestamp: doc.data().timestamp.toDate(),
-// 			};
-// 		});
-
-// 		cb(results);
-// 	});
-
-// 	return unsubscribe;
-// }
-
