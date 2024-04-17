@@ -8,13 +8,13 @@ import Breadcrumbs from "../ui/breadcrumbs";
 import { getFirestore, collection, FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot, SnapshotOptions, query, where } from 'firebase/firestore';
 import { useCollection, useCollectionData, useCollectionDataOnce, useCollectionOnce } from 'react-firebase-hooks/firestore';
 import { db, firebaseApp } from "../lib/firebase/firebase";
-import { Expert, postConverter } from "../lib/definitions";
+import { Expert, expertConverter } from "../lib/definitions";
 
 
 
 export default function Home() {
 
-  const ref = query(collection(db, 'expert'),where("visible","==",true)).withConverter(postConverter);
+  const ref = query(collection(db, 'expert'),where("status","==","activated")).withConverter(expertConverter);
 
 
   const [data, loading, error] = useCollectionDataOnce(ref);

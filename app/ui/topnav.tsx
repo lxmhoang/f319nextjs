@@ -7,26 +7,24 @@ import {
     Button
   } from "@nextui-org/react";
   import Link from 'next/link';
-// import NavLinks from "./nav-links";
-// import { signInWithGoogle, onAuthStateChanged } from "../lib/firebase/auth";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-// import { GoogleAuthProvider, User } from "firebase/auth";
-import { getAuth, signInWithPopup, signOut, GoogleAuthProvider, User } from 'firebase/auth';
-import { useAuthState, useSignInWithGoogle, useSignOut } from 'react-firebase-hooks/auth';
+import { useAuthState, useSignOut } from 'react-firebase-hooks/auth';
 import { auth } from "../lib/firebase/firebase";
-// import { getUser } from "../lib/firebase/getUser";
+import { signInWithGoogle } from "../lib/firebase/auth";
+import { useUserInfo } from "../lib/firebase/getUser";
 
 export default function TopNav() {
-  // const session = useSession() 
-  // console.log("session" + session.status)
-  // const auth = getAuth(firebaseApp)
-  const [signInWithGoogle, userCredential, signing, error] = useSignInWithGoogle(auth);
+  // const [signInWithGoogle, userCredential, signing, error] = useSignInWithGoogle(auth);
   const [signOut] = useSignOut(auth);
+  const [user2, role, loading] = useUserInfo(false)
   const [user, loadingAuthState, errorAuthState] = useAuthState(auth);
-  
+  // console.log(error ? "sign in eror : " + JSON.stringify(error) : "no error ")
+  // console.log(error ? "sign in errorAuthState : " + JSON.stringify(errorAuthState) : "no errorAuthState ")
   const login = () => {
-    signInWithGoogle()
+     try { 
+      signInWithGoogle()
+     } catch (error) {
+      console.log("error sign in " + JSON.stringify(error))
+     }
   };
   const logout = () => {
     signOut();
@@ -36,10 +34,11 @@ export default function TopNav() {
 	// const user = useUserSession(initialUser) ;
  
     return (
-    <Navbar className="h-[88px] border"  maxWidth='full' height="200px"  justify-between="left">
+    <Navbar className="dark h-[88px] border"  maxWidth='full' height="200px"  justify-between="left">
       <NavbarBrand className="p-3">
         {/* <AcmeLogo /> */}
         <Link href={{pathname:`/`}}>  <p className="font-bold text-inherit">KHUYẾN NGHỊ CHỨNG KHOÁN</p> </Link>
+
       
       </NavbarBrand>
       <NavbarContent className="hidden sm:flex gap-5" justify="start">
@@ -50,7 +49,10 @@ export default function TopNav() {
         {user ? (
 				<>
         <div className="profile p-4">
-        <Link href={{pathname:`/profile/registerExpert`}}>   Đăng ký chuyên gia</Link>        
+        <Link href={{pathname:`/admin`}}>  admin</Link>        
+        </div>
+        <div className="profile p-4">
+        <Link href={{pathname:`/profile/registerExpert`}}>Đăng ký chuyên gia</Link>        
         </div>
 					<div className="profile p-4">
           <Link href={{pathname:`/profile`}}> 
@@ -65,10 +67,12 @@ export default function TopNav() {
           {/* </NavbarItem>  */}
 				</>
 			) :
-      signing ? (<div>Singing in </div>) :
-      
+    
       (
-        <Link href="#" onClick={() =>login()} >Login</Link>
+        <>
+        <Link href="#" onClick={() =>login()} >Login By Google</Link>
+        {/* <div>{error ? "sign in eror : " + JSON.stringify(error) : "no error "}</div> */}
+        </>
 			)
       
       }
@@ -79,38 +83,3 @@ export default function TopNav() {
 
 }
 
-
-// function useUserSession(initialUser: User) {
-// 	// The initialUser comes from the server via a server component
-// 	const [user, setUser] = useState(initialUser);
-// 	const router = useRouter()
-
-// 	useEffect(() => {
-// 		const unsubscribe = onAuthStateChanged((authUser) => {
-//       console.log("vvvv")
-//       if (authUser != null) {
-//         setUser(authUser)
-//       }
-// 		})
-
-// 		return () => unsubscribe()
-// 		// eslint-disable-next-line react-hooks/exhaustive-deps
-// 	}, [])
-
-// 	useEffect(() => {
-//     console.log("rrtttt")
-// 		onAuthStateChanged((authUser) => {
-//       console.log("auth state changed")
-// 			if (user === undefined) return
-
-// 			// refresh when user changed to ease testing
-// 			if (user?.email !== authUser?.email) {
-// 				router.refresh()
-// 			}
-// 		})
-// 		// eslint-disable-next-line react-hooks/exhaustive-deps
-// 	}, [user])
-
-//   console.log("6666")
-// 	return user;
-// }

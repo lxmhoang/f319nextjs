@@ -11,16 +11,13 @@ import {
 import { Button } from '@/app/ui/button';
 import { registerExpert } from '@/app/lib/action';
 import { useFormState } from 'react-dom';
-import { onAuthStateChanged } from "@/app/lib/firebase/auth";
-import { useUploadFile } from 'react-firebase-hooks/storage';
 import { User } from 'firebase/auth';
+import {Image} from "@nextui-org/react";
 import { useState } from 'react';
 
 export default function Form({ subscriptionPrice, userInfo }: { subscriptionPrice: string[], userInfo: User }) {
 
-  // const [uploadFile, uploading, snapshot, error] = useUploadFile();
-  // const ref = storageRef(storage, 'file.jpg');
-  // const [selectedFile, setSelectedFile] = useState<File>();
+
   const [uploadAvatar, setAvatar] = useState<File>()
   const initialState = { message: "", errors: {} };
   const [state, dispatch] = useFormState(registerExpert, initialState);
@@ -31,17 +28,6 @@ export default function Form({ subscriptionPrice, userInfo }: { subscriptionPric
       <form action = {dispatch}>
         <div className="rounded-md bg-black-50">
           <input type="hidden" id="uid" name="uid" value={userInfo.uid}/>
-{/* 
-        <label className="block">
-    <span className="sr-only">Choose profile photo</span>
-    <input type="file" className="block w-full text-sm text-slate-500
-      file:mr-4 file:py-2 file:px-4
-      file:rounded-full file:border-0
-      file:text-sm file:font-semibold
-      file:bg-violet-50 file:text-violet-700
-      hover:file:bg-violet-100
-    "/>
-    </label> */}
          {/* Name */}
           <div className="mb-4">
             <label htmlFor="name" className="mb-2 block text-sm font-medium">
@@ -150,7 +136,7 @@ export default function Form({ subscriptionPrice, userInfo }: { subscriptionPric
 
           {uploadAvatar && (
           <div className='flex column p-4 w-100 h-100'>
-            <img
+            <Image
               src={URL.createObjectURL(uploadAvatar)}
               // style={styles.image}
               alt="Thumb"

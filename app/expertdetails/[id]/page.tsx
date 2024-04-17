@@ -1,4 +1,4 @@
-'use client'
+
 import { getAnExpertById, getExperts } from "@/app/lib/firebase/firestore";
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import ExpertCard from "@/app/ui/expertcard";

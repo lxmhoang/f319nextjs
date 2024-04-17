@@ -1,4 +1,4 @@
-import { generateFakeRestaurantsAndReviews } from "@/app/lib/fakeRestaurants.js";
+
 
 import {
 	collection,
@@ -15,76 +15,16 @@ import {
 	addDoc,
 	DocumentData,
 	DocumentReference,
-	Transaction,
 	Firestore,
 	Query,
+	FirestoreDataConverter,
+	writeBatch,
 } from "firebase/firestore";
 
-import { db, getAuthenticatedAppForUser } from "@/app/lib/firebase/firebase";
+import { db } from "@/app/lib/firebase/firebase";
+import { Transaction, expertConverter, transConverter, userConverter } from "../definitions";
 
-export async function updateRestaurantImageReference(
-	restaurantId: string | undefined,
-	publicImageUrl: any
-) {
-	const restaurantRef = doc(collection(db, "restaurants"), restaurantId);
-	if (restaurantRef) {
-		await updateDoc(restaurantRef, { photo: publicImageUrl });
-	}
-}
-
-const updateWithRating = async (
-	transaction: Transaction,
-	docRef: DocumentReference<DocumentData, DocumentData>,
-	newRatingDocument: DocumentReference<DocumentData, DocumentData>,
-	review: { rating: any; }
-) => {
-	const restaurant = await transaction.get(docRef);
-	const data = restaurant.data();
-	const newNumRatings = data?.numRatings ? data.numRatings + 1 : 1;
-	const newSumRating = (data?.sumRating || 0) + Number(review.rating);
-	const newAverage = newSumRating / newNumRatings;
-
-	transaction.update(docRef, {
-		numRatings: newNumRatings,
-		sumRating: newSumRating,
-		avgRating: newAverage,
-	});
-
-	transaction.set(newRatingDocument, {
-		...review,
-		timestamp: Timestamp.fromDate(new Date()),
-	});
-};
-
-export async function addReviewToRestaurant(db: Firestore, restaurantId: string | undefined, review: { rating: any; }) {
-	if (!restaurantId) {
-		throw new Error("No restaurant ID has been provided.");
-	}
-
-	if (!review) {
-		throw new Error("A valid review has not been provided.");
-	}
-
-	try {
-		const docRef = doc(collection(db, "restaurants"), restaurantId);
-		const newRatingDocument = doc(
-			collection(db, `restaurants/${restaurantId}/ratings`)
-		);
-
-		// corrected line
-		await runTransaction(db, transaction =>
-			updateWithRating(transaction, docRef, newRatingDocument, review)
-		);
-	} catch (error) {
-		console.error(
-			"There was an error adding the rating to the restaurant",
-			error
-		);
-		throw error;
-	}
-}
-
-function applyQueryFilters(q: Query<DocumentData, DocumentData>, params:any) {
+function applyQueryFilters(q: Query<DocumentData, DocumentData>, params:{[key:string]:string}) {
 	if (params.visible != undefined) {
 		q = query(q, where("visible", "==", params.visible));
 	}
@@ -94,6 +34,17 @@ function applyQueryFilters(q: Query<DocumentData, DocumentData>, params:any) {
 	if (params.price) {
 		q = query(q, where("price", "==", params.price));
 	}
+	if (params.paymentId) {
+		q = query(q, where("paymentId", "==", params.paymentId));
+	}
+	if (params.status) {
+		q = query(q, where("status", "==", params.status));
+	}
+	if (params.uid) {
+		q = query(q, where("uid", "==", params.uid));
+	}
+	
+	
 	return q;
 }
 
@@ -113,7 +64,8 @@ export async function getAnExpertById(id: string) {
 		exitPrice: number,
 		inPrice: number,
 		finalPrice: number,
-		inDate: Timestamp
+		inDate: Timestamp,
+		avatar: string
 	
 	} [] = []
 
@@ -148,12 +100,53 @@ export async function getAnExpertById(id: string) {
 		imageURL: docSnap.data()?.imageURL,
 		followerNum: docSnap.data()?.followerNum,
 		name: docSnap.data()?.name,
+		avatar: docSnap.data()?.avatar,
 		selfIntro: docSnap.data()?.selfIntro,
 		shortInfo: docSnap.data()?.shortInfo,
 		articles: articles
+
 		// ...docSnap.data(),s
 		// timestamp: docSnap.data().timestamp.toDate(),
 	};
+
+}
+
+export async function addANewTransaction(tran: Transaction) {
+	const tranCollection = collection(db, 'transaction')
+	const docRef = await addDoc(tranCollection, tran)
+	const snapshot = await getDoc(docRef.withConverter(transConverter))
+	return snapshot.data()
+}
+
+export async function searchCollection<ModelType>(name: string, filters = {},converter: FirestoreDataConverter<ModelType>) {
+	let q = query(collection(db, name));
+	q = applyQueryFilters(q, filters)
+	const result = await getDocs(q.withConverter(converter))
+	return result.docs.map(doc => {
+		return doc.data()
+	})
+}
+
+export async function approvePendingTrans(tranIDs: string[]) {
+	const batch = writeBatch(db)
+	tranIDs.forEach( (id) => {
+		const docRef = doc(db, 'transaction', id)
+		batch.update(docRef, {status: "adminApproved"})
+	})
+	await batch.commit()
+}
+
+export async function searchUser(filters = {}) {
+	let q = query(collection(db, "user"));
+	
+
+	q = applyQueryFilters(q, filters)
+	const results = await getDocs(q.withConverter(userConverter));
+	return results.docs.map(doc => {
+
+		return doc.data()
+		
+	});
 
 }
 

@@ -7,23 +7,23 @@ import {Accordion, AccordionItem} from "@nextui-org/react";
 import { usePathname, useRouter } from "next/navigation";
 import clsx from 'clsx';
 import Form from "@/app/ui/profile/create-form";
-import { auth, db, getAuthenticatedAppForUser } from "app/lib/firebase/firebase";
+import { auth, db } from "app/lib/firebase/firebase";
 import { useEffect, useState } from "react";
-import { onAuthStateChanged } from "@/app/lib/firebase/auth";
 import { useAuthState, useSignInWithGoogle, useSignOut } from "react-firebase-hooks/auth";
 import { useDocument } from "react-firebase-hooks/firestore";
 import { DocumentData, doc } from "firebase/firestore";
 import { User } from "firebase/auth";
-import { Expert, postConverter } from "@/app/lib/definitions";
+import { Expert, ExpertStatus, expertConverter } from "@/app/lib/definitions";
+import {Textarea} from "@nextui-org/react";
 
 
 export default function Page() {
 
   const [user, loadingAuthState, errorAuthState] = useAuthState(auth);
   const [userExpertInfo, loading, error] = useDocument(
-    doc(db, 'expert', user?.uid ?? "dd").withConverter(postConverter),
+    doc(db, 'expert', user?.uid ?? "dd").withConverter(expertConverter),
     {
-      snapshotListenOptions: { includeMetadataChanges: true },
+      // snapshotListenOptions: { includeMetadataChanges: true },
     }
   );
   return (
@@ -33,21 +33,14 @@ export default function Page() {
         { label: 'Profile', href: '/profile' },
         {
           label: 'Đăng ký chuyên gia',
-          href: '/profile/registerExpert',
+          href: '/admin',
+          // href: '/profile/registerExpert',
           // active: true,
         },
       ]} />
-      {/* {value && JSON.stringify(value.data())} */}
-      {/* {value && <span>Document: {JSON.stringify(value.data())}</span>} */}
       {
-          // body(user)
         user ? 
-        // body (userExpertInfo?.data())
           body(userExpertInfo?.data(), user) 
-            // body(userExpertInfo.data()?.status) :
-        // userExpertInfo.data()?.status == 'submitted' ? (<>chua dong tien</>) :
-        //   (<>da dang ky roi con gi</>) : 
-        // (<Form subscriptionPrice={['1mil', '2mil']} userInfo={user} />) 
         : 
         (<div>Please login</div>)
       }
@@ -59,40 +52,67 @@ export default function Page() {
     if (!userExpertInfoData) {
       return (<Form subscriptionPrice={['1mil', '2mil']} userInfo={user} />) 
     }
-    // if (userExpertInfoData) {
-    //   return (<Form subscriptionPrice={['1mil', '2mil']} userInfo={user} />) 
-    // }
-
 
     switch (userExpertInfoData.status) {
       case null : 
       return (<Form subscriptionPrice={['1mil', '2mil']} userInfo={user} />) 
-      case 'submitted'  : {
+      case ExpertStatus.paymentPending  : {
         if (!userExpertInfoData.avatar) {
           return (<div>Loading ... </div>)
         } else {
-          return  (<div>
-          <ExpertCard expert={userExpertInfoData} />
+          return  (
+          
+          <div className="max-w-100 flex">
+          <div className="w-1/2">
+            <ExpertCard expert={userExpertInfoData} />
+          </div>
           
           
-          chua dong tien</div>)
+          <div className="w-1/2  bg-black ">
+          <Textarea 
+      isReadOnly
+      isDisabled
+      label="Thông báo"
+      variant="bordered"
+      color="warning"
+      labelPlacement="outside"
+      placeholder="Enter your description"
+      defaultValue=" Bạn chưa đóng tiền
+      Chuyển 5000000 vào tài khoản xxxx để chúng tôi kích hoạt. 
+      Mọi thắc mắc xin liên hệ  0912609848"
+      className="max-w-xs text-white-900"
+    />
+            {/* <Textarea   
+      isReadOnly
+      defaultValue="  Bạn chưa đóng tiền
+            Chuyển 5000000 vào tài khoản xxxx để chúng tôi kích hoạt. 
+            Mọi thắc mắc xin liên hệ  0912609848
+"
+          label="Enter your description"
+      className="max-w-xs" /> */}
+              
+
+
+          </div>
+          
+          </div>)
         }
 
         }
 
-      case 'waitingForApproval': {
-        return  (<>Dang cho kiem duyet</>)
+      case ExpertStatus.suspended: {
+        return  (<>Dang cho duoc suspended, co muon kich hoat lai ko ?</>)
 
       }
 
-      case 'subspended': {
-        return  (<>Dang subspended, co muon kich hoat lai ko ?</>)
+      case ExpertStatus.banned: {
+        return  (<>Đang bị banned  roi</>)
 
       }
 
-      case 'active' : {
+      case ExpertStatus.activated : {
         
-        return  (<>Dang active</>)
+        return  (<>Dang activated</>)
       }
 
       default : 
