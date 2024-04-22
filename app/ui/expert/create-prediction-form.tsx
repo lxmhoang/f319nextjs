@@ -71,6 +71,8 @@ export default function PredictCreationForm() {
 
     const [comps, error] = useFetchData()
     const [selectedComp, setSelectedCompComp] = useState<rawCom>()
+    const minTakeProfitPrice = selectedComp ? selectedComp.HighPrice * 1.1 : 0
+    const maxCutLossPrice = selectedComp ? selectedComp.HighPrice * 0.9 : 0
 
     // const [compInfo, err] = useFetchData<CompanyRTInfo | null>("https://banggia.cafef.vn/stockhandler.ashx?userlist=" + selectedComp?.Symbol ?? "", parserCompRTInfo)   
 
@@ -118,14 +120,17 @@ export default function PredictCreationForm() {
                 {selectedComp ? selectedComp.Symbol : ""}
             </div> */}
             <form action={dispatchAddtran} className='p-4'>
-                <div className="relative mb-4"> {selectedComp != null && selectedComp != undefined ? (<>Giá mua vào hiện tại {selectedComp.HighPrice} </>) : (<> Hãy chọn 1 cổ phiếu</>)}</div>
 
+            
+                <div className="relative mb-4"> {selectedComp != null && selectedComp != undefined ? (<>Giá mua vào hiện tại {selectedComp.HighPrice} </>) : (<> Hãy chọn 1 cổ phiếu</>)}</div>
+                <input type="hidden"  name="priceIn" value={selectedComp?.HighPrice ?? 0}></input>
+                <input type="hidden"  name="uid" value={getAuth().currentUser?.uid ?? ""}></input>
                 <div className="relative mb-4">
 
                     {
                         (Array.isArray(comps)) ?
                             (<Autocomplete
-                                name="stockCode"
+                                name="assetName"
                                 // onKeyDown={(e) => e.co()}
                                 onKeyDown={(e: any) => e.continuePropagation()}
                                 label="Chọn 1 công ty"
@@ -159,8 +164,16 @@ export default function PredictCreationForm() {
                         className="peer block w-1/3 rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
                         placeholder="Giá mục tiêu chốt lời"
                         // startContent={<HeartIcon size={18} />}
-                        type="number"
+                        type="number" min={minTakeProfitPrice}
                     />
+                </div>
+                <div id="customer-error" aria-live="polite" aria-atomic="true">
+                    {/* {addPredictState.errors?.priceOut &&
+                        addPredictState.errors.priceOut.map((error: string) => (
+                            <p className="mt-2 text-sm text-red-500" key={error}>
+                                {error}
+                            </p>
+                        ))} */}
                 </div>
                 <label htmlFor="cutLossPrice" className="mb-2 block text-sm font-medium">
                     Giá cắt lỗ
@@ -171,8 +184,16 @@ export default function PredictCreationForm() {
                         className="peer block w-1/3 rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
                         placeholder="Nhap gia cat lo"
                         // startContent={<HeartIcon size={18} />}
-                        type="number"
+                        type="number" max={maxCutLossPrice}
                     />
+                </div>
+                <div id="customer-error" aria-live="polite" aria-atomic="true">
+                    {/* {addPredictState.errors?.cutLoss &&
+                        addPredictState.errors.cutLoss.map((error: string) => (
+                            <p className="mt-2 text-sm text-red-500" key={error}>
+                                {error}
+                            </p>
+                        ))} */}
                 </div>
                 <label htmlFor="deadLine" className="mb-2 block text-sm font-medium">
                     Ngày cuối cùng nắm giữ
@@ -186,14 +207,14 @@ export default function PredictCreationForm() {
                         type="date"
                     />
                 </div>
-                {/* <div id="customer-error" aria-live="polite" aria-atomic="true">
-                    {addPredictState.errors?.paymentId &&
-                        addPredictState.errors.paymentId.map((error: string) => (
+                <div id="customer-error" aria-live="polite" aria-atomic="true">
+                    {/* {addPredictState.errors?.deadLine &&
+                        addPredictState.errors.deadLine.map((error: string) => (
                             <p className="mt-2 text-sm text-red-500" key={error}>
                                 {error}
                             </p>
-                        ))}
-                </div> */}
+                        ))} */}
+                </div>
 
 
                 <Button type="submit">Search</Button>

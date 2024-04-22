@@ -1,85 +1,132 @@
 'use client'
 import {
-    Navbar, 
-    NavbarBrand, 
-    NavbarContent, 
-    NavbarItem, 
-    Button
-  } from "@nextui-org/react";
-  import Link from 'next/link';
+  Navbar,
+  NavbarBrand,
+  NavbarContent,
+  NavbarItem,
+  Button,
+  NavbarMenu,
+  NavbarMenuItem, Link,
+  NavbarMenuToggle,
+  DropdownTrigger,
+  Dropdown,
+  DropdownMenu,
+  DropdownItem
+} from "@nextui-org/react";
+// import Link from 'next/link';
 import { useAuthState, useSignOut } from 'react-firebase-hooks/auth';
-import { auth } from "../lib/firebase/firebase";
+import { auth, db } from "../lib/firebase/firebase";
 import { signInWithGoogle } from "../lib/firebase/auth";
 import { useUserInfo } from "../lib/firebase/getUser";
+import { useDocument } from "react-firebase-hooks/firestore";
+import { doc } from "firebase/firestore";
 
 export default function TopNav() {
   // const [signInWithGoogle, userCredential, signing, error] = useSignInWithGoogle(auth);
   const [signOut] = useSignOut(auth);
-  const [user2, role, loading] = useUserInfo(false)
-  const [user, loadingAuthState, errorAuthState] = useAuthState(auth);
-  // console.log(error ? "sign in eror : " + JSON.stringify(error) : "no error ")
-  // console.log(error ? "sign in errorAuthState : " + JSON.stringify(errorAuthState) : "no errorAuthState ")
+  const [user, role, loading] = useUserInfo(true)
+  const [userInfo, loadingUserInfo, error] = useDocument(
+    doc(db, 'user/' + user?.uid)
+  );
+  const amount = userInfo?.data() ? userInfo?.data()?.amount : ''
   const login = () => {
-     try { 
-      signInWithGoogle()
-     } catch (error) {
+    try {
+      let cache = localStorage.getItem("referalID")
+      signInWithGoogle(cache)
+    } catch (error) {
       console.log("error sign in " + JSON.stringify(error))
-     }
+    }
   };
-  const logout = () => {
-    signOut();
-  };
-  
 
-	// const user = useUserSession(initialUser) ;
- 
+  const dropDownInfo = [
+    { key: "profile", href: "/profile", label: "Profile" },
+    { key: "expert", href: "/expert", label: "Expert" },
+    { key: "signout", label: "Sign out", onclick :  {signOut} }
+  ]
+
+
+  const MenuButton = ({ title, menuInfo }: { title: string, menuInfo: { key: string }[] }) => {
     return (
-    <Navbar className="dark h-[88px] border"  maxWidth='full' height="200px"  justify-between="left">
+
+      <Dropdown>
+        <DropdownTrigger>
+          <Button
+            // color={color}
+            variant="bordered"
+            className="capitalize"
+          >
+            {title}
+          </Button>
+        </DropdownTrigger>
+        <DropdownMenu
+          aria-label="Dropdown Variants" items={dropDownInfo}
+        >
+          {
+            (item) => (
+              // <DropdownItem key={item.key} href={item.href}>{item.label}</DropdownItem>
+
+          <DropdownItem
+            key={item.key}
+            href={item.href}
+            color={item.key === "signout" ? "danger" : "default"}
+            className={item.key === "signout" ? "text-danger" : ""}
+            onClick={item.key === "signout" ? signOut : () => {}}
+          >
+            {item.label}
+          </DropdownItem>
+            )
+
+          }
+
+        </DropdownMenu>
+      </Dropdown>
+    );
+
+  }
+
+  console.log("kkkk" + JSON.stringify(role))
+
+  return (
+    <Navbar className="dark h-[88px] border" maxWidth='full' justify-between="left">
       <NavbarBrand className="p-3">
         {/* <AcmeLogo /> */}
-        <Link href={{pathname:`/`}}>  <p className="font-bold text-inherit">KHUYẾN NGHỊ CHỨNG KHOÁN</p> </Link>
+        <Link href="/">  <p className="font-bold">KHUYẾN NGHỊ CHỨNG KHOÁN</p> </Link>
 
-      
+
       </NavbarBrand>
+
       <NavbarContent className="hidden sm:flex gap-5" justify="start">
         {/* <NavLinks /> */}
       </NavbarContent>
       <NavbarContent justify="end">
         <NavbarItem className="hidden lg:flex p-2">
-        {user ? (
-				<>
-        <div className="profile p-4">
-        <Link href={{pathname:`/admin`}}>  admin</Link>        
-        </div>
-        <div className="profile p-4">
-        <Link href={{pathname:`/profile/registerExpert`}}>Đăng ký chuyên gia</Link>        
-        </div>
-					<div className="profile p-4">
-          <Link href={{pathname:`/profile`}}> 
-          {user.displayName}
-          </Link>  
-          </div>
+          {user ? (
+            <>
+              {role.isAdmin ? (
+                <div className="profile p-4">
+                  <Link href="/admin">  admin</Link>
+                </div>
+              ) : (<></>)}
+              <div>
+              </div>
+              <div className="profile p-2">
+                <MenuButton title={user.displayName ?? "Menu"} menuInfo={dropDownInfo} />
+              </div>
+            </>
+          ) :
 
-          {/* <NavbarItem> */}
-            <Button href="#" onClick={() => signOut()}>
-                  Sign Out
-            </Button>
-          {/* </NavbarItem>  */}
-				</>
-			) :
-    
-      (
-        <>
-        <Link href="#" onClick={() =>login()} >Login By Google</Link>
-        {/* <div>{error ? "sign in eror : " + JSON.stringify(error) : "no error "}</div> */}
-        </>
-			)
-      
-      }
+            (
+              <>
+                <Link onClick={() => login()} >Login By Google</Link>
+                {/* <div>{error ? "sign in eror : " + JSON.stringify(error) : "no error "}</div> */}
+              </>
+            )
+
+          }
         </NavbarItem>
       </NavbarContent>
     </Navbar>
-    );
+  );
 
 }
 

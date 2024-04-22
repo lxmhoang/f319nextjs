@@ -5,34 +5,45 @@ const hoseCode = '1'
 const hnxCode = '2'
 const hnx30Code = '12'
 const upcomCode = '9'
+const url = 'https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode='
 
 const MIN_VOLUME = 100000
-
-    // https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=21   - vn 100
-    // https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=11   -vn 30
-    // https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=1  - hose 
-    // https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=2  - hnx
-    // https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=12  - hn30
-    // https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=9  - upcom
-    // https://s.cafef.vn/ajax/pagenew/databusiness/congtyniemyet.ashx?centerid=0&skip=0&take=20000&major=0 all company
 
 
 export default async function getStockData() {
     try {
-        const responsevn100 = await fetch("https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=" + vn100Code);
-        const responsevn30 = await fetch("https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=" + vn30Code);
-        const responsehose = await fetch("https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=" + hoseCode);
-        const responsehnx = await fetch("https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=" + hnxCode);
-        const responsehnx30 = await fetch("https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=" + hnx30Code);
-        const responseupcom = await fetch("https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode=" + upcomCode);
+
+        const [responsevn100, responsevn30, responsehose, responsehnx, responsehnx30, responseupcom] = await Promise.all([
+          fetch(url + vn100Code),
+          fetch(url + vn30Code),
+          fetch(url + hoseCode),
+          fetch(url + hnxCode),
+          fetch(url + hnx30Code),
+          fetch(url + upcomCode),
+        ]
 
 
-        const resultvn100 = await responsevn100.json();
-        const resultvn30 = await responsevn30.json();
-        const resulthose = await responsehose.json();
-        const resulthnx = await responsehnx.json();
-        const resulthnx30 = await responsehnx30.json();
-        const resultupcom = await responseupcom.json();
+        )
+        const [
+          resultvn100, 
+          resultvn30, 
+          resulthose,
+          resulthnx,
+          resulthnx30,
+          resultupcom
+        ] = await Promise.all([
+          responsevn100.json(), 
+          responsevn30.json(), 
+          responsehose.json(), 
+          responsehnx.json(), 
+          responsehnx30.json(), 
+          responseupcom.json()
+        ]);
+        // const resultvn30 = await responsevn30.json();
+        // const resulthose = await responsehose.json();
+        // const resulthnx = await responsehnx.json();
+        // const resulthnx30 = await responsehnx30.json();
+        // const resultupcom = await responseupcom.json();
 
         const arrvn100 = (resultvn100.Data as {[key:string] : number}[]).filter(d =>d.TotalVolume > MIN_VOLUME) 
         const arrvn30 = (resultvn30.Data as {[key:string] : number}[]).filter(d =>d.TotalVolume > MIN_VOLUME) 
@@ -59,7 +70,7 @@ export default async function getStockData() {
 
         console.log("arr length " + merge6.length )
         
-        console.log(merge6 )
+        // console.log(merge6 )
         return merge6
       } catch (err) {
         throw err 

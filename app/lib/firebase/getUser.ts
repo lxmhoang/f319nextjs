@@ -8,17 +8,15 @@ import { getUserClaims } from "../firebaseadmin/firebaseadmin"
 
 export function useUserInfo(checkRole: boolean) {
 
-	const [user, setUser] = useState<User>()
-	const [role, setRole] = useState<string>("")
+	const [user, setUser] = useState<User | null>()
+	const [claim, setClaim] = useState<{[key: string] : any}>({})
 	const [loading, setLoading] = useState<boolean>(true)
-	// const [error, setError] = useState()
 	const router = useRouter()
 
 	useEffect(() => {
 
 		const unsubscribe = onAuthStateChanged(auth, (authUser) => {
-      if (authUser) {
-        setUser(authUser)      }
+				setUser(authUser)
 		})
 
 		return () => unsubscribe()
@@ -26,28 +24,30 @@ export function useUserInfo(checkRole: boolean) {
 
 	useEffect(() => {
 		onAuthStateChanged(auth, (authUser) => {
-			if (user === undefined) return
-
-            if (checkRole && user.uid) {
-                getUserClaims(user.uid).then ((claim) => {
-                    if (claim && claim.role) {
-                        setLoading(false)
-                        setRole(claim.role)
-                    } else {
-                        setLoading(false)
-                        setRole("")
-                    }
-                })
-            }
-
-			if (user?.uid !== authUser?.uid) {
+			console.log("state changeeeee phia duoi" + authUser);
+			if (user == undefined) return
+			console.log("2222" + user.uid + checkRole);
+			if (checkRole && user.uid) {
+				console.log("check user detrail : " + JSON.stringify(user))
+				getUserClaims(user.uid, user.email).then((claim) => {
+					if (claim) {
+						setLoading(false)
+						setClaim(claim)
+					} else {
+						setLoading(false)
+						setClaim({})
+					}
+				})
+			}
+			console.log("email compare: " + user?.email + authUser?.email);
+			if (user?.email !== authUser?.email) {
 				router.refresh()
 			}
 		})
 	}, [user])
 
-	return [user, role, loading]
-  
+	return [user, claim, loading] as const
+
 }
 
 

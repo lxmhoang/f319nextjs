@@ -56,14 +56,58 @@ exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (even
 
     const data = event.data.data();
     logger.log("new transaction created", event.params.documentId, data);
-    if (data.status == "adminCreated" || data.status == "pending") {
-        const toUid = data.toUid;
-        const fromUid = data.fromUid
+    const depositTran = (data.status == "adminCreated" && data.tranType == "deposit") 
+    const withDrawTran = (data.status == "pending" && data.tranType == "withDraw") 
+    const referallTran = data.tranType == "ReferralReward"
+    if (referallTran) {
+        const toUid = data.toUid
         if (toUid) {
             getFirestore().collection('user').doc(toUid).update({ 
                 amount: FieldValue.increment(data.amount)
             })
         }
+    }
+    if (depositTran) {
+        const toUid = data.toUid;
+        if (toUid) {
+            const userRef = getFirestore().collection('user').doc(toUid)
+            userRef.update({ 
+                amount: FieldValue.increment(data.amount)
+            })
+            userRef.get().then((snapshotUser) => {
+                const refID = snapshotUser.data().refID
+                logger.info("Ref ID : " + refID)
+                if (refID) {
+                    // chia tien cho ref
+                    getFirestore().collection('user').where("paymentId","==",refID).get().then((snapshot) => {
+                        if (snapshot.docs.length == 1) {
+
+                        const refUserDocID = snapshot.docs[0].id
+                        logger.info("Ref user ID : " + refUserDocID)
+                        const amountForReference = data.amount * 0.2
+                        getFirestore().collection('transaction').add({
+                            amount: amountForReference,
+                            date: Date.now(),
+                            toUid: refUserDocID,
+                            status: "Done",
+                            tranType: "ReferralReward",
+                            fromTranId: event.params.documentId
+                        })
+
+                        }  else {
+
+                logger.error("result of search is not 1 " + snapshot.docs.length)
+                        }
+                    })
+    
+                }
+            })
+           
+           
+        }
+    }
+    if (withDrawTran) {
+        const fromUid = data.fromUid
         if (fromUid) {
             getFirestore().collection('user').doc(fromUid).update({ 
                 amount: FieldValue.increment(-data.amount)

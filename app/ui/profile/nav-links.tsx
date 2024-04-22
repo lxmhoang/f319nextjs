@@ -12,6 +12,7 @@ import clsx from 'clsx';
 // Depending on the size of the application, this would be stored in a database.
 const links = [
   { name: 'Overview', href: '/profile', icon: HomeIcon },
+  { name: 'Theo dõi khuyến nghị', href: '/profile/pred', icon: UserGroupIcon },
   {
     name: 'Yêu cầu rút tiền', href: '/profile/requestwithdraw',
     icon: DocumentDuplicateIcon,
@@ -19,8 +20,7 @@ const links = [
   {
     name: 'Lịch sử giao dịch', href: '/profile/transaction',
     icon: DocumentDuplicateIcon,
-  },
-  { name: 'Subscription', href: '/admin/subscription', icon: UserGroupIcon },
+  }
 ];
 
 export default function NavLinks() {

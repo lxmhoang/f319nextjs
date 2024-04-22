@@ -95,13 +95,17 @@ export type CompanyRTInfo = {
 // }
 
 export type Prediction = {
+  id?: string;
   assetName: string;
   dateIn: Date;
-  dateOut: Date;
   priceIn: number;
   priceOut: number;
   cutLoss: number;
+  deadLine: Date;
+  dateRelease?: Date;
+  priceRelease?: number;
   status: string;
+  note: string
 }
 
 export type User = {
@@ -138,6 +142,42 @@ export type Transaction = {
   notebankacc?: string
   status: string
 }
+
+export const predConverter: FirestoreDataConverter<Prediction> = {
+  toFirestore(pred: WithFieldValue<Prediction>): DocumentData {
+    return {
+      assetName: pred.assetName,
+      dateIn: pred.dateIn,
+      priceIn: pred.priceIn,
+      priceOut: pred.priceOut,
+      cutLoss: pred.cutLoss,
+      deadLine: pred.deadLine,
+      dateRelease: pred.dateRelease,
+      priceRelease: pred.priceRelease,
+      note: pred.note,
+      status: pred.status
+    };
+  },
+  fromFirestore(
+    snapshot: QueryDocumentSnapshot,
+    options: SnapshotOptions
+  ): Prediction {
+    const data = snapshot.data(options);
+    return {
+      assetName: data.assetName,
+      dateIn: data.dateIn,
+      priceIn: data.priceIn,
+      priceOut: data.priceOut,
+      cutLoss: data.cutLoss,
+      deadLine: data.deadLine,
+      dateRelease: data.dateRelease,
+      priceRelease: data.priceRelease,
+      id: snapshot.id,
+      note: data.note,
+      status: data.status,
+    };
+  },
+};
 
 export const transConverter: FirestoreDataConverter<Transaction> = {
   toFirestore(trans: WithFieldValue<Transaction>): DocumentData {

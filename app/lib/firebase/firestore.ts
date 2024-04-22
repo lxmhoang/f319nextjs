@@ -22,7 +22,7 @@ import {
 } from "firebase/firestore";
 
 import { db } from "@/app/lib/firebase/firebase";
-import { Transaction, expertConverter, transConverter, userConverter } from "../definitions";
+import { Prediction, Transaction, expertConverter, predConverter, transConverter, userConverter } from "../definitions";
 
 function applyQueryFilters(q: Query<DocumentData, DocumentData>, params:{[key:string]:string}) {
 	if (params.visible != undefined) {
@@ -111,6 +111,14 @@ export async function getAnExpertById(id: string) {
 
 }
 
+export async function addNewPrediction(pred : Prediction, expertUid: string) {
+	const predCollection = collection(db, 'expert/' + expertUid + '/preds')
+	const docRef = await addDoc(predCollection, pred)
+	const snapshot = await getDoc(docRef.withConverter(predConverter))
+	return snapshot.data()
+
+}
+
 export async function addANewTransaction(tran: Transaction) {
 	const tranCollection = collection(db, 'transaction')
 	const docRef = await addDoc(tranCollection, tran)
@@ -134,6 +142,11 @@ export async function approvePendingTrans(tranIDs: string[]) {
 		batch.update(docRef, {status: "adminApproved"})
 	})
 	await batch.commit()
+}
+
+export async function updateRefID(userDocID: string, refID: string) {
+	let docRef = doc(db, 'user/' + userDocID)
+	return updateDoc(docRef, {refID : refID})
 }
 
 export async function searchUser(filters = {}) {

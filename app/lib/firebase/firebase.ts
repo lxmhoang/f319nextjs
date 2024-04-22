@@ -26,8 +26,9 @@ export const db = getFirestore(firebaseApp)!;
 export const storage = getStorage(firebaseApp);
 export const cloudFunc = getFunctions(firebaseApp);
 
-
-// connectFirestoreEmulator(db, '127.0.0.1', 8080);
-// connectAuthEmulator(auth,  'http://127.0.0.1:9099')
-// connectStorageEmulator(storage,  '127.0.0.1', 9199)
-// connectFunctionsEmulator(cloudFunc, '127.0.0.1', 5001)
+if (process.env.USE_EMULATOR) {
+  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  connectAuthEmulator(auth,  'http://127.0.0.1:9099')
+  connectStorageEmulator(storage,  '127.0.0.1', 9199)
+  connectFunctionsEmulator(cloudFunc, '127.0.0.1', 5001)
+}

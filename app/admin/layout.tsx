@@ -6,11 +6,9 @@ import SideNav from "../ui/admin/sidenav";
 import { useState } from "react";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  // const [count, setCount] = useState(0)
   const [user, role, loading] = useUserInfo(true)
-  console.log("aaaa " + role)
-  if ( loading == false && role != "admin") {
-    redirect('/')
+  if ( loading == false && role.isAdmin !=  true) {
+    redirect("/")
   }
     return (
       <div>{
@@ -26,11 +24,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="flex-grow p-6 md:overflow-y-auto md:p-12">{children}</div>
       </div>
       )
-
-
-
       }</div>
-      
-     
     );
   }

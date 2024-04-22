@@ -26,7 +26,7 @@ export default function Home() {
 
       ]} />
       { searchState.user ? (
-        <TransCreationForm user={searchState.user} transactionType="withDraw" />
+        <TransCreationForm user={searchState.user} transactionType="deposit" />
       ) : (<>Search user</>) }
     
       </>

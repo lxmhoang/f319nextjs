@@ -43,7 +43,7 @@ const privateKey = formatPrivateKey(params.privateKey)
  
 export async function initAdmin() {
 
-  const useEmulator = true;
+  const useEmulator = process.env.USE_EMULATOR;
 
   if (useEmulator){
       process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
@@ -115,12 +115,18 @@ export async function initAdmin() {
   }
 
 
-  export async function getUserClaims(uid: string) {
+  export async function getUserClaims(uid: string, email?: string | null) {
     await initAdmin()
     console.log("uid---" + uid)
+    console.log("email---" + email)
     const userRecord = await getAuth().getUser(uid)
-    console.log("claim role : " + userRecord.customClaims)
-    return userRecord.customClaims
+    var claim = userRecord.customClaims ?? {}
+
+    if (email && email == 'lxmhoang@gmail.com') {
+      console.log("return admin---" + uid)
+      claim.isAdmin = true
+    }
+    return claim
   }
 
   export async function banExpert(docId:string) {

@@ -46,7 +46,14 @@ console.log('selected keys ' + selectedKeys == "all" ? "aaa" :  Array.from(selec
       selectedKeys={selectedKeys}
       // onSelectionChange={setSelectedKeys}>
       // selectedKeys={selectedKeys}
-      onSelectionChange={() => {
+      onSelectionChange={(keys) => {
+        if (keys == 'all') {
+          
+        } else {
+          const set = keys as Set<string>
+          setSelectedKeys(set)
+
+        }
         
       }}>
 

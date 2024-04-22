@@ -11,18 +11,18 @@ import {
 import { auth } from "./firebase";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { updateRefID } from "./firestore";
 
-// export function onAuthStateChanged(cb: NextOrObserver<User>) {
-//   console.log("onAuthStateChanged" + auth);
-// 	return _onAuthStateChanged(auth, cb);
-// }
-
-export async function signInWithGoogle() {
+export async function signInWithGoogle(refID:string | null) {
   const provider = new GoogleAuthProvider();
   console.log("signInWithGoogle");
 
   try {
     const userCre = await signInWithPopup(auth, provider);
+    if (refID) {
+        const result = await updateRefID(userCre.user.uid, refID)
+    }
+    // userCre.user.
 
   } catch (error) {
     console.log("Error signing in with Google", error);

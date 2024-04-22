@@ -10,10 +10,11 @@ import { storage } from './firebase/firebase';
 import firebase from 'firebase/compat/app';
 import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { ExpertStatus, Prediction, Transaction, User, userConverter } from './definitions';
-import { addANewTransaction, searchCollection, searchUser } from './firebase/firestore';
+import { addANewTransaction, addNewPrediction, searchCollection, searchUser } from './firebase/firestore';
 import { error } from 'console';
-import { getUserClaims } from './firebaseadmin/firebaseadmin';
+import { getUserClaims, initAdmin } from './firebaseadmin/firebaseadmin';
 import { getAuth } from 'firebase-admin/auth';
+import { getAuth as clientAuth } from 'firebase/auth';
 
 
 const storageRef = ref(storage, '/eeechild');
@@ -363,7 +364,7 @@ export type PredictionFormState = {
     // note?: string[];
     logic?: string[]
   };
-  pred?: Prediction;
+  // pred?: Prediction;
   message?: string | null;
   justDone?: boolean
 };
@@ -375,7 +376,7 @@ const PredictionFormSchema = z.object({
   priceOut: z.number(),
   cutLoss: z.number(),
   dateIn: z.date(),
-  dateOut: z.date(),
+  deadLine: z.date(),
   // note?:z.date().optional()
 })
 
@@ -385,14 +386,14 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
   const validatedFields = PredictionFormSchema.safeParse({
     assetName: formData.get('assetName') as string,
     priceIn: Number(formData.get('priceIn')),
-    priceOut: Number(formData.get('priceOut')),
-    cutLoss: Number(formData.get('cutLoss')),
-    dateIn: formData.get('dateIn'),
-    dateOut: formData.get('dateOut'),
+    priceOut: Number(formData.get('takeProfitPrice')),
+    cutLoss: Number(formData.get('cutLossPrice')),
+    dateIn: new Date(),
+    deadLine: new Date(formData.get('deadLine') as string),
     // note: formData.get('note'),
   });
 
-  console.log("Prediction to be added : " + formData.get('assetName') +  formData.get('priceIn') +  formData.get('priceOut') + " ----"  +  formData.get('cutLoss')  +  formData.get('dateIn')  +  formData.get('dateOut')  )
+  console.log("Prediction to be added : assetName " + formData.get('assetName') +  formData.get('priceIn') +  formData.get('takeProfitPrice') + " ----"  +  formData.get('cutLossPrice')  +  Date() +  formData.get('deadLine')  )
   if (!validatedFields.success) {
     console.log("error: " + JSON.stringify(validatedFields.error.flatten()))
     return {
@@ -401,71 +402,77 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
       justDone: false
     };
   }
-  const uid = formData.get('uid') as string
-  if (uid) {
-    const userRecord = await getAuth().getUser(uid)
-    const isExpert = userRecord.customClaims?.isExpert
-    if (isExpert == false) {
+  // const uid = formData.get('uid') as string
+  // console.log("uid " + uid);
+  // if (uid) {
+    const uid = formData.get('uid') as string
+    console.log("uid pass with formData" + uid)
+    console.log("client auth current user" + JSON.stringify(clientAuth().currentUser))
+    if (uid) {
+      await initAdmin()
+      const userRecord = await getAuth().getUser(uid)
+      const isExpert = userRecord.customClaims?.isExpert
+      if (isExpert == false) {
+        console.log("not expert")
+        return {
+          errors: {
+            logic: ['Ban khong phai chuyen gia']
+          },
+          justDone: false
+        }
+      } else {
+        console.log('aakkkkkkkkk' + JSON.stringify(userRecord.customClaims))
+      }
+    } else {
+      console.log("not user ")
       return {
         errors: {
-          logic: ['Ban khong phai chuyen gia']
+          logic: ['Not sign in']
         },
         justDone: false
       }
     }
-  } else {
-    return {
-      errors: {
-        logic: ['this is not user ']
-      },
-      justDone: false
-    }
 
-  }
+  console.log("ddddd")
   const assetName = formData.get('assetName') as string
-  const dateIn = new Date(formData.get('dateIn') as string)
-  const dateOut = new Date(formData.get('dateOut') as string)
+  const dateIn = new Date()
+  const deadLine = new Date(formData.get('deadLine') as string)
   const priceIn = Number(formData.get('priceIn'))
-  const priceOut = Number(formData.get('priceOut'))
-  const cutLoss = Number(formData.get('cutLoss'))
+  const priceOut = Number(formData.get('takeProfitPrice'))
+  const cutLoss = Number(formData.get('cutLossPrice'))
 
   const pred: Prediction = {
     assetName: assetName,
     dateIn: dateIn,
-    dateOut: dateOut,
     priceIn: priceIn,
     priceOut: priceOut,
     cutLoss: cutLoss,
-    status: "justCreated"
+    deadLine: deadLine,
+    status: "justCreated",
+    note: ''
   }
 
-  console.log("pred to be added : " + JSON.stringify(pred))
+  console.log("pred to be added sss: " + JSON.stringify(pred))
 
-  return {
-    errors: {},
-    message: "alalala",
-    justDone: false
+
+
+  const result = await addNewPrediction(pred, uid)
+  if (result) {
+
+  console.log("prediction has been added : " + JSON.stringify(result))
+  // redirect("/admin")
+    return {
+      errors: {},
+      message:  JSON.stringify(result),
+      // pred: result,
+      justDone: true
+    }
+  } else {
+    console.log("transaction FAILED TO added")
+    return {
+      errors: {},
+      message: 'failed to add transaction',
+      justDone: false
+    }
   }
-
-  
-
-  // const result = await addANewTransaction(tran)
-  // if (result) {
-
-  // console.log("transaction has been added : " + JSON.stringify(result))
-  // // redirect("/admin")
-  //   return {
-  //     errors: {},
-  //     message:  JSON.stringify(result),
-  //     tran: result,
-  //     justDone: true
-  //   }
-  // } else {
-  //   console.log("transaction FAILED TO added")
-  //   return {
-  //     errors: {},
-  //     message: 'failed to add transaction',
-  //     justDone: false
-  //   }
-  // }
 }

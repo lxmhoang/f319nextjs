@@ -7,7 +7,13 @@ import {Accordion, AccordionItem} from "@nextui-org/react";
 import { usePathname } from "next/navigation";
 import clsx from 'clsx';
 
+export async function generateStaticParams() {
+ 
+  return [{id: 'test'}]
+}
+
 export default async function Page({params} : {params: {id: string}} ) {
+  
   
   const expert = await getAnExpertById(params.id)
   console.log("called")
