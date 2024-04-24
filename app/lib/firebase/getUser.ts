@@ -23,22 +23,37 @@ export function useUserInfo(checkRole: boolean) {
 	}, [])
 
 	useEffect(() => {
-		onAuthStateChanged(auth, (authUser) => {
+		const checkUser = async (user: User) => {
+			const claim = await getUserClaims(user.uid, user.email)
+			console.log("custom claim : " + JSON.stringify(claim))
+			if (claim) {
+				setLoading(false)
+				setClaim(claim)
+			} else {
+				setLoading(false)
+				setClaim({})
+			}
+			
+		}
+		onAuthStateChanged(auth, (authUser) =>  {
 			console.log("state changeeeee phia duoi" + authUser);
 			if (user == undefined) return
 			console.log("2222" + user.uid + checkRole);
 			if (checkRole && user.uid) {
 				console.log("check user detrail : " + JSON.stringify(user))
 				// comment doan duoi thi chay duoc
-				const claim = getUserClaims(user.uid, user.email)
-					if (claim) {
-						setLoading(false)
-						setClaim(claim)
-					} else {
-						setLoading(false)
-						setClaim({})
-					}
+				// const claim = getUserClaims(user.uid, user.email)
+				// 	if (claim) {
+				// 		setLoading(false)
+				// 		setClaim(claim)
+				// 	} else {
+				// 		setLoading(false)
+				// 		setClaim({})
+				// 	}
 				
+				checkUser(user)
+			
+
 			}
 			console.log("email compare: " + user?.email + authUser?.email);
 			if (user?.email !== authUser?.email) {

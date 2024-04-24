@@ -12,7 +12,7 @@ import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { ExpertStatus, Prediction, Transaction, User, userConverter } from './definitions';
 import { addANewTransaction, addNewPrediction, searchCollection, searchUser } from './firebase/firestore';
 import { error } from 'console';
-import { getUserClaims, initAdmin } from './firebaseadmin/firebaseadmin';
+import { getUserClaims } from './firebaseadmin/firebaseadmin';
 import { getAuth } from 'firebase-admin/auth';
 import { getAuth as clientAuth } from 'firebase/auth';
 
@@ -409,20 +409,19 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
     console.log("uid pass with formData" + uid)
     console.log("client auth current user" + JSON.stringify(clientAuth().currentUser))
     if (uid) {
-      await initAdmin()
-      const userRecord = await getAuth().getUser(uid)
-      const isExpert = userRecord.customClaims?.isExpert
-      if (isExpert == false) {
-        console.log("not expert")
-        return {
-          errors: {
-            logic: ['Ban khong phai chuyen gia']
-          },
-          justDone: false
-        }
-      } else {
-        console.log('aakkkkkkkkk' + JSON.stringify(userRecord.customClaims))
-      }
+      // const userRecord = await getAuth(adminApp).getUser(uid)
+      // const isExpert = userRecord.customClaims?.isExpert
+      // if (isExpert == false) {
+      //   console.log("not expert")
+      //   return {
+      //     errors: {
+      //       logic: ['Ban khong phai chuyen gia']
+      //     },
+      //     justDone: false
+      //   }
+      // } else {
+      //   console.log('aakkkkkkkkk' + JSON.stringify(userRecord.customClaims))
+      // }
     } else {
       console.log("not user ")
       return {
