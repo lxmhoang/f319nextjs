@@ -1,4 +1,4 @@
-"use server" // must have this to read env variable
+// "use server" // must have this to read env variable
 
 import admin from "firebase-admin"
 import { getAuth } from "firebase-admin/auth";
@@ -34,11 +34,11 @@ export async function createFirebaseAdminApp(params: FirebaseAdminAppParams) {
     privateKey: privateKey,
   })
 
-  return admin.initializeApp({
-    credential: cert,
-    projectId: params.projectId,
-    storageBucket: params.storageBucket,
-  })
+  // return admin.initializeApp({
+  //   credential: cert,
+  //   projectId: params.projectId,
+  //   storageBucket: params.storageBucket,
+  // })
 
 }
 
@@ -65,17 +65,21 @@ export async function initAdmin() {
   // return JSON.stringify(admin.app())
 }
 
-export async function getUserClaims(uid: string, email?: string | null) {
-  await initAdmin()
-
-  const userRecord = await getAuth().getUser(uid)
-  var claim = userRecord.customClaims ?? {}
-
-  if (email && email == 'lxmhoang@gmail.com') {
-    console.log("return admin---" + uid)
-    claim.isAdmin = true
+export function getUserClaims(uid: string, email?: string | null) {
+  // await initAdmin()
+  return {
+    testenv: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    isAdmin: true
   }
-  return claim
+
+  // const userRecord = await getAuth().getUser(uid)
+  // var claim = userRecord.customClaims ?? {}
+
+  // if (email && email == 'lxmhoang@gmail.com') {
+  //   console.log("return admin---" + uid)
+  //   claim.isAdmin = true
+  // }
+  // return claim
 }
 
 export async function banExpert(docId: string) {

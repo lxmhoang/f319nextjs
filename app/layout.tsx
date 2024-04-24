@@ -19,7 +19,7 @@ export default async function RootLayout({
 
   return (
     <html lang="en">
-      <body className="{inter.className} dark">
+      <body className="max-w-full  {inter.className} dark">
           <TopNav />
         
         {children}</body>

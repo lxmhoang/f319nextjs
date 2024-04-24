@@ -29,7 +29,8 @@ export function useUserInfo(checkRole: boolean) {
 			console.log("2222" + user.uid + checkRole);
 			if (checkRole && user.uid) {
 				console.log("check user detrail : " + JSON.stringify(user))
-				getUserClaims(user.uid, user.email).then((claim) => {
+				// comment doan duoi thi chay duoc
+				const claim = getUserClaims(user.uid, user.email)
 					if (claim) {
 						setLoading(false)
 						setClaim(claim)
@@ -37,7 +38,7 @@ export function useUserInfo(checkRole: boolean) {
 						setLoading(false)
 						setClaim({})
 					}
-				})
+				
 			}
 			console.log("email compare: " + user?.email + authUser?.email);
 			if (user?.email !== authUser?.email) {
