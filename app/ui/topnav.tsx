@@ -14,7 +14,7 @@ import {
   DropdownItem
 } from "@nextui-org/react";
 // import Link from 'next/link';
-import { useAuthState, useSignOut } from 'react-firebase-hooks/auth';
+import {  useSignOut } from 'react-firebase-hooks/auth';
 import { auth, db } from "../lib/firebase/firebase";
 import { signInWithGoogle } from "../lib/firebase/auth";
 import { useUserInfo } from "../lib/firebase/getUser";
@@ -29,6 +29,7 @@ export default function TopNav() {
     doc(db, 'user/' + user?.uid)
   );
   const amount = userInfo?.data() ? userInfo?.data()?.amount : ''
+  const menuLabel = userInfo?.data() ?  user?.displayName + "   " + amount : "Menu"
   const login = () => {
     try {
       let cache = localStorage.getItem("referalID")
@@ -40,7 +41,7 @@ export default function TopNav() {
 
   const dropDownInfo = [
     { key: "profile", href: "/profile", label: "Profile" },
-    { key: "expert", href: "/expert", label: "Expert" },
+    { key: "expert", href: "/profile/expert", label: "Expert" },
     { key: "signout", label: "Sign out", onclick :  {signOut} }
   ]
 
@@ -84,13 +85,11 @@ export default function TopNav() {
 
   }
 
-  console.log("kkkk" + JSON.stringify(role))
-
   return (
     <Navbar className="dark h-[88px] border" maxWidth='full' justify-between="left">
       <NavbarBrand className="p-3">
         {/* <AcmeLogo /> */}
-        <Link href="/">  <p className="font-bold">KHUYẾN NGHỊ CHỨNG KHOÁN</p> </Link>
+        <Link href="/">  <p className="text-4xl">Cùng nhau thành công</p> </Link>
 
 
       </NavbarBrand>
@@ -110,7 +109,7 @@ export default function TopNav() {
               <div>
               </div>
               <div className="profile p-2">
-                <MenuButton title={user.displayName ?? "Menu"} menuInfo={dropDownInfo} />
+                <MenuButton title={menuLabel} menuInfo={dropDownInfo} />
               </div>
             </>
           ) :

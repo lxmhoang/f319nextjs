@@ -119,6 +119,19 @@ export type User = {
   phoneNumber?: string
 }
 
+export type Subscription = {
+  id?: string,
+  uid: string;
+  eid: string;
+  startDate: Date;
+  length: number;
+  endDate?: Date;
+  value?: number;
+  // expiredDate?: Date;
+  isExpired?: boolean
+  // autoExtend: boolean
+}
+
 export type Expert = {
   avatar: string;
   imageURL: string;
@@ -128,6 +141,8 @@ export type Expert = {
   selfIntro: string;
   shortInfo: string;
   status: ExpertStatus;
+  preds?: Prediction[]
+  
 }
 
 export type Transaction = {
@@ -142,6 +157,35 @@ export type Transaction = {
   notebankacc?: string
   status: string
 }
+
+export const subscriptionConverter: FirestoreDataConverter<Subscription> = {
+  toFirestore(sub: WithFieldValue<Subscription>): DocumentData {
+    return {
+      uid: sub.uid,
+      eid: sub.eid,
+      startDate: sub.startDate,
+      value: sub.value,
+      length: sub.length,
+      isExpired: sub.isExpired
+    };
+  },
+  fromFirestore(
+    snapshot: QueryDocumentSnapshot,
+    options: SnapshotOptions
+  ): Subscription {
+    const data = snapshot.data(options);
+    return {
+      id: snapshot.id,
+      uid: data.uid,
+      eid: data.eid,
+      startDate: data.startDate,
+      length: data.length,
+      value: data.value,
+      isExpired: data.isExpired,
+      endDate: data.endDate ?? undefined,
+    };
+  },
+};
 
 export const predConverter: FirestoreDataConverter<Prediction> = {
   toFirestore(pred: WithFieldValue<Prediction>): DocumentData {

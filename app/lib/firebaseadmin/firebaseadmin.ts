@@ -25,7 +25,7 @@ function formatPrivateKey(key: string) {
 
   const useEmulator = process.env.USE_EMULATOR;
 
-  if (useEmulator) {
+  if (true) {
     process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
     process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
     process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
@@ -48,46 +48,12 @@ function formatPrivateKey(key: string) {
         privateKey: formatPrivateKey(params.privateKey),
       }),
   }, ADMIN_APP_NAME);
-
-
-
-  // if (admin.apps.length > 0) {
-  //   const app = admin.app()
-
-  //   console.log("have existing app");
-  //   return app
-  // }
-  // console.log("create new app");
-  // const cert = admin.credential.cert({
-  //   projectId: params.projectId,
-  //   clientEmail: params.clientEmail,
-  //   privateKey: privateKey,
-  // })
-
-  // return admin.initializeApp({
-  //   credential: cert,
-  //   projectId: params.projectId,
-  //   storageBucket: params.storageBucket,
-  // })
-
 }
 
 
-// export async function initAdmin() {
-
-
-//   createFirebaseAdminApp(params)
-// }
 
 export async function getUserClaims(uid: string, email?: string | null) {
-  // initAdmin()
-  // return {
-  //   testenv: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  //   isAdmin: true
-  // }
-
-  const app = createFirebaseAdminApp()
-  const auth = getAuth(app)
+  const auth = getAuth(adminApp)
   const userRecord = await auth.getUser(uid)
   var claim = userRecord.customClaims ?? {}
 
@@ -100,12 +66,12 @@ export async function getUserClaims(uid: string, email?: string | null) {
 
 
  export async function banExpert(docId: string) {
-  await getFirestore(createFirebaseAdminApp()).collection('expert').doc(docId).update({ status: ExpertStatus.banned })
+  await getFirestore(adminApp).collection('expert').doc(docId).update({ status: ExpertStatus.banned })
 }
 
 
 export async function activateExpert(docId: string) {
-  await getFirestore(createFirebaseAdminApp()).collection('expert').doc(docId).update({ status: ExpertStatus.activated })
+  await getFirestore(adminApp).collection('expert').doc(docId).update({ status: ExpertStatus.activated })
 }
 
 

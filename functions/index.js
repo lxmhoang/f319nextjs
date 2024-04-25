@@ -58,6 +58,7 @@ exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (even
     logger.log("new transaction created", event.params.documentId, data);
     const depositTran = (data.status == "adminCreated" && data.tranType == "deposit") 
     const withDrawTran = (data.status == "pending" && data.tranType == "withDraw") 
+    const subTran = data.tranType = "subTran"
     const referallTran = data.tranType == "ReferralReward"
     if (referallTran) {
         const toUid = data.toUid
@@ -114,10 +115,40 @@ exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (even
             })
         }
     }
+
+    if (subTran) {
+        const fromUid = data.fromUid
+        const toUid = data.toUid
+        logger.info("adding subTran type transaction, to uid : " + toUid + ", from Uid :   "  + fromUid + " --- " + data.amount)
+        if (fromUid && toUid) {
+            getFirestore().collection('user').doc(fromUid).update({ 
+                amount: FieldValue.increment(-data.amount)
+            })
+            getFirestore().collection('user').doc(toUid).update({ 
+                    amount: FieldValue.increment(data.amount)
+                })
+                
+
+        }
+
+    }
 }
 );
 
 
+
+exports.createSubscription = onDocumentCreated("/subscription/{documentId}", (event) => {
+
+    const data = event.data.data();
+    const date = new Date()
+    const length = data.length
+
+    date.setDate(date.getDate() + length)
+    event.data.ref.update({"endDate":date}).then(() => {
+        console.log('Write succeeded!');
+      });
+
+})
 
 
 // exports.makeuppercase = onDocumentCreated("/messages/{documentId}", (event) => {

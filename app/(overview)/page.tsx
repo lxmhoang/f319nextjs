@@ -7,7 +7,7 @@ import ExpertListing from "../ui/expert-listing";
 import Breadcrumbs from "../ui/breadcrumbs";
 import { getFirestore, collection, FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot, SnapshotOptions, query, where } from 'firebase/firestore';
 import { useCollection, useCollectionData, useCollectionDataOnce, useCollectionOnce } from 'react-firebase-hooks/firestore';
-import { db, firebaseApp } from "../lib/firebase/firebase";
+import { db } from "../lib/firebase/firebase";
 import { Expert, expertConverter } from "../lib/definitions";
 import { BanknotesIcon, ClockIcon, InboxIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { lusitana } from "../ui/font";
@@ -24,12 +24,15 @@ export default function Home() {
   return (
     <>
       <div className="flex">
-        <StatsCard num={70} infos={["chuyên gia đang hoạt động"]} />
+        <Link href="/expert">
+          <StatsCard num={70} infos={["chuyên gia đang hoạt động"]} />
+        </Link>
 
-        <StatsCard num={439} infos={["người dùng đang trả phí "]} />
-        <StatsCard num={671} infos={["tr phí giới thiệu"]} />
-        <StatsCard num={19} infos={["khuyến nghị đang theo tiếp diễn"]} />
-        <StatsCard num={2819} infos={["khuyến nghị đã kết thúc"]} />
+        <Link href="/expert"><StatsCard num={439} infos={["người dùng đang trả phí "]} /></Link>
+        
+        <Link href="/expert"><StatsCard num={671} infos={["tr phí giới thiệu"]} /></Link>
+        <Link href="/expert"><StatsCard num={19} infos={["khuyến nghị đang theo tiếp diễn"]} /></Link>
+        <Link href="/expert"><StatsCard num={2819} infos={["khuyến nghị đã kết thúc"]} /></Link>
 
 
       </div>

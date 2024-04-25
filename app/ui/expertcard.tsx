@@ -1,11 +1,12 @@
 'use client'
-import { Card, CardBody, CardFooter, CardHeader, Divider, Image } from "@nextui-org/react";
+import { Card, CardBody, CardFooter, CardHeader, Divider, Image, User } from "@nextui-org/react";
 import Link from 'next/link'
 import { useDownloadURL } from "react-firebase-hooks/storage";
 import { storage } from "../lib/firebase/firebase";
 import { getStorage, ref as storageRef } from 'firebase/storage';
+import { Expert } from "../lib/definitions";
 
-export default function ExpertCard({ expert }: { expert: { avatar: string, imageURL: string, id: string, name: string, followerNum: number, selfIntro: string, shortInfo: string } }) {
+export default function ExpertCard({ expert }: { expert:Expert }) {
 
   const [imagedownloadURL, loading, error] = useDownloadURL(storageRef(storage, expert.avatar));
   console.log("aaaaaa" + expert.avatar);
@@ -13,28 +14,32 @@ export default function ExpertCard({ expert }: { expert: { avatar: string, image
 
   return (
     <Link href={{ pathname: `/expertdetails/${expert.id}` }}>
-      <div className=" p-2 max-w-102 rounded-sm">
+      <div className=" p-2 max-w-80 rounded-sm">
         <Card className="">
           <CardHeader className=" gap-3 flex">
-            {<Image className="max-w-40 max-h-40"
+          
+          <User name={expert.name}
+                avatarProps={{
+                  src:  imagedownloadURL 
+                }}
+              />
+          </CardHeader>
+
+
+          <Divider />
+          <CardBody>
+          {/* {
+            <Image className="max-w-40 max-h-40"
               alt="nextui logo"
               radius="sm"
               // fill = "true"
               src={imagedownloadURL}
-            />}
+            />} */}
             <ul>
               <p>Số người đăng ký: 44</p>
               <p>Tỷ lệ lãi 12/94</p>
 
             </ul>
-
-          </CardHeader>
-
-          <div className="flex flex-wrap">
-            <p className="text-small text-default-500">{expert.name}</p>
-          </div>
-          <Divider />
-          <CardBody>
 
           </CardBody>
           {/* <Divider/> */}

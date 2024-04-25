@@ -75,7 +75,7 @@ export async function registerExpert(prevState: RegisterExpertFormState, formDat
       message: 'Hãy điền đầy đủ thông tin',
     };
   }
-  
+
   const docRef = doc(db, 'expert/' + uid)
   setDoc(docRef, {
     name: formData.get('name'),
@@ -138,7 +138,7 @@ const TransactionFormSchema = z.object({
   note: z.string({
     invalid_type_error: 'Chọn 1 cái note'
   }).optional()
-}).refine( input => {
+}).refine(input => {
 
   console.log("refine")
   if (input.tranType == 'p2p') {
@@ -146,23 +146,23 @@ const TransactionFormSchema = z.object({
       return false
     }
   } else
-  if (input.tranType == 'deposit') {
-    if (input.toUid == undefined || input.fromUid != undefined) {
-      console.log("refine to Uid" + input.toUid )
-      console.log("refine to fromUid" + input.fromUid )
-      return false
-    }
-  } else 
-  if (input.tranType == 'withDraw') {
-    if (input.notebankacc == undefined || input.notebankacc.length < 10) {
-      return false
-    }
-    if (input.toUid != undefined || input.fromUid == undefined) {
-      return false
-    }
-  } else {
-    return false
-  }
+    if (input.tranType == 'deposit') {
+      if (input.toUid == undefined || input.fromUid != undefined) {
+        console.log("refine to Uid" + input.toUid)
+        console.log("refine to fromUid" + input.fromUid)
+        return false
+      }
+    } else
+      if (input.tranType == 'withDraw') {
+        if (input.notebankacc == undefined || input.notebankacc.length < 10) {
+          return false
+        }
+        if (input.toUid != undefined || input.fromUid == undefined) {
+          return false
+        }
+      } else {
+        return false
+      }
   return true
 })
 
@@ -183,7 +183,7 @@ export type AddNewTransFormState = {
 };
 
 export async function createNewTransaction(prevState: AddNewTransFormState, formData: FormData) {
-  console.log("transaction to be added : " )
+  console.log("transaction to be added : ")
   const validatedFields = TransactionFormSchema.safeParse({
     toUid: formData.get('toUid') as string,
     tranType: formData.get('tranType'),
@@ -193,7 +193,7 @@ export async function createNewTransaction(prevState: AddNewTransFormState, form
     notebankacc: formData.get('notebankacc') as string
   });
 
-  console.log("transaction to be added : " + formData.get('tranType') +  formData.get('amount') +  formData.get('fromUid') + " ----"  +  formData.get('toUid') + " notebank acc  " + formData.get('notebankacc')    )
+  console.log("transaction to be added : " + formData.get('tranType') + formData.get('amount') + formData.get('fromUid') + " ----" + formData.get('toUid') + " notebank acc  " + formData.get('notebankacc'))
   if (!validatedFields.success) {
     console.log("error: " + JSON.stringify(validatedFields.error.flatten()))
     return {
@@ -202,7 +202,7 @@ export async function createNewTransaction(prevState: AddNewTransFormState, form
       justDone: false
     };
   }
-  console.log("transaction to be added : " )
+  console.log("transaction to be added : ")
 
   const tranType = formData.get('tranType') as string
   const notebankacc = formData.get('notebankacc') as string
@@ -222,10 +222,10 @@ export async function createNewTransaction(prevState: AddNewTransFormState, form
   console.log("transaction to be added : " + JSON.stringify(tran))
 
   if (tranType == 'withDraw') {
-    const result = await searchUser({uid: fromUid})
+    const result = await searchUser({ uid: fromUid })
     if (result.length != 1) {
       console.log('sth wrong with uid, number of user found :')
-      
+
       return {
         errors: {
           anmount: [""],
@@ -234,8 +234,8 @@ export async function createNewTransaction(prevState: AddNewTransFormState, form
           logic: ["sth wrong with uid, number of user found :" + result.length.toString()]
         },
         message: 'sth wrong with uid, number of user found :  ' + result.length.toString(),
-        justDone: false    
-      } 
+        justDone: false
+      }
     }
     if (tran.amount > result[0].amount) {
       console.log('amount withDraw is > user current amount')
@@ -246,22 +246,21 @@ export async function createNewTransaction(prevState: AddNewTransFormState, form
           logic: ['amount withDraw is > user current amount']
         },
         message: 'amount withDraw is > user current amount',
-        justDone: false    
-      } 
+        justDone: false
+      }
 
     }
   }
-  
+
 
   const result = await addANewTransaction(tran)
-  if (result) {
+  if (result.success) {
 
-  console.log("transaction has been added : " + JSON.stringify(result))
-  // redirect("/admin")
+    console.log("transaction has been added with ref " + result.message)
     return {
       errors: {},
-      message:  JSON.stringify(result),
-      tran: result,
+      message: JSON.stringify(result),
+      tran: tran,
       justDone: true
     }
   } else {
@@ -290,7 +289,7 @@ const SearchUser = SearchUserForPaymentFormSchema
 
 export type SearchUseFormState = {
   errors?: {
-    [key: string] : string[]
+    [key: string]: string[]
     // general?: string[]
     // paymentId?: string[];
   };
@@ -300,7 +299,7 @@ export type SearchUseFormState = {
 
 export async function searchUserForPayment(prevState: SearchUseFormState, formData: FormData) {
   const paymentId = formData.get('paymentId')
-  
+
   // if (!paymentId) {
   //   return {
   //     errors: {
@@ -331,7 +330,7 @@ export async function searchUserForPayment(prevState: SearchUseFormState, formDa
     }
   } else if (!searchResult || searchResult.length == 0) {
     return {
-      errors : {
+      errors: {
         general: ["No user found"]
       },
       message: "No user found"
@@ -339,7 +338,7 @@ export async function searchUserForPayment(prevState: SearchUseFormState, formDa
 
   } else {
     return {
-      errors :  {
+      errors: {
         general: ["too many user found"]
       },
       message: "too many user found"
@@ -382,7 +381,7 @@ const PredictionFormSchema = z.object({
 
 
 export async function createNewPrediction(prevState: PredictionFormState, formData: FormData) {
-  console.log("Prediction to be added : " )
+  console.log("Prediction to be added : ")
   const validatedFields = PredictionFormSchema.safeParse({
     assetName: formData.get('assetName') as string,
     priceIn: Number(formData.get('priceIn')),
@@ -393,7 +392,7 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
     // note: formData.get('note'),
   });
 
-  console.log("Prediction to be added : assetName " + formData.get('assetName') +  formData.get('priceIn') +  formData.get('takeProfitPrice') + " ----"  +  formData.get('cutLossPrice')  +  Date() +  formData.get('deadLine')  )
+  console.log("Prediction to be added : assetName " + formData.get('assetName') + formData.get('priceIn') + formData.get('takeProfitPrice') + " ----" + formData.get('cutLossPrice') + Date() + formData.get('deadLine'))
   if (!validatedFields.success) {
     console.log("error: " + JSON.stringify(validatedFields.error.flatten()))
     return {
@@ -405,34 +404,32 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
   // const uid = formData.get('uid') as string
   // console.log("uid " + uid);
   // if (uid) {
-    const uid = formData.get('uid') as string
-    console.log("uid pass with formData" + uid)
-    console.log("client auth current user" + JSON.stringify(clientAuth().currentUser))
-    if (uid) {
-      // const userRecord = await getAuth(adminApp).getUser(uid)
-      // const isExpert = userRecord.customClaims?.isExpert
-      // if (isExpert == false) {
-      //   console.log("not expert")
-      //   return {
-      //     errors: {
-      //       logic: ['Ban khong phai chuyen gia']
-      //     },
-      //     justDone: false
-      //   }
-      // } else {
-      //   console.log('aakkkkkkkkk' + JSON.stringify(userRecord.customClaims))
-      // }
-    } else {
-      console.log("not user ")
+  const uid = formData.get('uid') as string
+  console.log("uid pass with formData" + uid)
+  console.log("client auth current user" + JSON.stringify(clientAuth().currentUser))
+  if (uid) {
+    const customClaims = await getUserClaims(uid)
+    const isExpert = customClaims.isExpert
+    if (isExpert == false) {
+      console.log("not expert")
       return {
         errors: {
-          logic: ['Not sign in']
+          logic: ['Ban khong phai chuyen gia']
         },
         justDone: false
       }
+    } else {
+      console.log('this is expert' + JSON.stringify(customClaims))
     }
-
-  console.log("ddddd")
+  } else {
+    console.log("not user ")
+    return {
+      errors: {
+        logic: ['Not sign in']
+      },
+      justDone: false
+    }
+  }
   const assetName = formData.get('assetName') as string
   const dateIn = new Date()
   const deadLine = new Date(formData.get('deadLine') as string)
@@ -451,18 +448,14 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
     note: ''
   }
 
-  console.log("pred to be added sss: " + JSON.stringify(pred))
-
-
-
   const result = await addNewPrediction(pred, uid)
   if (result) {
 
-  console.log("prediction has been added : " + JSON.stringify(result))
-  // redirect("/admin")
+    console.log("prediction has been added : " + JSON.stringify(result))
+    // redirect("/admin")
     return {
       errors: {},
-      message:  JSON.stringify(result),
+      message: JSON.stringify(result),
       // pred: result,
       justDone: true
     }
