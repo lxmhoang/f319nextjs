@@ -25,7 +25,7 @@ function formatPrivateKey(key: string) {
 
   const useEmulator = process.env.USE_EMULATOR;
 
-  if (true) {
+  if (useEmulator) {
     process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
     process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
     process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
