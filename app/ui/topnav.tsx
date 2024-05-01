@@ -57,7 +57,7 @@ const MenuButton = ({ title, menuInfo }: { title: string, menuInfo: { key: strin
               // href={item.href}
               color={item.key === "signout" ? "danger" : "default"}
               className={item.key === "signout" ? "text-danger" : ""}
-              onClick={item.key === "signout" ? () => { signOut(auth) } : () => { }}
+              onClick={item.key === "signout" ? () => { signOut() } : () => { }}
             >
               <Link href={{pathname:item.href}}>{item.label}</Link>
              
