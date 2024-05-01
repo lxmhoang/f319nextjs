@@ -8,23 +8,25 @@ import {
 import Link from 'next/link'
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
+import { ClipboardDocumentIcon, PlusIcon } from '@heroicons/react/24/solid';
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
 const links = [
-  { name: 'Overview', href: '/expert', icon: HomeIcon },
+  { name: 'Overview', href: '/profile/expert', icon: HomeIcon },
   {
-    name: 'Thêm khuyến nghị', href: '/expert/prediction/new',
-    icon: DocumentDuplicateIcon,
+    name: 'Thêm khuyến nghị', href: '/profile/expert/prediction/new',
+    icon: PlusIcon,
   },
   {
-    name: 'Lịch sử khuyến nghị', href: '/expert/prediction',
-    icon: DocumentDuplicateIcon,
+    name: 'Lịch sử khuyến nghị', href: '/profile/expert/prediction',
+    icon: ClipboardDocumentIcon,
   },
-  { name: 'Subscription', href: '/admin/subscription', icon: UserGroupIcon },
+  { name: 'Subscription', href: '/profile/expert/subscription', icon: UserGroupIcon },
 ];
 
 export default function NavLinks() {
   const pathname = usePathname();
+  console.log("refresh nav bar")
   return (
     <>
       {links.map((link) => {

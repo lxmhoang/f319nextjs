@@ -1,5 +1,5 @@
 'use client';
-import { CustomerField } from 'app/lib/definitions';
+import { CustomerField, User } from '@/app/lib/definitions';
 import Link from 'next/link';
 import {
   CheckIcon,
@@ -11,21 +11,50 @@ import {
 import { Button } from '@/app/ui/button';
 import { registerExpert } from '@/app/lib/action';
 import { useFormState } from 'react-dom';
-import { User } from 'firebase/auth';
 import {Image} from "@nextui-org/react";
 import { useState } from 'react';
+import { ConfirmationModal } from '../confirm';
 
-export default function Form({ subscriptionPrice, userInfo }: { subscriptionPrice: string[], userInfo: User }) {
+export default function ExpertRegisterForm({ subscriptionPrice, userInfo }: { subscriptionPrice: string[], userInfo: User }) {
 
 
   const [uploadAvatar, setAvatar] = useState<File>()
-  const initialState = { message: "", errors: {} };
+  const initialState = { message: "", errors: {}, justDone: false};
   const [state, dispatch] = useFormState(registerExpert, initialState);
+
+  const [showModal, setShowModal] = useState(false);
+
+  console.log("stateeee" + JSON.stringify(state))
+  if (state.justDone == true) {
+    setShowModal(true)
+    state.justDone = false
+}
+  const handleConfirmationConfirm = async () => {
+    // handleNewPassword();
+    // go go go
+    setShowModal(false);
+  };
+
+  const handleConfirmationCancel = () => {
+    setShowModal(false);
+  };
+
   return (
+    
     // <div>{state.error ? "adsf" : "asdfsdeee"}</div>
     <div className='p-6'>
+       <ConfirmationModal
+                isOpen={showModal}
+                onClose={handleConfirmationCancel}
+                onConfirm={handleConfirmationConfirm}
+                title={"Đã tạo xong khuyeens nghị33"}
+                message={state.message ?? "No message"}
+                confirmButtonText={"Okey"}
+            />
       {/* <div>{ state.message.length == 0 ? "no error" : "cccc" + Object.keys(JSON.stringify(state.errors)).length}</div> */}
       <form action = {dispatch}>
+
+     
         <div className="rounded-md bg-black-50">
           <input type="hidden" id="uid" name="uid" value={userInfo.uid}/>
          {/* Name */}
@@ -58,7 +87,7 @@ export default function Form({ subscriptionPrice, userInfo }: { subscriptionPric
           </div>
       
           {/* subscription price */}
-          <div className="mb-4">
+          {/* <div className="mb-4">
             <label htmlFor="customer" className="mb-2 block text-sm font-medium">
               Choose subscription price
             </label>
@@ -89,7 +118,7 @@ export default function Form({ subscriptionPrice, userInfo }: { subscriptionPric
                   </p>
                 ))}
             </div>
-          </div>
+          </div> */}
           {/* Short intro */}
           <div className="mb-4">
             <label htmlFor="name" className="mb-2 block text-sm font-medium">
@@ -102,7 +131,7 @@ export default function Form({ subscriptionPrice, userInfo }: { subscriptionPric
                   name="shortIntro"
                   type="text"
                   placeholder="Viết giới thiệu ngắn "
-                  defaultValue="default short info"
+                  // defaultValue="default short info"
                   className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
                   required
                 />

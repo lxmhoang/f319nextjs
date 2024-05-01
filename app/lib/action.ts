@@ -28,9 +28,9 @@ const ExpertFormSchema = z.object({
   shortIntro: z.string({
     invalid_type_error: 'Chọn 1 cái shortIntro'
   }),
-  subscriptionPrice: z.enum(['1mil', '2mil'], {
-    invalid_type_error: 'Chọn 1 cái giá nào',
-  }),
+  // subscriptionPrice: z.enum(['1mil', '2mil'], {
+  //   invalid_type_error: 'Chọn 1 cái giá nào',
+  // }),
   date: z.string(),
 })
 
@@ -40,19 +40,20 @@ export type RegisterExpertFormState = {
   errors?: {
     uid?: string[]
     name?: string[];
-    subscriptionPrice?: string[];
+    // subscriptionPrice?: string[];
     shortIntro?: string[];
     avatar?: File
   };
   message?: string | null;
+  justDone?: boolean
 };
 
 
-export async function registerExpert(prevState: RegisterExpertFormState, formData: FormData) {
+export async function registerExpert(_prevState: RegisterExpertFormState, formData: FormData) {
   const validatedFields = RegisterExpert.safeParse({
     name: formData.get('name'),
     shortIntro: formData.get('shortIntro'),
-    subscriptionPrice: formData.get('subscriptionPrice'),
+    // subscriptionPrice: formData.get('subscriptionPrice'),
     avatar: formData.get('avatar'),
   });
 
@@ -60,8 +61,10 @@ export async function registerExpert(prevState: RegisterExpertFormState, formDat
     return {
       errors: validatedFields.error.flatten().fieldErrors,
       message: 'Hãy điền đầy đủ thông tin',
+      justDone: false
     };
   }
+  
 
   const uid = formData.get('uid')
   if (!uid) {
@@ -69,62 +72,66 @@ export async function registerExpert(prevState: RegisterExpertFormState, formDat
       errors: {
         uid: ["uid khong ton tai"],
         name: [""],
-        subscriptionPrice: [""],
+        // subscriptionPrice: [""],
         shortIntro: [""]
       },
       message: 'Hãy điền đầy đủ thông tin',
+      justDone: false
     };
   }
+  
 
   const docRef = doc(db, 'expert/' + uid)
-  setDoc(docRef, {
-    name: formData.get('name'),
-    shortIntro: formData.get('shortIntro'),
-    subscriptionPrice: formData.get('subscriptionPrice'),
-    status: ExpertStatus.paymentPending,
-    created: new Date(),
-    visible: true
-  }).then(
-    () => {
-      console.log('done add new expert' + docRef.id)
-      const file = formData.get('avatar') as File
-      if (file) {
-        const storageRef = ref(storage, '/expertAvatar/' + docRef.id)
-        uploadBytes(storageRef, file).then(
-          (snapshot) => {
-            console.log('Uploaded a blob or file! with ref : ' + snapshot.ref.toString() + " pah " +
-              snapshot.ref.fullPath);
-            updateDoc(docRef, { avatar: snapshot.ref.fullPath }).then(
-              () => {
-                console.log("successful update avatar ref to expert data ")
-                // revalidatePath('/profile');
-                // redirect('/profile');
-              },
-              (reason) => {
-                console.log("faield to update avatar ref, reason " + reason)
-              }
+  const result = await setDoc(docRef, {
+      name: formData.get('name'),
+      shortIntro: formData.get('shortIntro'),
+      // subscriptionPrice: formData.get('subscriptionPrice'),
+      status: ExpertStatus.paymentPending,
+      created: new Date(),
+      visible: true
+    })
 
-            )
-          },
-          (reason) => {
-            console.log("faield to upload avatar ref, reason " + reason)
-          }
-        );
+   
+    
+    console.log('done add new expert' + docRef.path)
+    
+    return {
+      errors: {
+      
+      },
+      message: "Bạn bây giờ đã là chuyên gia444",
+      justDone: true
+    };
+    const file = formData.get('avatar') as File
+    if (file) {
+      const storageRef = ref(storage, '/expertAvatar/' + docRef.id)
+      const snapshot = await uploadBytes(storageRef, file)
+      console.log('Uploaded a blob or file! with ref : ' + snapshot.ref.toString() + " pah " +
+      snapshot.ref.fullPath);
+      await updateDoc(docRef, { avatar: snapshot.ref.fullPath })
+      console.log("successful update avatar ref to expert data, begin to return ")
+      // revalidatePath('/profile');
+      // redirect('/profile');
+      return {
+        errors: {},
+        message: "Bạn bây giờ đã là chuyên gia",
+        justDone: true
+      };
 
-      } else {
-        console.log('done, no upload file')
-        // revalidatePath('/profile');
-        // redirect('/profile');
-      }
-    },
-    (error) => {
 
+    } else {
+      console.log('done, no upload file')
+      // revalidatePath('/profile');
+      // redirect('/profile');
+      return {
+        message: 'Bạn bây giờ đã là chuyên gia',
+        errors: {},
+        justDone: true
+      };
     }
-  )
-  return {
-    message: 'Database Error: Failed to Create Invoice.',
-    error: {}
-  };
+
+ 
+
 }
 
 // Transaction Creataion

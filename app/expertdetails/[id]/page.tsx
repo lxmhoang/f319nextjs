@@ -1,5 +1,5 @@
 'use client'
-import {  subcribleToAnExpert } from "@/app/lib/firebase/firestore";
+import { subcribleToAnExpert } from "@/app/lib/firebase/firestore";
 import Breadcrumbs from "@/app/ui/breadcrumbs";
 import ExpertCard from "@/app/ui/expertcard";
 import Image from "next/image";
@@ -10,17 +10,21 @@ import { collection, doc, query, where } from "firebase/firestore";
 import { db } from "@/app/lib/firebase/firebase";
 import { expertConverter, predConverter } from "@/app/lib/definitions";
 import { useState } from "react";
+import { ConfirmationModal } from "@/app/ui/confirm";
 
 
 
 
 export default function Page({ params }: { params: { id: string } }) {
+
+
+
   const follow = async (eid: string, length: number) => {
 
     const result = await subcribleToAnExpert(eid, length)
     setError(result.error)
   }
-  
+
 
   const ref = doc(db, 'expert', params.id).withConverter(expertConverter);
   const [error, setError] = useState<string>()
@@ -33,8 +37,24 @@ export default function Page({ params }: { params: { id: string } }) {
     console.log("preds : " + JSON.stringify(preds))
     expert.preds = preds
   }
-  
+
   const id = params.id
+
+
+  const [showConfirmation, setShowConfirmation] =
+    useState(false);
+  const handleConfirmationConfirm = async () => {
+    // handleNewPassword();
+    // go go go
+    setShowConfirmation(false);
+  };
+
+  const handleConfirmation = () => {
+    setShowConfirmation(true);
+  };
+  const handleConfirmationCancel = () => {
+    setShowConfirmation(false);
+  };
 
   return (
 
@@ -49,10 +69,21 @@ export default function Page({ params }: { params: { id: string } }) {
       {expert ?
         (<div className="max-w-full">
           <ExpertDetail expert={expert} />
+
+          <ConfirmationModal
+            isOpen={showConfirmation}
+            onClose={handleConfirmationCancel}
+            onConfirm={handleConfirmationConfirm}
+            title={"Theo dõi chuyên gia này ?"}
+            message={"500K 1 tháng"}
+            confirmButtonText={"Okey đồng ý"}
+            // cancelButtonText="Thôi từ từ "
+          />
           <Button
-           onClick={() => {
-            follow(expert.id, 30)
-          }}
+          onClick={handleConfirmation}
+            // onClick={() => {
+            //   follow(expert.id, 30)
+            // }}
           > Unlock </Button>
           <div>{error}</div>
         </div>

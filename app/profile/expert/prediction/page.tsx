@@ -1,5 +1,7 @@
 'use client'
 
+import Link from "next/link"
+
 export default function Page({ params }: { params: { id: string } }) {
 
 
@@ -8,6 +10,10 @@ export default function Page({ params }: { params: { id: string } }) {
 
 
       <div className="flex flex-col gap-2">
+
+    <Link href="/profile">profile</Link>
+    <Link href="/profile/expert">profile expert</Link>
+
       
       </div>
 

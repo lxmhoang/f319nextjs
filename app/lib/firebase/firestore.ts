@@ -49,7 +49,7 @@ function applyQueryFilters(q: Query<DocumentData, DocumentData>, params: { [key:
 	return q;
 }
 
-async function getAUserByID(id: string) {
+export async function getAUserByID(id: string) {
 
 	const docRef = doc(db, "user", id).withConverter(userConverter);
 

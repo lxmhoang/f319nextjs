@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getExperts } from "../lib/firebase/firestore";
 import ExpertListing from "../ui/expert-listing";
 

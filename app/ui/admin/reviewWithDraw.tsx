@@ -3,7 +3,6 @@
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, getKeyValue } from "@nextui-org/react";
 import { useState } from "react";
 import { Button } from "../button";
-import { addDoc } from "firebase/firestore";
 
 const columns = [
   {

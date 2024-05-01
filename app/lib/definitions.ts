@@ -114,9 +114,14 @@ export type User = {
   amount: number;
   disabled: boolean;
   email?: string;
-  customClaims?: {};
+  customClaims: {
+    isAdmin: boolean,
+    isExpert: boolean
+  };
   metadata?: {};
   phoneNumber?: string
+  isAdmin?: boolean,
+  isExpert?: boolean
 }
 
 export type Subscription = {
@@ -320,3 +325,5 @@ export enum ExpertStatus {
   banned = 'banned',
   unknown = 'unknown'
 }
+
+export type APIResponse<T = object> = { success: true; data: T } | { success: false; error: string };

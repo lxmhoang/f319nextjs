@@ -13,9 +13,10 @@ import { useFormState } from 'react-dom';
 import { ChangeEvent, useEffect, useReducer, useState } from 'react';
 import { Divider, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button as ButtonReact, useDisclosure, Autocomplete, AutocompleteItem } from '@nextui-org/react';
 import { CompanyRTInfo, User } from '@/app/lib/definitions';
-import { useAuthState } from 'react-firebase-hooks/auth';
 import { getAuth } from 'firebase/auth';
 import { useFetchData } from '@/app/lib/hooks/useFetchData';
+import { ConfirmationModal } from '../confirm';
+import { useAppContext } from '@/app/lib/context';
 
 
 let parser = (data: { [key: string]: any }) => {
@@ -76,20 +77,40 @@ export default function PredictCreationForm() {
 
     // const [compInfo, err] = useFetchData<CompanyRTInfo | null>("https://banggia.cafef.vn/stockhandler.ashx?userlist=" + selectedComp?.Symbol ?? "", parserCompRTInfo)   
 
-    const [user] = useAuthState(getAuth())
+    const { user} = useAppContext()
 
     const initialFormState = { message: "", errors: {}, justDone: false };
     const [addPredictState, dispatchAddtran] = useFormState(createNewPrediction, initialFormState);
+    const [showModal, setShowModal] = useState(false);
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
     if (addPredictState.justDone == true) {
-        onOpen()
+        setShowModal(true)
         addPredictState.justDone = false
     }
+    
+    const handleConfirmationConfirm = async () => {
+        // handleNewPassword();
+        // go go go
+        setShowModal(false);
+    };
+
+    const handleConfirmationCancel = () => {
+        setShowModal(false);
+    };
+
     return (
         <>
+            <ConfirmationModal
+                isOpen={showModal}
+                onClose={handleConfirmationCancel}
+                onConfirm={handleConfirmationConfirm}
+                title={"Đã tạo xong khuyeens nghị33"}
+                message={addPredictState.message ?? "No message"}
+                confirmButtonText={"Okey"}
+            />
 
-            <Modal className='dark' isOpen={isOpen} onOpenChange={onOpenChange}>
+            {/* <Modal className='dark' isOpen={isOpen} onOpenChange={onOpenChange}>
                 <ModalContent>
                     {(onClose) => (
                         <>
@@ -115,16 +136,16 @@ export default function PredictCreationForm() {
                         </>
                     )}
                 </ModalContent>
-            </Modal>
+            </Modal> */}
             {/* <div className='p-1'>
                 {selectedComp ? selectedComp.Symbol : ""}
             </div> */}
             <form action={dispatchAddtran} className='p-4'>
 
-            
+
                 <div className="relative mb-4"> {selectedComp != null && selectedComp != undefined ? (<>Giá mua vào hiện tại {selectedComp.HighPrice} </>) : (<> Hãy chọn 1 cổ phiếu</>)}</div>
-                <input type="hidden"  name="priceIn" value={selectedComp?.HighPrice ?? 0}></input>
-                <input type="hidden"  name="uid" value={getAuth().currentUser?.uid ?? ""}></input>
+                <input type="hidden" name="priceIn" value={selectedComp?.HighPrice ?? 0}></input>
+                <input type="hidden" name="uid" value={getAuth().currentUser?.uid ?? ""}></input>
                 <div className="relative mb-4">
 
                     {

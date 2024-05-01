@@ -6,7 +6,6 @@ import { searchUserForPayment } from "@/app/lib/action";
 import SearchUserForm from "@/app/ui/profile/search-user-form";
 
 export default function Home() {
-  // const [user, role] = useUserInfo(true)
 
   const initialState = { message: "", errors: {} };
   const [searchState, dispatchSearch] = useFormState(searchUserForPayment, initialState);

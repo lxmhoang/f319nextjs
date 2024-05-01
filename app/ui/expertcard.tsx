@@ -8,7 +8,7 @@ import { Expert } from "../lib/definitions";
 
 export default function ExpertCard({ expert }: { expert:Expert }) {
 
-  const [imagedownloadURL, loading, error] = useDownloadURL(storageRef(storage, expert.avatar));
+  const [imagedownloadURL, loading, error] = useDownloadURL(storageRef(storage, expert.avatar ?? "uploads/profileImage/1111"));
   console.log("aaaaaa" + expert.avatar);
 
 

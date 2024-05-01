@@ -8,18 +8,19 @@ import {
 import Link from 'next/link'
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
+import { ArrowLeftEndOnRectangleIcon, ArrowsRightLeftIcon, ChartBarIcon, ChatBubbleLeftIcon, UserIcon } from '@heroicons/react/24/solid';
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
 const links = [
-  { name: 'Overview', href: '/profile', icon: HomeIcon },
-  { name: 'Theo dõi khuyến nghị', href: '/profile/pred', icon: UserGroupIcon },
+  { name: 'Overview', href: '/profile', icon: UserIcon },
+  { name: 'Theo dõi khuyến nghị', href: '/profile/pred', icon: ChartBarIcon},
   {
     name: 'Yêu cầu rút tiền', href: '/profile/requestwithdraw',
-    icon: DocumentDuplicateIcon,
+    icon: ArrowLeftEndOnRectangleIcon,
   },
   {
     name: 'Lịch sử giao dịch', href: '/profile/transaction',
-    icon: DocumentDuplicateIcon,
+    icon: ArrowsRightLeftIcon,
   }
 ];
 
@@ -40,7 +41,7 @@ export default function NavLinks() {
 
             },)}
           >
-            <LinkIcon className="w-6" />
+            <LinkIcon className="w-6" title="aaa" />
             <p className="hidden md:block">{link.name}</p>
           </Link>
         );

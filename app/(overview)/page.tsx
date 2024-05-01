@@ -1,7 +1,7 @@
 'use client'
 import Image from "next/image";
 import { getExperts } from "../lib/firebase/firestore";
-import { Card, CardBody, CardFooter, CardHeader, Divider, Link } from "@nextui-org/react";
+import { Card, CardBody, CardFooter, CardHeader, Divider } from "@nextui-org/react";
 import ExpertCard from "../ui/expertcard";
 import ExpertListing from "../ui/expert-listing";
 import Breadcrumbs from "../ui/breadcrumbs";
@@ -12,26 +12,23 @@ import { Expert, expertConverter } from "../lib/definitions";
 import { BanknotesIcon, ClockIcon, InboxIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { lusitana } from "../ui/font";
 import StatsCard from "../ui/statsCard";
+import Link from "next/link";
 
 
 
 export default function Home() {
 
-  // const ref = query(collection(db, 'expert'),where("status","==","activated")).withConverter(expertConverter);
-
-
-  // const [data, loading, error] = useCollectionDataOnce(ref);
   return (
     <>
-      <div className="flex">
-        <Link href="/expert">
+      <div className="block sm:grid-cols-3">
+        <Link href="/admin">
           <StatsCard num={70} infos={["chuyên gia đang hoạt động"]} />
         </Link>
 
         <Link href="/expert"><StatsCard num={439} infos={["người dùng đang trả phí "]} /></Link>
         
-        <Link href="/expert"><StatsCard num={671} infos={["tr phí giới thiệu"]} /></Link>
-        <Link href="/expert"><StatsCard num={19} infos={["khuyến nghị đang theo tiếp diễn"]} /></Link>
+        <Link href="/referalPolicy"><StatsCard num={671} infos={["tr phí giới thiệu"]} /></Link>
+        <Link href="/preds"><StatsCard num={19} infos={["khuyến nghị đang theo tiếp diễn"]} /></Link>
         <Link href="/expert"><StatsCard num={2819} infos={["khuyến nghị đã kết thúc"]} /></Link>
 
 

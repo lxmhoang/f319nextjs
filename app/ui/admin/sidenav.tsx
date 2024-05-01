@@ -1,7 +1,3 @@
-import Link from 'next/link';
-// import NavLinks from '';
-// import AcmeLogo from '@/app/ui/acme-logo';
-// import { HeartIcon, PowerIcon } from '@heroicons/react/24/outline';
 import NavLinks from './nav-links';
 import { PowerIcon } from '@heroicons/react/16/solid';
 
