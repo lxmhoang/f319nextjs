@@ -25,6 +25,7 @@ export const userAdminConverter: FirestoreDataConverter<User> = {
         amount: data.amount,
         disabled: data.disabled,
         email: data.email,
+        following: data.following,
         metadata: data.metadata,
         customClaims: data.customClaims,
         phoneNumber: data.phoneNumber,
