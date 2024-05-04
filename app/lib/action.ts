@@ -2,47 +2,51 @@
 "use server"
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation';
 import { useCollectionDataOnce, useDocument, useDocumentOnce } from 'react-firebase-hooks/firestore';
 import { addDoc, collection, doc, setDoc, updateDoc } from 'firebase/firestore';
-import { db } from './firebase/firebase';
+import { auth, db } from './firebase/firebase';
 import { storage } from './firebase/firebase';
 import firebase from 'firebase/compat/app';
 import { getStorage, ref, uploadBytes } from "firebase/storage";
 import { ExpertStatus, Prediction, Transaction, User, userConverter } from './definitions';
-import { addANewTransaction, addNewPrediction, searchCollection, searchUser } from './firebase/firestore';
+import { addNewPrediction, getAUserByID, searchCollection, searchUser } from './firebase/firestore';
 import { error } from 'console';
-import { getUserClaims } from './firebaseadmin/firebaseadmin';
-import { getAuth } from 'firebase-admin/auth';
-import { getAuth as clientAuth } from 'firebase/auth';
+import { addANewTransaction, getCurrentUser, getUidFromIdToken, getUserClaims } from './firebaseadmin/firebaseadmin';
+import { Timestamp } from 'firebase-admin/firestore';
+// import { getAuth } from 'firebase-admin/auth';
+// import { getAuth as clientAuth } from 'firebase/auth';
+
 
 
 const storageRef = ref(storage, '/eeechild');
 
 // Expert Creation
 const ExpertFormSchema = z.object({
-  id: z.string(),
   name: z.string({
     invalid_type_error: 'wrong type of name field'
   }),
+  monthlyPrice: z.number(),
+  permPrice: z.number(),
   shortIntro: z.string({
     invalid_type_error: 'Chọn 1 cái shortIntro'
   }),
   // subscriptionPrice: z.enum(['1mil', '2mil'], {
   //   invalid_type_error: 'Chọn 1 cái giá nào',
   // }),
-  date: z.string(),
+  // date: z.string(),
 })
 
-const RegisterExpert = ExpertFormSchema.omit({ id: true, date: true });
+const RegisterExpert = ExpertFormSchema;
 
 export type RegisterExpertFormState = {
   errors?: {
-    uid?: string[]
-    name?: string[];
-    // subscriptionPrice?: string[];
+    name?: string[]
+    monthlyPrice?: string[]
+    permPrice?: string[]
     shortIntro?: string[];
-    avatar?: File
+    generic?: string[]
   };
   message?: string | null;
   justDone?: boolean
@@ -50,24 +54,19 @@ export type RegisterExpertFormState = {
 
 
 export async function registerExpert(_prevState: RegisterExpertFormState, formData: FormData) {
-  const validatedFields = RegisterExpert.safeParse({
-    name: formData.get('name'),
-    shortIntro: formData.get('shortIntro'),
-    // subscriptionPrice: formData.get('subscriptionPrice'),
-    avatar: formData.get('avatar'),
-  });
 
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Hãy điền đầy đủ thông tin',
-      justDone: false
-    };
-  }
-  
+  const curUser = await getCurrentUser()
 
-  const uid = formData.get('uid')
-  if (!uid) {
+  // console.log("client auth current user" + JSON.stringify(auth))
+  // console.log("uid for expert register : " + curUser?.uid)
+
+  // const cookieStore = cookies()
+  // const token = cookieStore.get('firebaseIdToken')
+  // console.log("token " + token)
+
+  // const uid = getUidFromIdToken(token?.value ?? "")
+  // console.log('token get : ' + JSON.stringify(token))
+  if (!curUser) {
     return {
       errors: {
         uid: ["uid khong ton tai"],
@@ -75,18 +74,58 @@ export async function registerExpert(_prevState: RegisterExpertFormState, formDa
         // subscriptionPrice: [""],
         shortIntro: [""]
       },
-      message: 'Hãy điền đầy đủ thông tin',
+      message: 'Không tìm thấy user',
       justDone: false
     };
   }
+  const uid = curUser.uid
+  const validatedFields = RegisterExpert.safeParse({
+    name: formData.get('name'),
+    shortIntro: formData.get('shortIntro'),
+    monthlyPrice: Number(formData.get('monthlyPrice')),
+    permPrice: Number(formData.get('permPrice')),
+    // subscriptionPrice: formData.get('subscriptionPrice'),
+    avatar: formData.get('avatar'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      justDone: false
+    };
+  }
+  const monthlyPrice = Number(formData.get('monthlyPrice'))
+  const permPrice = Number(formData.get('permPrice'))
+  const fee = monthlyPrice * 5 + permPrice
+  const userInfo = await getAUserByID(uid)
+  if (!(monthlyPrice && permPrice && userInfo?.amount && userInfo.amount >= fee)) {
+    return {
+      errors: {
+        generic:["khong du tien"]
+      },
+      message: 'khong du tien, so tien cua ban chi co ' + userInfo?.amount + ' trong khi phi  dang ky la ' + fee ,
+      justDone: false
+    };
+    // ok
+  }  
+
+  const remain = userInfo.amount - fee
+
+  await updateDoc(doc(db,'user/' + uid,), {
+    amount: remain
+  })
+  
+
   
 
   const docRef = doc(db, 'expert/' + uid)
   const result = await setDoc(docRef, {
       name: formData.get('name'),
       shortIntro: formData.get('shortIntro'),
+      monthlyPrice: formData.get('monthlyPrice'),
+      permPrice: formData.get('permPrice'),
       // subscriptionPrice: formData.get('subscriptionPrice'),
-      status: ExpertStatus.paymentPending,
+      status: ExpertStatus.activated,
       created: new Date(),
       visible: true
     })
@@ -94,12 +133,12 @@ export async function registerExpert(_prevState: RegisterExpertFormState, formDa
    
     
     console.log('done add new expert' + docRef.path)
-    
+
     return {
       errors: {
       
       },
-      message: "Bạn bây giờ đã là chuyên gia444",
+      message: "Xin chuc mung !!! Bạn bây giờ đã là chuyên gia",
       justDone: true
     };
     const file = formData.get('avatar') as File
@@ -413,7 +452,7 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
   // if (uid) {
   const uid = formData.get('uid') as string
   console.log("uid pass with formData" + uid)
-  console.log("client auth current user" + JSON.stringify(clientAuth().currentUser))
+  console.log("client auth current user" + JSON.stringify(auth.currentUser))
   if (uid) {
     const customClaims = await getUserClaims(uid)
     const isExpert = customClaims.isExpert

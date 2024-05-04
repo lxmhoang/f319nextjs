@@ -8,7 +8,6 @@ import Breadcrumbs from "../ui/breadcrumbs";
 import { getFirestore, collection, FirestoreDataConverter, WithFieldValue, DocumentData, QueryDocumentSnapshot, SnapshotOptions, query, where } from 'firebase/firestore';
 import { useCollection, useCollectionData, useCollectionDataOnce, useCollectionOnce } from 'react-firebase-hooks/firestore';
 import { db } from "../lib/firebase/firebase";
-import { Expert, expertConverter } from "../lib/definitions";
 import { BanknotesIcon, ClockIcon, InboxIcon, UserGroupIcon } from "@heroicons/react/24/outline";
 import { lusitana } from "../ui/font";
 import StatsCard from "../ui/statsCard";
@@ -20,8 +19,8 @@ export default function Home() {
 
   return (
     <>
-      <div className="block sm:grid-cols-3">
-        <Link href="/admin">
+      <div className="block sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ">
+        <Link href="/expert">
           <StatsCard num={70} infos={["chuyên gia đang hoạt động"]} />
         </Link>
 

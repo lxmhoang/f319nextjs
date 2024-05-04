@@ -24,14 +24,9 @@ export default function RootLayout({
       <body className="{inter.className} dark">
 
         <AppWrapper>
-          {/* <div className="flex flex-col items-center h-screen w-screen bg-slate-800 pt-40 p-4"> */}
-            {/* <div> */}
 
             <TopNav></TopNav>
-            {/* <NavBar></NavBar> */}
-            {/* </div> */}
             {children}
-          {/* </div> */}
         </AppWrapper>
 
 

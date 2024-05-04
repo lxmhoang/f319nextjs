@@ -1,4 +1,5 @@
 import { DocumentData, FirestoreDataConverter, QueryDocumentSnapshot, SnapshotOptions, WithFieldValue } from "firebase/firestore";
+import { metadata } from "../layout";
 
 export type CustomerField = {
   id: string;
@@ -47,8 +48,8 @@ export type CompanyRTInfo = {
 
   z: number; //z 
   time: string;
-  tb:number;
-  ts:number;
+  tb: number;
+  ts: number;
 
 
 }
@@ -105,7 +106,7 @@ export type Prediction = {
   dateRelease?: Date;
   priceRelease?: number;
   status: string;
-  note: string
+  note: string;
 }
 
 export type User = {
@@ -118,6 +119,7 @@ export type User = {
     isAdmin: boolean,
     isExpert: boolean
   };
+  following: {[key:string] : {}};
   metadata?: {};
   phoneNumber?: string
   isAdmin?: boolean,
@@ -129,25 +131,23 @@ export type Subscription = {
   uid: string;
   eid: string;
   startDate: Date;
-  length: number;
   endDate?: Date;
-  value?: number;
-  // expiredDate?: Date;
-  isExpired?: boolean
-  // autoExtend: boolean
+  perm: boolean;
+  value: number;
 }
 
 export type Expert = {
+  id: string;
   avatar: string;
   imageURL: string;
-  id: string;
   name: string;
   followerNum: number;
+  permPrice: number;
+  monthlyPrice: number;
   selfIntro: string;
   shortInfo: string;
   status: ExpertStatus;
   preds?: Prediction[]
-  
 }
 
 export type Transaction = {
@@ -170,8 +170,7 @@ export const subscriptionConverter: FirestoreDataConverter<Subscription> = {
       eid: sub.eid,
       startDate: sub.startDate,
       value: sub.value,
-      length: sub.length,
-      isExpired: sub.isExpired
+      perm: sub.perm,
     };
   },
   fromFirestore(
@@ -184,9 +183,8 @@ export const subscriptionConverter: FirestoreDataConverter<Subscription> = {
       uid: data.uid,
       eid: data.eid,
       startDate: data.startDate,
-      length: data.length,
+      perm: data.perm,
       value: data.value,
-      isExpired: data.isExpired,
       endDate: data.endDate ?? undefined,
     };
   },
@@ -194,6 +192,8 @@ export const subscriptionConverter: FirestoreDataConverter<Subscription> = {
 
 export const predConverter: FirestoreDataConverter<Prediction> = {
   toFirestore(pred: WithFieldValue<Prediction>): DocumentData {
+    // const dateIntimeStamp = pred.dateIn as Timestamp
+    // const dateIn = new Date(Number(dateIntimeStamp))
     return {
       assetName: pred.assetName,
       dateIn: pred.dateIn,
@@ -214,11 +214,11 @@ export const predConverter: FirestoreDataConverter<Prediction> = {
     const data = snapshot.data(options);
     return {
       assetName: data.assetName,
-      dateIn: data.dateIn,
+      dateIn: (data.dateIn as FirebaseFirestore.Timestamp).toDate(),
       priceIn: data.priceIn,
       priceOut: data.priceOut,
       cutLoss: data.cutLoss,
-      deadLine: data.deadLine,
+      deadLine: (data.deadLine as FirebaseFirestore.Timestamp).toDate(),
       dateRelease: data.dateRelease,
       priceRelease: data.priceRelease,
       id: snapshot.id,
@@ -263,30 +263,43 @@ export const transConverter: FirestoreDataConverter<Transaction> = {
 
 export const expertConverter: FirestoreDataConverter<Expert> = {
   toFirestore(expert: WithFieldValue<Expert>): DocumentData {
-    return { imageURL: expert.imageURL, name: expert.name, shortInfo: expert.shortInfo };
+    return { 
+      avatar: expert.avatar,
+      imageURL: expert.imageURL, 
+      name: expert.name, 
+      shortInfo: expert.shortInfo,
+      selfIntro: expert.selfIntro,
+      followerNum: expert.followerNum,
+      status: expert.status,
+      permPrice: expert.permPrice, 
+      monthlyPrice: expert.monthlyPrice,
+    };
   },
   fromFirestore(
-    snapshot: QueryDocumentSnapshot,
-    options: SnapshotOptions
+    snapshot: QueryDocumentSnapshot
   ): Expert {
-    const data = snapshot.data(options);
+    const data = snapshot.data();
     return {
+      id: snapshot.id,
       avatar: data.avatar,
       imageURL: data.imageURL,
-      id: snapshot.id,
-      shortInfo: data.shortInfo,
       name: data.name,
       followerNum: data.followerNum,
+      permPrice: data.permPrice,
+      monthlyPrice: data.monthlyPrice,
+      shortInfo: data.shortInfo,
       selfIntro: data.selfIntro,
-      status: data.status
+      status:  ExpertStatus.activated,
     };
   },
 };
 
 
+
 export const userConverter: FirestoreDataConverter<User> = {
   toFirestore(user: WithFieldValue<User>): DocumentData {
     return {
+      following: user.following,
       uid: user.uid,
       displayName: user.displayName,
       amount: user.amount,
@@ -307,11 +320,11 @@ export const userConverter: FirestoreDataConverter<User> = {
       displayName: data.displayName,
       amount: data.amount,
       disabled: data.disabled,
+      email: data.email,
       metadata: data.metadata,
       customClaims: data.customClaims,
       phoneNumber: data.phoneNumber,
-      email: data.email,
-
+      following: data.following ?? []
     };
   },
 };

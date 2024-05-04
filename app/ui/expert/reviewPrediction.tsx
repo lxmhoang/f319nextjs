@@ -1,17 +1,26 @@
 'use client'
 
 import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, getKeyValue } from "@nextui-org/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "../button";
+import { Timestamp } from "firebase/firestore";
 
-const columns = [
+const masterCols = [
   {
     key: "assetName",
     label: "AssetName",
   },
   {
+    key: "curStatus",
+    label: "curStatus",
+  },
+  {
     key: "priceIn",
     label: "Giá mua vào",
+  },
+  {
+    key: "curPrice",
+    label: "curPrice",
   },
   {
     key: "priceOut",
@@ -39,24 +48,46 @@ const columns = [
 
 export default function ReviewPrediction({ preds, submit }: {
   preds:
-  { id: string | undefined, 
-    assetName: string, 
-    priceIn: number, 
-    priceOut: number, 
+  {
+    id: string | undefined,
+    assetName: string,
+    priceIn: number,
+    priceOut: number,
     deadLine: string,
     dateIn: string,
-    cutLoss: number }[], 
-    submit: (predIDs: string[]) => void
+    cutLoss: number,
+    curPrice: number,
+    status: string
+  }[],
+  submit: (predIDs: string[]) => void
 }) {
 
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set([]));
+  const [width, setWidth] = useState<number>(window.innerWidth)
   console.log('selected ' + selectedKeys)
   console.log('selected keys ' + selectedKeys == "all" ? "aaa" : Array.from(selectedKeys.values()))
+  const space = width <= 768 ? width : width - 256
+  const num = Math.trunc(space * 0.8 / 100)
+  console.log('preds ' + JSON.stringify(preds))
+  const columns = masterCols.slice(0, num)
 
+  const updateDimensions = () => {
+    if (typeof window !== 'undefined') {
+      console.log("width " + window.innerWidth)
+      setWidth(window.innerWidth);
+    }
+  }
+  useEffect(() => {
+    window.addEventListener("resize", updateDimensions);
+    return () => window.removeEventListener("resize", updateDimensions);
+  }, []);
+
+  console.log('master preds ' + JSON.stringify(preds))
   return (
     <>
-      <Table className="dark" aria-label="Example table with dynamic content"
-        selectionMode="multiple"
+      {width}
+      <Table className="dark w-full" aria-label="Example table with dynamic content"
+        // selectionMode="multiple"
         selectedKeys={selectedKeys}
         // onSelectionChange={setSelectedKeys}>
         // selectedKeys={selectedKeys}
@@ -77,7 +108,21 @@ export default function ReviewPrediction({ preds, submit }: {
           {(item) => (
             <TableRow key={item.id}>
               {
-                (columnKey) => <TableCell>{getKeyValue(item, columnKey) as string}</TableCell>
+                (columnKey) => {
+                  // if (columnKey == 'deadLine') {
+                  //   const value = new Date(item.deadLine.seconds * 1000).toDateString()
+                  //   return (<TableCell>{value.toLocaleString()}</TableCell>)
+                  // }
+                  // if (columnKey == 'dateIn') {
+                  //   const value = new Date(item.dateIn.seconds * 1000).toDateString()
+                  //   return (<TableCell>{value.toLocaleString()}</TableCell>)
+                  // }
+
+
+                  return (
+                    <TableCell>{getKeyValue(item, columnKey) as string}</TableCell>
+                  )
+                }
 
               }
             </TableRow>

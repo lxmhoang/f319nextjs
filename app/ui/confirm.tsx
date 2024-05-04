@@ -1,51 +1,49 @@
-// import {
-//     Button,
-//     Modal,
-//     ModalBody,
-//     ModalContent,
-//     ModalFooter,
-//     ModalHeader,
-//     ModalOverlay,
-//   } from "@chakra-ui/react";
-  import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/react";
+
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/react";
 import { FC } from "react";
 import { Button } from "./button";
   
   interface ConfirmationModalProps {
     isOpen: boolean;
     onClose: VoidFunction;
-    onConfirm: VoidFunction;
+    onLeftButtonClick: VoidFunction;
+    onRightButtonClick?: VoidFunction
     title: string;
     message: string;
-    confirmButtonText: string;
-    cancelButtonText?: string;
+    rightButtonText?: string;
+    leftButtonText: string;
   }
   
   export const ConfirmationModal: FC<ConfirmationModalProps> = ({
     isOpen,
     onClose,
-    onConfirm,
+    onLeftButtonClick,
+    onRightButtonClick,
     title,
     message,
-    confirmButtonText,
-    cancelButtonText,
+    rightButtonText,
+    leftButtonText,
   }) => {
-    const handleConfirm = () => {
-      onConfirm();
+    const handleLeftButtonClick = () => {
+      onLeftButtonClick();
+      onClose();
+    };
+    const handleRightButtonClick = () => {
+      onRightButtonClick &&  onRightButtonClick();
       onClose();
     };
   
     return (
-      <Modal isOpen={isOpen} onClose={onClose}>
+      <Modal isOpen={isOpen} onClose={onClose} isDismissable={false} isKeyboardDismissDisabled={true}>
         <ModalContent>
           <ModalHeader>{title}</ModalHeader>
           <ModalBody>{message}</ModalBody>
-          <ModalFooter>
-            <Button onClick={handleConfirm}>
-              {confirmButtonText}
+          <ModalFooter className="justify-center flex">
+            <Button onClick={handleLeftButtonClick}>
+              {leftButtonText}
             </Button>
-            {cancelButtonText ? (<Button  onClick={onClose}>
-              {cancelButtonText}
+            {rightButtonText ? (<Button  onClick={handleRightButtonClick}>
+              {rightButtonText}
             </Button>) : (<></>)}
             
           </ModalFooter>
@@ -53,3 +51,5 @@ import { Button } from "./button";
       </Modal>
     );
   };
+
+  

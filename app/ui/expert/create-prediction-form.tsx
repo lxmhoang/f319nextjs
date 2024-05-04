@@ -104,10 +104,10 @@ export default function PredictCreationForm() {
             <ConfirmationModal
                 isOpen={showModal}
                 onClose={handleConfirmationCancel}
-                onConfirm={handleConfirmationConfirm}
+                onLeftButtonClick={handleConfirmationConfirm}
                 title={"Đã tạo xong khuyeens nghị33"}
                 message={addPredictState.message ?? "No message"}
-                confirmButtonText={"Okey"}
+                leftButtonText={"Okey"}
             />
 
             {/* <Modal className='dark' isOpen={isOpen} onOpenChange={onOpenChange}>
@@ -185,7 +185,8 @@ export default function PredictCreationForm() {
                         className="peer block w-1/3 rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
                         placeholder="Giá mục tiêu chốt lời"
                         // startContent={<HeartIcon size={18} />}
-                        type="number" min={minTakeProfitPrice}
+                        type="number" 
+                        // min={minTakeProfitPrice}
                     />
                 </div>
                 <div id="customer-error" aria-live="polite" aria-atomic="true">
@@ -205,7 +206,8 @@ export default function PredictCreationForm() {
                         className="peer block w-1/3 rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
                         placeholder="Nhap gia cat lo"
                         // startContent={<HeartIcon size={18} />}
-                        type="number" max={maxCutLossPrice}
+                        type="number"
+                        //  max={maxCutLossPrice}
                     />
                 </div>
                 <div id="customer-error" aria-live="polite" aria-atomic="true">

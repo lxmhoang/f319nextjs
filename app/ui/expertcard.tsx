@@ -9,12 +9,11 @@ import { Expert } from "../lib/definitions";
 export default function ExpertCard({ expert }: { expert:Expert }) {
 
   const [imagedownloadURL, loading, error] = useDownloadURL(storageRef(storage, expert.avatar ?? "uploads/profileImage/1111"));
-  console.log("aaaaaa" + expert.avatar);
 
 
   return (
-    <Link href={{ pathname: `/expertdetails/${expert.id}` }}>
-      <div className=" p-2 max-w-80 rounded-sm">
+    <Link className="justify-center" href={{ pathname: `/expertdetails/${expert.id}` }}>
+      <div className=" p-2   rounded-sm">
         <Card className="">
           <CardHeader className=" gap-3 flex">
           
@@ -36,7 +35,7 @@ export default function ExpertCard({ expert }: { expert:Expert }) {
               src={imagedownloadURL}
             />} */}
             <ul>
-              <p>Số người đăng ký: 44</p>
+              <p>Số người đăng ký: {expert.followerNum}</p>
               <p>Tỷ lệ lãi 12/94</p>
 
             </ul>

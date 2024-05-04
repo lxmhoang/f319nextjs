@@ -4,13 +4,12 @@ import {
   onAuthStateChanged as _onAuthStateChanged,
 } from "firebase/auth";
 
+import Cookies from "js-cookie";
 import { auth } from "./firebase";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { updateRefID } from "./firestore";
 import { APIResponse } from "../definitions";
 
 
+// auth.setPersistence({type: 'NONE'});
 export async function signInWithGoogle(refID:string | null) {
   const provider = new GoogleAuthProvider();
 
