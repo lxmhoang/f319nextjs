@@ -143,7 +143,7 @@ export default function TopNav() {
     <Navbar isBordered className="dark h-[66px] sm:h-[88px] " maxWidth='full' justify-between="left" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
       <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          className="w-[66px] h-full"
+          className="w-[66px] h-full bg-red-500"
         />  
       <NavbarBrand className="">
       </NavbarBrand>
