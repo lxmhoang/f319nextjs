@@ -141,13 +141,11 @@ export default function TopNav() {
 
   return (
     <Navbar isBordered className="dark h-[66px] sm:h-[88px] " maxWidth='full' justify-between="left" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
-      <NavbarBrand className="">
-        <NavbarMenuToggle
+      <NavbarMenuToggle
           aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          className=""
-        />
-        {/* <AcmeLogo /> */}
-        {/* <Link href="/">  <p className="text-2xl">319</p> </Link> */}
+          className="w-[66px] h-full"
+        />  
+      <NavbarBrand className="">
       </NavbarBrand>
 
       {/* <NavbarContent className="hidden sm:flex gap-5" justify="start">
