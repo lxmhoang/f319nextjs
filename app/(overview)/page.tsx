@@ -19,8 +19,8 @@ export default function Home() {
 
   return (
     <>
-      <div className="block sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ">
-        <Link href="/expert">
+      <div className="grid grid-cols-2 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ">
+        <Link className="" href="/expert">
           <StatsCard num={70} infos={["chuyên gia đang hoạt động"]} />
         </Link>
 

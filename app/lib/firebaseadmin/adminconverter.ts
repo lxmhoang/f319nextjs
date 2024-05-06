@@ -132,7 +132,7 @@ export const predAdminConverter: FirestoreDataConverter<Prediction> = {
 
 
 
-export const transConverter: FirestoreDataConverter<Transaction> = {
+export const adminTranConverter: FirestoreDataConverter<Transaction> = {
     toFirestore(trans: WithFieldValue<Transaction>): DocumentData {
       return {
         // id: trans.id,

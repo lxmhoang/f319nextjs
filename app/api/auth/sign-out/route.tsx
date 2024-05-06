@@ -10,7 +10,7 @@ export async function GET() {
 
   if (!sessionCookie)
     return NextResponse.json<APIResponse<string>>({ success: false, error: "Session not found." }, { status: 400 });
-
+  console.log('aaaaa deleting cookie session')
   cookies().delete("__session");
 
   await revokeAllSessions(sessionCookie);

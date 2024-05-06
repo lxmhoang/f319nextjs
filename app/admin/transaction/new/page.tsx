@@ -19,13 +19,13 @@ export default function Home() {
            name:'paymentId', placeHolder: 'Nhap payment id', type:'search'
         },
         {
-           name:'name', placeHolder: 'name', type:'search'
+           name:'displayName', placeHolder: 'displayName', type:'search'
         }
 
 
       ]} />
       { searchState.user ? (
-        <TransCreationForm user={searchState.user} transactionType="deposit" />
+        <TransCreationForm user={JSON.parse(searchState.user)} transactionType="deposit" />
       ) : (<>Search user</>) }
     
       </>

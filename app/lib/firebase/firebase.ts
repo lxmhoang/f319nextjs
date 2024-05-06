@@ -31,9 +31,12 @@ export const cloudFunc = getFunctions(app);
 
 const useEmulator = process.env.USE_EMULATOR as string;
 
-if (useEmulator == "enabled") {
+// console.log('connecting to emulator' + useEmulator)
+if (false) {
+
+  console.log('connecting to emulator')
   connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  connectAuthEmulator(auth,  'http://127.0.0.1:9099')
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', {disableWarnings: true})
   connectStorageEmulator(storage,  '127.0.0.1', 9199)
   connectFunctionsEmulator(cloudFunc, '127.0.0.1', 5001)
 }

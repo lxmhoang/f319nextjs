@@ -67,9 +67,10 @@ exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (even
     logger.log("new transaction created", event.params.documentId, data);
     const depositTran = (data.status == "adminCreated" && data.tranType == "deposit") 
     const withDrawTran = (data.status == "pending" && data.tranType == "withDraw") 
-    const subTran = data.tranType = "subTran"
+    const subTran = data.tranType == "subTran"
     const referallTran = data.tranType == "ReferralReward"
     if (referallTran) {
+        logger.log("referallTran" + data.amount);
         const toUid = data.toUid
         if (toUid) {
             getFirestore().collection('user').doc(toUid).update({ 
@@ -78,6 +79,7 @@ exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (even
         }
     }
     if (depositTran) {
+        logger.log("depositTran" + data.amount);
         const toUid = data.toUid;
         if (toUid) {
             const userRef = getFirestore().collection('user').doc(toUid)
@@ -117,6 +119,7 @@ exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (even
         }
     }
     if (withDrawTran) {
+        logger.log("withDrawTran" + data.amount);
         const fromUid = data.fromUid
         if (fromUid) {
             getFirestore().collection('user').doc(fromUid).update({ 
@@ -126,6 +129,7 @@ exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (even
     }
 
     if (subTran) {
+        logger.log("subTran" + data.amount);
         const fromUid = data.fromUid
         const toUid = data.toUid
         logger.info("adding subTran type transaction, to uid : " + toUid + ", from Uid :   "  + fromUid + " --- " + data.amount)

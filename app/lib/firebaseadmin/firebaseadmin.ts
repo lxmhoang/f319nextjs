@@ -7,7 +7,7 @@ import { getAuth, SessionCookieOptions } from "firebase-admin/auth";
 import { getApps, initializeApp, cert } from "firebase-admin/app"
 import { DocumentData, Filter, FirestoreDataConverter, getFirestore, Query, QueryDocumentSnapshot, WithFieldValue } from "firebase-admin/firestore";
 import { ExpertStatus, predConverter, User, Expert, subscriptionConverter, Transaction, Subscription, Prediction } from "../definitions";
-import { expertAdminConverter, predAdminConverter, subscriptionAdminConverter, transConverter, userAdminConverter } from "./adminconverter";
+import { expertAdminConverter, predAdminConverter, subscriptionAdminConverter, userAdminConverter } from "./adminconverter";
 
 const ADMIN_APP_NAME = "stock-319";
 
@@ -29,7 +29,7 @@ function createFirebaseAdminApp() {
     const useEmulator = process.env.USE_EMULATOR as string;
     console.log('use emulator ' + useEmulator)
 
-    if (useEmulator == "enabled") {
+    if (false) {
         process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
         process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
         process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
@@ -337,4 +337,14 @@ export async function revokeAllSessions(session: string) {
     const decodedIdToken = await getAuth(adminApp).verifySessionCookie(session);
 
     return await getAuth(adminApp).revokeRefreshTokens(decodedIdToken.sub);
+}
+
+
+export async function serverApprovePendingTrans(tranIDs: string[]) {
+	const batch = db.batch()
+	tranIDs.forEach((id) => {
+		const docRef = db.doc('transaction/'+ id)
+		batch.update(docRef, { status: "adminApproved" })
+	})
+	await batch.commit()
 }

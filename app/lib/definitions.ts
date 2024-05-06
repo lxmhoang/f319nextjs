@@ -324,6 +324,8 @@ export const userConverter: FirestoreDataConverter<User> = {
       metadata: data.metadata,
       customClaims: data.customClaims,
       phoneNumber: data.phoneNumber,
+      isAdmin: data.email == 'lxmhoang@gmail.com' ? true : data.isAdmin ?? false,
+      isExpert: data.isExpert ?? false,
       following: data.following ?? []
     };
   },

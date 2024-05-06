@@ -5,11 +5,15 @@ service cloud.firestore {
     match /transaction/{tranid} {
       allow read, write: if true
     }
+    match /subscription/{subId} {
+      allow read: if request.auth.uid == resource.data.eid
+    }
     match /user/{userId} {
-      allow read: if request.auth.uid == userId
+      allow read: if request.auth != null && request.auth.uid == userId
     }
     match /expert/{eid} {
       allow read: if true
+      allow write: if false
       
       match /preds/{pid} {
         function checkContainEid() {

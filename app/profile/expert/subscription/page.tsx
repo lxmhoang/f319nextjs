@@ -7,17 +7,13 @@ import { Accordion, AccordionItem, Switch } from "@nextui-org/react";
 import { usePathname } from "next/navigation";
 import clsx from 'clsx';
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default function Page() {
 
 
   return (
 
-
-
       <div className="flex flex-col gap-2">
-        <Switch color="success">
-          Nạp tiền
-        </Switch>
+      
       </div>
 
       )

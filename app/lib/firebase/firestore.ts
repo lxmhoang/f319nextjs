@@ -99,14 +99,6 @@ export async function clientSearchCollection<ModelType>(name: string, filters = 
 	})
 }
 
-export async function approvePendingTrans(tranIDs: string[]) {
-	const batch = writeBatch(db)
-	tranIDs.forEach((id) => {
-		const docRef = doc(db, 'transaction', id)
-		batch.update(docRef, { status: "adminApproved" })
-	})
-	await batch.commit()
-}
 
 export async function updateRefID(userDocID: string, refID: string) {
 	let docRef = doc(db, 'user/' + userDocID)

@@ -41,31 +41,31 @@ export default function TopNav() {
         { key: "admin", href: "/admin", label: "Admin", activated: true },
         { key: "myprofile", href: "/profile", label: "My Profile", activated: true },
         { key: "myexpert", href: "/profile/expert", label: "My Expert Profile", activated: true },
-        user ? 
-        { key: "signout", href: "", label: "Sign out", activated: true } :
-        { key: "signin", href: "", label: "Sign in", activated: true }
+        user ?
+          { key: "signout", href: "", label: "Sign out", activated: true } :
+          { key: "signin", href: "", label: "Sign in", activated: true }
       ]
       :
-      user ? 
-      [
-        { key: "home", href: "/", label: "Home", activated: true },
-        { key: "expert", href: "/expert", label: "Expert", activated: true },
-        { key: "divider", href: "#", label: "", activated: true },
-        { key: "myprofile", href: "/profile", label: user.email, activated: true },
-        { key: "myexpert", href: "/profile/expert", label: "My Expert Profile", activated: true },
-        user ? 
-        { key: "signout", href: "", label: "Sign out", activated: true } :
-        { key: "signin", href: "", label: "Sign in", activated: true }
-      ]
-      :
-      [
-        { key: "home", href: "/", label: "Home", activated: true },
-        { key: "expert", href: "/expert", label: "Expert List", activated: true },
-        { key: "divider", href: "#", label: "", activated: true },
-        { key: "myprofile", href: "/profile", label: "My Profile", activated: user != undefined },
-        { key: "myexpert", href: "/profile/expert", label: "My Expert Profile", activated: (user != undefined ) },
-        user ? { key: "signout",  href: "",label: "Sign out", activated: true } : { key: "signin", href:"", label: "Sign in", activated: true }
-      ]
+      user ?
+        [
+          { key: "home", href: "/", label: "Home", activated: true },
+          { key: "expert", href: "/expert", label: "Expert", activated: true },
+          { key: "divider", href: "#", label: "", activated: true },
+          { key: "myprofile", href: "/profile", label: user.email, activated: true },
+          { key: "myexpert", href: "/profile/expert", label: "My Expert Profile", activated: true },
+          user ?
+            { key: "signout", href: "", label: "Sign out", activated: true } :
+            { key: "signin", href: "", label: "Sign in", activated: true }
+        ]
+        :
+        [
+          { key: "home", href: "/", label: "Home", activated: true },
+          { key: "expert", href: "/expert", label: "Expert List", activated: true },
+          { key: "divider", href: "#", label: "", activated: true },
+          { key: "myprofile", href: "/profile", label: "My Profile", activated: user != undefined },
+          { key: "myexpert", href: "/profile/expert", label: "My Expert Profile", activated: (user != undefined) },
+          user ? { key: "signout", href: "", label: "Sign out", activated: true } : { key: "signin", href: "", label: "Sign in", activated: true }
+        ]
   //   :
   //   [
   //     { key: "home", href: "/", label: "Home" },
@@ -140,41 +140,11 @@ export default function TopNav() {
   };
 
   return (
-    <Navbar isBordered className="dark h-[66px] sm:h-[88px] " maxWidth='full' justify-between="left" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
+    <Navbar isBordered className="dark h-[66px] sm:h-[66px] " maxWidth='full' justify-between="left" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
       <NavbarMenuToggle
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-          className="w-[66px] h-full bg-red-500"
-        />  
-      <NavbarBrand className="">
-      </NavbarBrand>
-
-      {/* <NavbarContent className="hidden sm:flex gap-5" justify="start">
-        <NavLinks />
-      </NavbarContent> */}
-      <NavbarContent>
-      <div className="profile p-2">
-                <MenuButton title={menuLabel} menuInfo={dropDownInfo} />
-              </div>
-
-        {/* <NavbarItem className="flex">
-          {user ? (
-            <>
-              <></>
-              <div className="profile p-2">
-                <MenuButton title={menuLabel} menuInfo={dropDownInfo} />
-              </div>
-            </>
-          ) :
-
-            (
-              <>
-                <Button onClick={() => login()} >Login By Google</Button>
-              </>
-            )
-
-          }
-        </NavbarItem> */}
-      </NavbarContent>
+        aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+        className="w-[66px] h-full bg-red-500  sm:w-[66px] sm:h-[66px]"
+      />
       <NavbarMenu>
 
         {dropDownInfo.map((item, index) => {
@@ -197,7 +167,7 @@ export default function TopNav() {
             } : undefined} >
               <Link
                 className="w-full"
-                href={ item.activated ? { pathname: item.href } : ""}
+                href={item.activated ? { pathname: item.href } : ""}
               >
                 <p className={clsx({
 
@@ -211,6 +181,37 @@ export default function TopNav() {
           )
         })}
       </NavbarMenu>
+      <NavbarBrand className="">
+      </NavbarBrand>
+
+      {/* <NavbarContent className="hidden sm:flex gap-5" justify="start">
+        <NavLinks />
+      </NavbarContent> */}
+      <NavbarContent>
+        <div className="profile p-2">
+          <MenuButton title={menuLabel} menuInfo={dropDownInfo} />
+        </div>
+
+        {/* <NavbarItem className="flex">
+          {user ? (
+            <>
+              <></>
+              <div className="profile p-2">
+                <MenuButton title={menuLabel} menuInfo={dropDownInfo} />
+              </div>
+            </>
+          ) :
+
+            (
+              <>
+                <Button onClick={() => login()} >Login By Google</Button>
+              </>
+            )
+
+          }
+        </NavbarItem> */}
+      </NavbarContent>
+
     </Navbar >
   );
 
