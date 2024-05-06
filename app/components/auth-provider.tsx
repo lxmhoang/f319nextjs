@@ -36,12 +36,11 @@ export const AuthProvider = ({ children }: { children: any }) => {
     useEffect(() => {
 
         console.log("useEffect ")
-        if (!auth) 
-            {
+        if (!auth) {
 
             console.log("empty auth ")
-                return;
-            }
+            return;
+        }
 
         return auth.onAuthStateChanged(async (user) => {
             console.log("onAuthStateChanged " + user)

@@ -1,7 +1,6 @@
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  onAuthStateChanged as _onAuthStateChanged,
 } from "firebase/auth";
 
 import Cookies from "js-cookie";

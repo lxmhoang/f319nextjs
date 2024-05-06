@@ -1,6 +1,5 @@
 
 import SideNav from "@/app/ui/expert/sidenav";
-import { User } from "firebase/auth";
 
 function Layout({ children }: { children: React.ReactNode }) {
   

@@ -79,8 +79,6 @@ export const predAdminConverter: FirestoreDataConverter<Prediction> = {
         priceOut: pred.priceOut,
         cutLoss: pred.cutLoss,
         deadLine: pred.deadLine,
-        dateRelease: pred.dateRelease,
-        priceRelease: pred.priceRelease,
         note: pred.note,
         status: pred.status
       };

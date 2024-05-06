@@ -57,7 +57,8 @@ exports.createUserDoc = auth.user().onCreate((user) => {
 });
 
 exports.createExpertHandler = onDocumentCreated("expert/{expertId}", (event) => {
-    getAuth().setCustomUserClaims(event.params.expertId, {"isExpert" : true})   
+    getFirestore().doc('/user/' + event.params.expertId).update({isExpert: true})
+    // getAuth().setCustomUserClaims(event.params.expertId, {"isExpert" : true})   
 })
 
 exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (event) => {

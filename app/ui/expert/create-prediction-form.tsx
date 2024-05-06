@@ -1,6 +1,6 @@
 'use client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'
+import { redirect, useRouter } from 'next/navigation'
 import {
     CurrencyDollarIcon,
     HeartIcon,
@@ -77,38 +77,30 @@ export default function PredictCreationForm() {
 
     // const [compInfo, err] = useFetchData<CompanyRTInfo | null>("https://banggia.cafef.vn/stockhandler.ashx?userlist=" + selectedComp?.Symbol ?? "", parserCompRTInfo)   
 
+    const router = useRouter()
     const { user} = useAppContext()
 
     const initialFormState = { message: "", errors: {}, justDone: false };
     const [addPredictState, dispatchAddtran] = useFormState(createNewPrediction, initialFormState);
     const [showModal, setShowModal] = useState(false);
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
-
+    console.log('render with add predict state : ' + JSON.stringify(addPredictState))
     if (addPredictState.justDone == true) {
         setShowModal(true)
         addPredictState.justDone = false
     }
     
-    const handleConfirmationConfirm = async () => {
-        // handleNewPassword();
-        // go go go
+    const handleLeftBtn = () => {
+        router.push('/profile/expert')
         setShowModal(false);
     };
 
-    const handleConfirmationCancel = () => {
+    const handleCloseModal = () => {
         setShowModal(false);
     };
 
     return (
         <>
-            <ConfirmationModal
-                isOpen={showModal}
-                onClose={handleConfirmationCancel}
-                onLeftButtonClick={handleConfirmationConfirm}
-                title={"Đã tạo xong khuyeens nghị33"}
-                message={addPredictState.message ?? "No message"}
-                leftButtonText={"Okey"}
-            />
 
             {/* <Modal className='dark' isOpen={isOpen} onOpenChange={onOpenChange}>
                 <ModalContent>
@@ -145,7 +137,7 @@ export default function PredictCreationForm() {
 
                 <div className="relative mb-4"> {selectedComp != null && selectedComp != undefined ? (<>Giá mua vào hiện tại {selectedComp.HighPrice} </>) : (<> Hãy chọn 1 cổ phiếu</>)}</div>
                 <input type="hidden" name="priceIn" value={selectedComp?.HighPrice ?? 0}></input>
-                <input type="hidden" name="uid" value={getAuth().currentUser?.uid ?? ""}></input>
+                {/* <input type="hidden" name="uid" value={getAuth().currentUser?.uid ?? ""}></input> */}
                 <div className="relative mb-4">
 
                     {
@@ -251,26 +243,15 @@ export default function PredictCreationForm() {
                 </div> */}
             </form>
             <Divider />
-            {/* {user ? (
-                <ul>
-                    <li>UID: {user.uid}</li>
-                    <li>Display name: {user.displayName}</li>
-                    <li>Amount: {user.amount}</li>
-                    <li>Email: {user.email}</li>
-                    <li>metadata: {JSON.stringify(user.metadata)}</li>
-                    <li>phoneNumber: {user.phoneNumber}</li>
-                    <li>disabled: {user.disabled ? "yes" : "no"}</li>
-                </ul>
-
-            ) : (
-                <>
-                    <Divider /></>
-            )} */}
-
-            <Divider />
-            {/* {JSON.stringify(searchState.user)} */}
-            <Divider />
-            {/* <div>{ addPredictState.message.length == 0 ? "no error" : "cccc" + Object.keys(JSON.stringify(addPredictState.errors)).length}</div> */}
+           
+            <ConfirmationModal
+                isOpen={showModal}
+                onClose={handleCloseModal}
+                onLeftButtonClick={handleLeftBtn}
+                title={"Đã tạo xong khuyeens nghị33"}
+                message={addPredictState.message ?? "No message"}
+                leftButtonText={"Okey"}
+            />
 
         </>
     );

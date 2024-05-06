@@ -19,12 +19,12 @@ import {
 	Query,
 	FirestoreDataConverter,
 	writeBatch,
+	getDocFromServer,
 } from "firebase/firestore";
 
-import { auth, db } from "@/app/lib/firebase/firebase";
+import { db } from "@/app/lib/firebase/firebase";
 import { Expert, Prediction, Subscription, Transaction, User, expertConverter, predConverter, subscriptionConverter, transConverter, userConverter } from "../definitions";
-import { getAuth } from "firebase/auth";
-import { getCurrentUser } from "../firebaseadmin/firebaseadmin";
+
 
 function applyQueryFilters(q: Query<DocumentData, DocumentData>, params: { [key: string]: string }) {
 	if (params.visible != undefined) {
@@ -50,43 +50,47 @@ function applyQueryFilters(q: Query<DocumentData, DocumentData>, params: { [key:
 	return q;
 }
 
-export async function getAUserByID(id: string) {
-
-	const docRef = doc(db, "user", id).withConverter(userConverter);
-
-	const docSnap = await getDoc(docRef)
-	var user = docSnap.data()
-	return user
+export async function clientFetchObject<ModelType>(path: string, converter: FirestoreDataConverter<ModelType>) {
+	const docRef = doc(db, path).withConverter(converter)
+	const snap = await getDocFromServer(docRef)
+	return snap.data()
 }
 
-async function getAnExpertById(id: string) {
+// export async function getAUserByID(id: string) {
 
-	const docRef = doc(db, "expert", id).withConverter(expertConverter);
+// 	console.log('begin fetch user info2222')
+// 	const docRef = doc(db, "user", id).withConverter(userConverter)
+// 	const docSnap = await getDocFromServer(docRef)
+// 	console.log('done fetch user info222')
 
-	const docSnap = await getDoc(docRef)
-	var expert = docSnap.data()
-	if (expert) {
-		const predRef = collection(db, "expert", id, "preds").withConverter(predConverter)
+// 	// const docRef = doc(db, "user", id).withConverter(userConverter);
 
-		let preds = (await getDocs(predRef)).docs.map(doc => doc.data())
-		expert.preds = preds
-	}
+// 	// const docSnap = await getDoc(docRef)
+// 	var user = docSnap.data()
+// 	return user
+// }
 
-	return expert
-}
+// async function getAnExpertById(id: string) {
+
+// 	const docRef = doc(db, "expert", id).withConverter(expertConverter);
+
+// 	const docSnap = await getDoc(docRef)
+// 	var expert = docSnap.data()
+// 	if (expert) {
+// 		const predRef = collection(db, "expert", id, "preds").withConverter(predConverter)
+
+// 		let preds = (await getDocs(predRef)).docs.map(doc => doc.data())
+// 		expert.preds = preds
+// 	}
+
+// 	return expert
+// }
 
 
 
 
-export async function addNewPrediction(pred: Prediction, expertUid: string) {
-	const predCollection = collection(db, 'expert/' + expertUid + '/preds')
-	const docRef = await addDoc(predCollection, pred)
-	const snapshot = await getDoc(docRef.withConverter(predConverter))
-	return snapshot.data()
 
-}
-
-export async function searchCollection<ModelType>(name: string, filters = {}, converter: FirestoreDataConverter<ModelType>) {
+export async function clientSearchCollection<ModelType>(name: string, filters = {}, converter: FirestoreDataConverter<ModelType>) {
 	let q = query(collection(db, name));
 	q = applyQueryFilters(q, filters)
 	const result = await getDocs(q.withConverter(converter))
@@ -151,6 +155,4 @@ export async function getPredsFromExpert(user: User | undefined, expert: Expert 
 	} else {
 		return []
 	}
-
-
 }
