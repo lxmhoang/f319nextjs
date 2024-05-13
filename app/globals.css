@@ -17,13 +17,14 @@
 }
 
 body {
-  color: rgb(var(--foreground-rgb-1));
+  height:100vh;
+  /* color: rgb(var(--foreground-rgb-1));
   background: linear-gradient(
       to bottom,
       transparent,
       rgb(var(--background-end-rgb))
     )
-    rgb(var(--background-start-rgb));
+    rgb(var(--background-start-rgb)); */
 }
 
 @layer utilities {
@@ -31,3 +32,10 @@ body {
     text-wrap: balance;
   }
 }
+
+@layer base {
+  body {
+    @apply dark:bg-slate-900;
+  }
+}
+

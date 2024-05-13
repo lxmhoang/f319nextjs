@@ -4,6 +4,14 @@ import "./globals.css";
 import TopNav from "./ui/topnav";
 import { AppWrapper } from "./lib/context";
 import { AuthProvider } from "./components/auth-provider";
+import BottomNav from "./ui/botnav";
+import { DarkThemeToggle, Flowbite, Sidebar, ThemeModeScript } from "flowbite-react";
+import { UserGroupIcon } from "@heroicons/react/24/outline";
+import SideBar from "./ui/sidebar";
+import StatsCard from "./ui/statsCard";
+import type { CustomFlowbiteTheme } from "flowbite-react";
+import TopBar from "./ui/topbar";
+import { useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -18,18 +26,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
-  console.log("layout refresh")
   return (
     <html lang="en">
-      <body className="{inter.className} dark">
-
-        <AppWrapper>
-
-            <TopNav></TopNav>
+      <head>
+        <ThemeModeScript />
+      </head>
+      <body className="{inter.className} h-full" >
+        <Flowbite>
+          <AppWrapper>
             {children}
-        </AppWrapper>
-
-
+          </AppWrapper>
+        </Flowbite>
       </body>
     </html>
   );

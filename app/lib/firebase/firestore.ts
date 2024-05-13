@@ -131,20 +131,16 @@ export async function getExperts(filters = {}) {
 	});
 }
 
-export async function getPredsFromExpert(user: User | undefined, expert: Expert | undefined) {
-	if (!expert || !user) { 
-		return Promise.resolve([]) 
+export async function getPredsFromExpert(user: User | undefined, expert: Expert | undefined, inProgress: boolean) {
+	if (!expert) {
+		return Promise.resolve([])
 	}
-	if (user) {
-		const notSub = user.following[expert.id] == null 
-		console.log(notSub ? 'not sub ' : 'already sub')
-		let q = query(collection(db, 'expert', expert.id, 'preds').withConverter(predConverter))
-		notSub ? q = query( q, where('status','==','Closed')) : q
+	const hideInprogressOnes = !user || (user.following[expert.id] == null && user.uid != expert.id)
+	console.log(hideInprogressOnes ? 'hide them ' : 'show them sub')
+	let q = query(collection(db, 'expert', expert.id, 'preds').withConverter(predConverter))
+	q = query(q, where('status', inProgress ? '==' : '!=', 'Inprogress'))
 
-		const querySnapshot = await getDocs(q);
-		return querySnapshot.docs.map((doc) => doc.data())
+	const querySnapshot = await getDocs(q);
+	return querySnapshot.docs.map((doc) => doc.data())
 
-	} else {
-		return []
-	}
 }

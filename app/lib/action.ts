@@ -483,7 +483,7 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
       console.log("not expert")
       return {
         errors: {
-          logic: ['Ban khong phai chuyen gia']
+          logic: ['Ban khong phai chuyen gia' + uid]
         },
         justDone: false
       }

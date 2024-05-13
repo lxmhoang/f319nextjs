@@ -86,7 +86,7 @@ export default function ReviewPrediction({ preds, submit }: {
   return (
     <>
       {width}
-      <Table className="dark w-full" aria-label="Example table with dynamic content"
+      <Table className=" w-full" aria-label="Example table with dynamic content"
         // selectionMode="multiple"
         selectedKeys={selectedKeys}
         // onSelectionChange={setSelectedKeys}>

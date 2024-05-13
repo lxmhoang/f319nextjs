@@ -1,6 +1,6 @@
 import { Expert, predConverter } from "@/app/lib/definitions";
 import ExpertCard from "../expertcard";
-import { collection, query, where } from "firebase/firestore";
+import { collection, or, query, where } from "firebase/firestore";
 import { db } from "@/app/lib/firebase/firebase";
 import { useCollectionData } from "react-firebase-hooks/firestore";
 import ReviewPrediction from "./reviewPrediction";
@@ -11,16 +11,17 @@ import { getRealTimeStockData } from "@/app/lib/getStockData";
 
 export default function MyExpertView({ expert }: { expert: Expert }) {
 
-    const ref = query(collection(db, 'expert/' + expert.id + '/preds'), where("status", "==", "justCreated")).withConverter(predConverter);
+    const ref = query(collection(db, 'expert/' + expert.id + '/preds')).withConverter(predConverter);
 
 
     const [data, setData] = useState<{ [key: string]: number }>();
     const [preds, loading, error] = useCollectionData(ref);
-
+    console.log('predddd ' + JSON.stringify(preds))
     const stockList = preds?.map((e) => {
         return e.assetName
     })
 
+    console.log(JSON.stringify(expert))
     useEffect(() => {
         const fetchData = async () => {
             const data = await getRealTimeStockData(stockList ?? [])

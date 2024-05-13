@@ -1,5 +1,4 @@
 import { DocumentData, FirestoreDataConverter, QueryDocumentSnapshot, SnapshotOptions, WithFieldValue } from "firebase/firestore";
-import { metadata } from "../layout";
 
 export type CustomerField = {
   id: string;
@@ -212,6 +211,7 @@ export const predConverter: FirestoreDataConverter<Prediction> = {
     options: SnapshotOptions
   ): Prediction {
     const data = snapshot.data(options);
+    console.log('data from firestore' + JSON.stringify(data))
     return {
       assetName: data.assetName,
       dateIn: (data.dateIn as FirebaseFirestore.Timestamp).toDate(),

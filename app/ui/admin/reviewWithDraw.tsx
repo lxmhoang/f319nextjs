@@ -40,7 +40,7 @@ console.log('selected keys ' + selectedKeys == "all" ? "aaa" :  Array.from(selec
 
   return (
     <>
-  <Table className="dark" aria-label="Example table with dynamic content" 
+  <Table aria-label="Example table with dynamic content" 
       selectionMode="multiple"
       selectedKeys={selectedKeys}
       // onSelectionChange={setSelectedKeys}>

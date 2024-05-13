@@ -29,7 +29,7 @@ export const userAdminConverter: FirestoreDataConverter<User> = {
         metadata: data.metadata,
         customClaims: data.customClaims,
         phoneNumber: data.phoneNumber,
-  
+        isExpert: data.isExpert  
       };
     },
   };

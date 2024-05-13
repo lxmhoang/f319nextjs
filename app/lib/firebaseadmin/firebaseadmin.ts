@@ -83,6 +83,7 @@ export async function serverGetModal<ModelType>(docPath: string, converter: Fire
 
 export async function serverQueryCollection<ModelType>(path: string, filters : {}, converter: FirestoreDataConverter<ModelType>) {
 	let ref = db.collection(path)// query(collection(db, name));
+    console.log(filters)
     var q = undefined
     for (const [key,value] of Object.entries(filters)) {
          q =  q ? q.where(key, '==' , value) : ref.where(key,'==',value)

@@ -13,10 +13,10 @@ export async function POST(request: NextRequest) {
 
   const sessionCookie = await createSessionCookie(idToken, { expiresIn });
 
-    console.log('aaaaa sessionCookie' + JSON.stringify(sessionCookie))
+    // console.log('aaaaa sessionCookie' + JSON.stringify(sessionCookie))
   cookies().set("__session", sessionCookie, { maxAge: expiresIn, httpOnly: true, secure: true });
-  const sessionCookietest = cookies().get("__session")?.value;
-  console.log('aaaaa  test    sessionCookie' + JSON.stringify(sessionCookie))
+  // const sessionCookietest = cookies().get("__session")?.value;
+  // console.log('aaaaa  test    sessionCookie' + JSON.stringify(sessionCookie))
 
   return NextResponse.json<APIResponse<string>>({ success: true, data: "Signed in successfully." });
 }

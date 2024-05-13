@@ -24,6 +24,7 @@ export async function signInWithGoogle(refID:string | null) {
     });
     const resBody = (await response.json()) as unknown as APIResponse<string>;
     if (response.ok && resBody.success) {
+      console.log('sign in success')
       return true;
     } else return false;
   } catch (error) {

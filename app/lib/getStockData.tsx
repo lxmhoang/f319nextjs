@@ -1,4 +1,6 @@
 "use server"
+
+import { promises as fs } from 'fs';
 const vn100Code = '21'
 const vn30Code = '11'
 const hoseCode = '1'
@@ -6,6 +8,7 @@ const hnxCode = '2'
 const hnx30Code = '12'
 const upcomCode = '9'
 const url = 'https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode='
+const urlMatchTime = 'https://iboard-query.ssi.com.vn/stock/'
 const urlRealTime = 'https://banggia.cafef.vn/stockhandler.ashx?userlist='
 
 const MIN_VOLUME = 100000
@@ -19,7 +22,7 @@ export async function getRealTimeStockData(stocks: string[]) {
     let object : {[key: string] : number} = {}
     result.map((d: { a: string, v: number }) => {
       const key = d.a as string
-      const value = d.v
+      const value = d.v // hight, d.w is low
       object[key] = value
     })
 
@@ -29,6 +32,65 @@ export async function getRealTimeStockData(stocks: string[]) {
     throw err
   }
 }
+// try {
+//   const userCreds = await signInWithPopup(auth, provider);
+//   const idToken = await userCreds.user.getIdToken();
+//   const response = await fetch("/api/auth/sign-in", {
+//     method: "POST",
+//     headers: {
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify({ idToken }),
+//   });
+//   const resBody = (await response.json()) as unknown as APIResponse<string>;
+//   if (response.ok && resBody.success) {
+//     return true;
+//   } else return false;
+// } catch (error) {
+//   console.error("Error signing in with Google", error);
+//   return false;
+// }
+
+export async function getTodayMatchedVolume(stock: string) {
+  try {
+    const response = await fetch(urlMatchTime + stock + '/matched-vol-by-price',{
+      method: "GET",
+      headers: {
+        "origin": "https://iboard.ssi.com.vn",
+        "cache-control": "no-cache",
+      }})
+    if (!response.ok) {
+      throw new Error('Failed to fetch data')
+    }
+    const resBody = await response.json() as {
+      code: string,
+      message: string,
+      data: {
+        price: number,
+        stockSymbol: string
+        // "buyUpVol": 1500,
+        // "changeType": "U",
+        // "sellDownVol": 0,
+        // "totalVol": 1500,
+        // "unknownVol": 0
+
+      }[]
+    }
+
+    return resBody.data.map((item) => item.price)
+  }
+  catch (err) {
+    throw err
+  }
+}
+
+export async function getLocalStockList() {
+
+  const string = await fs.readFile(process.cwd() + '/public/stockList.json', 'utf-8')
+  const array =  string.split(',')
+  return array
+}
+
 
 
 export default async function getStockData() {

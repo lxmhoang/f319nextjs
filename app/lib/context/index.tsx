@@ -49,15 +49,15 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
 
                 updateToken(firebaseUser)
                 setUser(doc.data())
-            }) 
-            : 
+            })
+            :
             () => {
                 console.log('olddddd set new user null, going to set  new user')
                 setUser(undefined)
 
             }
-                if (!firebaseUser) {
-                    console.log('set new user null')
+        if (!firebaseUser) {
+            console.log('set new user null')
             setUser(undefined)
         }
         return unsubscribe

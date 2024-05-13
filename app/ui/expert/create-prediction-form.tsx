@@ -1,22 +1,15 @@
 'use client';
-import Link from 'next/link';
-import { redirect, useRouter } from 'next/navigation'
-import {
-    CurrencyDollarIcon,
-    HeartIcon,
-    UserCircleIcon,
-} from '@heroicons/react/24/outline';
+import { useRouter } from 'next/navigation'
 
 import { Button } from '@/app/ui/button';
-import { SearchUseFormState, createNewPrediction, createNewTransaction, registerExpert, searchUserForPayment } from '@/app/lib/action';
+import { createNewPrediction } from '@/app/lib/action';
 import { useFormState } from 'react-dom';
-import { ChangeEvent, useEffect, useReducer, useState } from 'react';
-import { Divider, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button as ButtonReact, useDisclosure, Autocomplete, AutocompleteItem } from '@nextui-org/react';
-import { CompanyRTInfo, User } from '@/app/lib/definitions';
-import { getAuth } from 'firebase/auth';
-import { useFetchData } from '@/app/lib/hooks/useFetchData';
+import { useEffect, useState } from 'react';
+import { Divider, useDisclosure, Autocomplete, AutocompleteItem } from '@nextui-org/react';
+import { CompanyRTInfo } from '@/app/lib/definitions';
 import { ConfirmationModal } from '../confirm';
 import { useAppContext } from '@/app/lib/context';
+import { getLocalStockList, getRealTimeStockData } from '@/app/lib/getStockData';
 
 
 let parser = (data: { [key: string]: any }) => {
@@ -70,10 +63,13 @@ let parserCompRTInfo = (array: { [key: string]: any }[]) => {
 
 export default function PredictCreationForm() {
 
-    const [comps, error] = useFetchData()
-    const [selectedComp, setSelectedCompComp] = useState<rawCom>()
-    const minTakeProfitPrice = selectedComp ? selectedComp.HighPrice * 1.1 : 0
-    const maxCutLossPrice = selectedComp ? selectedComp.HighPrice * 0.9 : 0
+    // const [comps, error] = useFetchData()
+    const [selectedStock, setSelectedStock] = useState<string>()
+    const [selectedStockPrice, setSelectedStockPrice] = useState<number>()
+    const [stockCodes, setStockCodes] = useState<string[]>([])
+    // const [selectedComp, setSelectedCompComp] = useState<rawCom>()
+    const minTakeProfitPrice = selectedStockPrice ? selectedStockPrice * 1.1 : 0
+    const maxCutLossPrice = selectedStockPrice ? selectedStockPrice * 0.9 : 0
 
     // const [compInfo, err] = useFetchData<CompanyRTInfo | null>("https://banggia.cafef.vn/stockhandler.ashx?userlist=" + selectedComp?.Symbol ?? "", parserCompRTInfo)   
 
@@ -98,6 +94,32 @@ export default function PredictCreationForm() {
     const handleCloseModal = () => {
         setShowModal(false);
     };
+
+    useEffect(() => {
+        console.log('getting local stock list')
+        const fetchData = async () => {
+            const result = await getLocalStockList()
+
+        console.log('fetched local stock list' + result)
+            setStockCodes(result)
+        }
+        fetchData()
+
+    } , [])
+
+    useEffect(() => {
+        const fetchData = async () => {
+            console.log('getting price of selected stock : ' + selectedStock)
+            if (selectedStock) {
+                const result = await getRealTimeStockData([selectedStock])
+                const price = result[selectedStock]
+                setSelectedStockPrice(price)
+            }
+        }
+        fetchData()
+
+
+    }, [selectedStock])
 
     return (
         <>
@@ -135,30 +157,31 @@ export default function PredictCreationForm() {
             <form action={dispatchAddtran} className='p-4'>
 
 
-                <div className="relative mb-4"> {selectedComp != null && selectedComp != undefined ? (<>Giá mua vào hiện tại {selectedComp.HighPrice} </>) : (<> Hãy chọn 1 cổ phiếu</>)}</div>
-                <input type="hidden" name="priceIn" value={selectedComp?.HighPrice ?? 0}></input>
+                <div className="relative mb-4"> {selectedStock != null && selectedStock != undefined ? (<>Giá mua vào hiện tại {selectedStockPrice} </>) : (<> Hãy chọn 1 cổ phiếu</>)}</div>
+                <input type="hidden" name="priceIn" value={selectedStockPrice ?? 0}></input>
                 {/* <input type="hidden" name="uid" value={getAuth().currentUser?.uid ?? ""}></input> */}
                 <div className="relative mb-4">
 
                     {
-                        (Array.isArray(comps)) ?
+                        (stockCodes.length > 0) ?
                             (<Autocomplete
                                 name="assetName"
                                 // onKeyDown={(e) => e.co()}
                                 onKeyDown={(e: any) => e.continuePropagation()}
-                                label="Chọn 1 công ty"
+                                // label="Chọn 1 công ty"
                                 className="max-w-xs"
                                 isRequired
                                 onSelectionChange={(index) => {
                                     console.log('aa' + index)
-                                    setSelectedCompComp(comps[index as number])
+                                    setSelectedStock(stockCodes[index as number])
+                                    // setSelectedCompComp(comps[index as number])
                                 }}
                             >
 
-                                {comps.map((code, index) => (
+                                {stockCodes.map((code, index) => (
 
-                                    <AutocompleteItem key={index} value={code.Symbol} className="">
-                                        {code.Symbol}
+                                    <AutocompleteItem key={index} value={code} className="">
+                                        {code}
                                     </AutocompleteItem>
                                 ))}
                             </Autocomplete>)

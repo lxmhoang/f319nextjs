@@ -15,74 +15,40 @@ import {
   Divider
 } from "@nextui-org/react";
 import Link from 'next/link';
-
 import clsx from 'clsx';
-import { auth, } from "../lib/firebase/firebase";
 import { signInWithGoogle, signOut } from "../lib/firebase/auth";
 import { useAppContext } from "../lib/context";
 import { useState } from "react";
-import { activate } from "firebase/remote-config";
 import { convert } from "../lib/utils";
-
-
-
-
-
+import { DarkThemeToggle } from "flowbite-react";
 export default function TopNav() {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user } = useAppContext()
   const dropDownInfo =
-    user && user.isAdmin ?
+    user && user.isExpert ?
       [
         { key: "home", href: "/", label: "Home", activated: true },
         { key: "expert", href: "/expert", label: "Expert", activated: true },
         { key: "divider", href: "#", label: "", activated: true },
-        { key: "admin", href: "/admin", label: "Admin", activated: true },
         { key: "myprofile", href: "/profile", label: "My Profile", activated: true },
         { key: "myexpert", href: "/profile/expert", label: "My Expert Profile", activated: true },
-        user ?
-          { key: "signout", href: "", label: "Sign out", activated: true } :
-          { key: "signin", href: "", label: "Sign in", activated: true }
+        { key: "signout", href: "", label: "Sign out", activated: true }
       ]
       :
-      user ?
-        [
-          { key: "home", href: "/", label: "Home", activated: true },
-          { key: "expert", href: "/expert", label: "Expert", activated: true },
-          { key: "divider", href: "#", label: "", activated: true },
-          { key: "myprofile", href: "/profile", label: user.email, activated: true },
-          { key: "myexpert", href: "/profile/expert", label: "My Expert Profile", activated: true },
-          user ?
-            { key: "signout", href: "", label: "Sign out", activated: true } :
-            { key: "signin", href: "", label: "Sign in", activated: true }
-        ]
-        :
-        [
-          { key: "home", href: "/", label: "Home", activated: true },
-          { key: "expert", href: "/expert", label: "Expert List", activated: true },
-          { key: "divider", href: "#", label: "", activated: true },
-          { key: "myprofile", href: "/profile", label: "My Profile", activated: user != undefined },
-          { key: "myexpert", href: "/profile/expert", label: "My Expert Profile", activated: (user != undefined) },
-          user ? { key: "signout", href: "", label: "Sign out", activated: true } : { key: "signin", href: "", label: "Sign in", activated: true }
-        ]
-  //   :
-  //   [
-  //     { key: "home", href: "/", label: "Home" },
-  //     { key: "expert", href: "/expert", label: "Home" },
-  //     { key: "divider", },
-  //     { key: "myprofile", href: "/profile", label: "Profile" },
-  //     { key: "myexpert", href: "/profile/expert", label: "Expert" },
-  //     { key: "signout", label: "Sign out" }
-  //   ] : [
-  //   { key: "home", href: "/profile", label: "Profile" },
-  //   { key: "expert", href: "/expert", label: "Expert" },
-  //   { key: "sign", label: "Sign in" }
-  // ]
 
-  // console.log(dropDownInfo)
+      [
+        { key: "home", href: "/", label: "Home", activated: true },
+        { key: "expert", href: "/expert", label: "Expert List", activated: true },
+        { key: "divider", href: "#", label: "", activated: true },
+        { key: "myexpert", href: "/profile/expert", label: "My Expert Profile", activated: false },
+        { key: "myprofile", href: "/profile", label: "My Profile", activated: user != undefined },
+        user ? { key: "signout", href: "", label: "Sign out", activated: true } :
+          { key: "signin", href: "", label: "Sign in", activated: true }
+      ]
   const MenuButton = ({ title, menuInfo }: { title: string, menuInfo: { key: string }[] }) => {
     return (
+      
       <Dropdown>
         <DropdownTrigger>
           <Button
@@ -120,6 +86,7 @@ export default function TopNav() {
           }
 
         </DropdownMenu>
+
       </Dropdown>
     );
 
@@ -140,11 +107,14 @@ export default function TopNav() {
   };
 
   return (
-    <Navbar isBordered className="dark h-[66px] sm:h-[66px] " maxWidth='full' justify-between="left" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
+    <Navbar position="static" isBordered className="h-[44px] sm:h-[66px] " maxWidth='full'
+      justify-between="left" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
       <NavbarMenuToggle
         aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-        className="w-[66px] h-full bg-red-500  sm:w-[66px] sm:h-[66px]"
+        className="w-[44px] h-[44px] sm:w-[66px] sm:h-[66px] sm:hidden"
       />
+
+      <DarkThemeToggle className="sm:hidden" /> 
       <NavbarMenu>
 
         {dropDownInfo.map((item, index) => {
@@ -187,10 +157,43 @@ export default function TopNav() {
       {/* <NavbarContent className="hidden sm:flex gap-5" justify="start">
         <NavLinks />
       </NavbarContent> */}
-      <NavbarContent>
-        <div className="profile p-2">
-          <MenuButton title={menuLabel} menuInfo={dropDownInfo} />
+      <NavbarContent className="hidden sm:flex gap-4" justify="start">
+        <div className="profile">
+          {/* <MenuButton title={menuLabel} menuInfo={dropDownInfo} /> */}
         </div>
+        {dropDownInfo.map((item, index) => {
+          if (item.key == 'divider') {
+            return (<></>)
+          }
+
+
+          return (
+            <NavbarItem key={`${item}-${index}`} onClick={item.activated ? (e) => {
+              // console.log('eeee')
+              e.preventDefault()
+              if (item.key == 'signin') {
+                login()
+              }
+              if (item.key == 'signout') {
+                signOut()
+              }
+            } : undefined} >
+              <Link
+                className="w-full"
+                href={item.activated ? { pathname: item.href } : ""}
+              >
+                <p className={clsx({
+
+                  "text-white-600": item.activated == true,
+                  "text-gray-600": item.activated == false
+                })}>
+                  {item.label}
+                </p>
+              </Link>
+            </NavbarItem>
+          )
+        })}
+        <DarkThemeToggle />
 
         {/* <NavbarItem className="flex">
           {user ? (
