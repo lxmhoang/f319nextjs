@@ -36,7 +36,6 @@ export default function TopNav() {
         { key: "signout", href: "", label: "Sign out", activated: true }
       ]
       :
-
       [
         { key: "home", href: "/", label: "Home", activated: true },
         { key: "expert", href: "/expert", label: "Expert List", activated: true },
@@ -107,11 +106,11 @@ export default function TopNav() {
   };
 
   return (
-    <Navbar position="static" isBordered className="h-[44px] sm:h-[66px] " maxWidth='full'
+    <Navbar  shouldHideOnScroll={false} position="sticky" isBordered className="h-[66px] sm:h-[66px] " maxWidth='full'
       justify-between="left" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
       <NavbarMenuToggle
         aria-label={isMenuOpen ? "Close menu" : "Open menu"}
-        className="w-[44px] h-[44px] sm:w-[66px] sm:h-[66px] sm:hidden"
+        className="w-[44px] h-[66px] sm:w-[66px] sm:h-[66px] sm:hidden"
       />
 
       <DarkThemeToggle className="sm:hidden" /> 

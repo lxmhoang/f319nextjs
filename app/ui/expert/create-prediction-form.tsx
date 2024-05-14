@@ -5,11 +5,15 @@ import { Button } from '@/app/ui/button';
 import { createNewPrediction } from '@/app/lib/action';
 import { useFormState } from 'react-dom';
 import { useEffect, useState } from 'react';
-import { Divider, useDisclosure, Autocomplete, AutocompleteItem } from '@nextui-org/react';
-import { CompanyRTInfo } from '@/app/lib/definitions';
+import { Divider, useDisclosure, Autocomplete, AutocompleteItem, Slider } from '@nextui-org/react';
+import { CompanyRTInfo, expertConverter, predConverter } from '@/app/lib/definitions';
 import { ConfirmationModal } from '../confirm';
 import { useAppContext } from '@/app/lib/context';
 import { getLocalStockList, getRealTimeStockData } from '@/app/lib/getStockData';
+import { useDocument } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
+import { db } from '@/app/lib/firebase/firebase';
+import { clientFetchObject, clientSearchCollection } from '@/app/lib/firebase/firestore';
 
 
 let parser = (data: { [key: string]: any }) => {
@@ -62,6 +66,24 @@ let parserCompRTInfo = (array: { [key: string]: any }[]) => {
 }
 
 export default function PredictCreationForm() {
+    const { user } = useAppContext()
+    const [remainPortion, setRemainPortion] = useState<number>()
+
+    useEffect(() =>  {
+        const getPreds = async () => {
+            if (!user) {
+                return
+            }
+
+         const preds = await clientSearchCollection('expert/' + user.uid + '/preds', {status: "Inprogress"}, predConverter)
+         const sum = preds.map((i) => i.portion).reduce( (a,b) => a+b,0)
+         setRemainPortion(100-sum)
+        }
+
+        getPreds()
+       
+
+    }, [user])
 
     // const [comps, error] = useFetchData()
     const [selectedStock, setSelectedStock] = useState<string>()
@@ -74,7 +96,6 @@ export default function PredictCreationForm() {
     // const [compInfo, err] = useFetchData<CompanyRTInfo | null>("https://banggia.cafef.vn/stockhandler.ashx?userlist=" + selectedComp?.Symbol ?? "", parserCompRTInfo)   
 
     const router = useRouter()
-    const { user} = useAppContext()
 
     const initialFormState = { message: "", errors: {}, justDone: false };
     const [addPredictState, dispatchAddtran] = useFormState(createNewPrediction, initialFormState);
@@ -85,7 +106,7 @@ export default function PredictCreationForm() {
         setShowModal(true)
         addPredictState.justDone = false
     }
-    
+
     const handleLeftBtn = () => {
         router.push('/profile/expert')
         setShowModal(false);
@@ -100,12 +121,12 @@ export default function PredictCreationForm() {
         const fetchData = async () => {
             const result = await getLocalStockList()
 
-        console.log('fetched local stock list' + result)
+            console.log('fetched local stock list' + result)
             setStockCodes(result)
         }
         fetchData()
 
-    } , [])
+    }, [])
 
     useEffect(() => {
         const fetchData = async () => {
@@ -154,6 +175,7 @@ export default function PredictCreationForm() {
             {/* <div className='p-1'>
                 {selectedComp ? selectedComp.Symbol : ""}
             </div> */}
+            {remainPortion}
             <form action={dispatchAddtran} className='p-4'>
 
 
@@ -187,8 +209,6 @@ export default function PredictCreationForm() {
                             </Autocomplete>)
                             :
                             (<>Loading list ... </>)
-
-
                     }
                 </div>
                 <label htmlFor="takeProfitPrice" className="mb-2 block text-sm font-medium">
@@ -200,8 +220,8 @@ export default function PredictCreationForm() {
                         className="peer block w-1/3 rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
                         placeholder="Giá mục tiêu chốt lời"
                         // startContent={<HeartIcon size={18} />}
-                        type="number" 
-                        // min={minTakeProfitPrice}
+                        type="number"
+                    // min={minTakeProfitPrice}
                     />
                 </div>
                 <div id="customer-error" aria-live="polite" aria-atomic="true">
@@ -222,7 +242,7 @@ export default function PredictCreationForm() {
                         placeholder="Nhap gia cat lo"
                         // startContent={<HeartIcon size={18} />}
                         type="number"
-                        //  max={maxCutLossPrice}
+                    //  max={maxCutLossPrice}
                     />
                 </div>
                 <div id="customer-error" aria-live="polite" aria-atomic="true">
@@ -253,9 +273,20 @@ export default function PredictCreationForm() {
                             </p>
                         ))} */}
                 </div>
+                <div className="mb-4 max-w">
+                    <Slider
+                    name='portion'
+                        label={"Max portion : " + remainPortion + "%"}
+                        step={10}
+                        maxValue={remainPortion}
+                        minValue={0}
+                        defaultValue={20}
+                        className="max-w-md"
+                    />
+                </div>
 
 
-                <Button type="submit">Search</Button>
+                <Button type="submit">Tạo khuyến nghị </Button>
                 {/* <div id="customer-error" aria-live="polite" aria-atomic="true">
                     {addPredictState.errors?.assetName &&
                         addPredictState.errors?.general.map((error: string) => (
@@ -266,7 +297,7 @@ export default function PredictCreationForm() {
                 </div> */}
             </form>
             <Divider />
-           
+
             <ConfirmationModal
                 isOpen={showModal}
                 onClose={handleCloseModal}

@@ -1,16 +1,12 @@
 "use client"
 
-import { apps } from "firebase-admin";
 
 import Cookies from "js-cookie";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebase";
 import { User as FireBaseUser, getAuth } from "firebase/auth";
-import { useRouter } from "next/navigation";
 import { User, userConverter } from "../definitions";
-import { useDocument, useDocumentData } from "react-firebase-hooks/firestore";
-import { doc, getDoc, getDocFromServer, onSnapshot } from "firebase/firestore";
-import { clientFetchObject } from "../firebase/firestore";
+import { doc, onSnapshot } from "firebase/firestore";
 
 
 const AppContext = createContext<{ user: User | undefined }>({ user: undefined });

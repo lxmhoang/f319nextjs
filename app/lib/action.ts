@@ -426,6 +426,7 @@ export type PredictionFormState = {
     cutLoss?: string[];
     dateIn?: string[];
     dateOut?: string[];
+    portion?: string[];
     // note?: string[];
     logic?: string[]
   };
@@ -442,6 +443,7 @@ const PredictionFormSchema = z.object({
   cutLoss: z.number(),
   dateIn: z.date(),
   deadLine: z.date(),
+  portion: z.number(),
   // note?:z.date().optional()
 })
 
@@ -453,12 +455,13 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
     priceIn: Number(formData.get('priceIn')),
     priceOut: Number(formData.get('takeProfitPrice')),
     cutLoss: Number(formData.get('cutLossPrice')),
+    portion: Number(formData.get('portion')),
     dateIn: new Date(),
     deadLine: new Date(formData.get('deadLine') as string),
     // note: formData.get('note'),
   });
 
-  console.log("Prediction to be added : assetName " + formData.get('assetName') + formData.get('priceIn') + formData.get('takeProfitPrice') + " ----" + formData.get('cutLossPrice') + Date() + formData.get('deadLine'))
+  console.log("Prediction to be added : portion " + formData.get('portion') +" assetName " + formData.get('assetName') + formData.get('priceIn') + formData.get('takeProfitPrice') + " ----" + formData.get('cutLossPrice') + Date() + formData.get('deadLine'))
   if (!validatedFields.success) {
     console.log("error: " + JSON.stringify(validatedFields.error.flatten()))
     return {
@@ -505,6 +508,7 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
   const priceIn = Number(formData.get('priceIn'))
   const priceOut = Number(formData.get('takeProfitPrice'))
   const cutLoss = Number(formData.get('cutLossPrice'))
+  const portion = Number(formData.get('portion'))
 
   const pred: Prediction = {
     assetName: assetName,
@@ -513,8 +517,9 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
     priceOut: priceOut,
     cutLoss: cutLoss,
     deadLine: deadLine,
-    status: "justCreated",
-    note: ''
+    status: "Inprogress",
+    note: '',
+    portion: portion
   }
 
 

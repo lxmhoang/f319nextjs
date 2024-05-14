@@ -84,7 +84,7 @@ export default function BottomNav() {
 
     return (
         <>
-            <div className={clsx('grid h-[54px] max-w-lg mx-auto mt-4 font-medium', {
+            <div className={clsx('dark:bg-slate-900 bg-white grid h-[54px] max-w-lg mx-auto mt-4 font-medium', {
                 'grid-cols-4': tabInfo.length == 4,
                 'grid-cols-5': tabInfo.length == 5,
             })}>

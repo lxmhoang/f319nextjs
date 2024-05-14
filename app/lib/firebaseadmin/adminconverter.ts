@@ -80,7 +80,8 @@ export const predAdminConverter: FirestoreDataConverter<Prediction> = {
         cutLoss: pred.cutLoss,
         deadLine: pred.deadLine,
         note: pred.note,
-        status: pred.status
+        status: pred.status,
+        portion: pred.portion
       };
     },
     fromFirestore(
@@ -99,6 +100,7 @@ export const predAdminConverter: FirestoreDataConverter<Prediction> = {
         id: snapshot.id,
         note: data.note,
         status: data.status,
+        portion: data.portion
       };
     },
   };

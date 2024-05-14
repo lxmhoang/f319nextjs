@@ -106,6 +106,7 @@ export type Prediction = {
   priceRelease?: number;
   status: string;
   note: string;
+  portion: number;
 }
 
 export type User = {
@@ -203,7 +204,8 @@ export const predConverter: FirestoreDataConverter<Prediction> = {
       dateRelease: pred.dateRelease,
       priceRelease: pred.priceRelease,
       note: pred.note,
-      status: pred.status
+      status: pred.status,
+      portion: pred.portion
     };
   },
   fromFirestore(
@@ -224,6 +226,7 @@ export const predConverter: FirestoreDataConverter<Prediction> = {
       id: snapshot.id,
       note: data.note,
       status: data.status,
+      portion: data.portion
     };
   },
 };

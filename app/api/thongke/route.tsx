@@ -14,7 +14,7 @@ export async function GET(request: Request) {
 
     for (const expert of experts) {
       const eid = expert.id
-      let openPreds = await serverQueryCollection('expert/' + eid + '/preds', { status: "justCreated" }, predAdminConverter)
+      let openPreds = await serverQueryCollection('expert/' + eid + '/preds', { status: "Inprogress" }, predAdminConverter)
 
       message.push('expert id : ' + eid + '\n')
 
