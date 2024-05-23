@@ -33,10 +33,14 @@ export async function GET(request: Request) {
       for (const expert of experts) {
         var perform = 1.0
         const eid = expert.id
-        let openPreds = await serverQueryCollection('expert/' + eid + '/preds', [
-          { key: 'status', operator: '==', value: "Inprogress" },
-          { key: 'dateIn', operator: '>=', value: pivotDay }
-        ], predAdminConverter)
+        let allPreds = await serverQueryCollection('expert/' + eid + '/preds', [] , predAdminConverter)
+        // let openPreds = await serverQueryCollection('expert/' + eid + '/preds', [
+        //   { key: 'status', operator: '==', value: "Inprogress" },
+        //   { key: 'dateIn', operator: '>=', value: pivotDay }
+        // ], predAdminConverter)
+        let openPreds = allPreds.filter((item) => {
+          return item.status =="Inprogress" && item.dateIn >= pivotDay
+        })
   
         message.push('expert id : ' + eid +  ' name ' + expert.name +'\n\n\n\n')
   
@@ -86,8 +90,12 @@ export async function GET(request: Request) {
           }
         }
   
-        let closePreds = await serverQueryCollection('expert/' + eid + '/preds', [{ key: 'status', operator: '!=', value: "Inprogress" },
-        { key: 'dateIn', operator: '>=', value: pivotDay }], predAdminConverter)
+        // let closePreds = await serverQueryCollection('expert/' + eid + '/preds', [{ key: 'status', operator: '!=', value: "Inprogress" },
+        // { key: 'dateIn', operator: '>=', value: pivotDay }], predAdminConverter)
+
+        let closePreds = allPreds.filter((item) => {
+          return item.status != "Inprogress" && item.dateIn >= pivotDay
+        })
         for (const pred of closePreds) {
           if (pred.priceRelease) {
             const ratio = pred.priceRelease / pred.priceIn
