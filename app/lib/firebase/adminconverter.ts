@@ -21,11 +21,12 @@ export const userAdminConverter: FirestoreDataConverter<User> = {
       const data = snapshot.data();
       return {
         uid: snapshot.id,
+        accessId: data.accessId,
         displayName: data.displayName,
         amount: data.amount,
         disabled: data.disabled,
         email: data.email,
-        following: data.following,
+        following: data.following ?? {},
         metadata: data.metadata,
         customClaims: data.customClaims,
         phoneNumber: data.phoneNumber,
@@ -42,7 +43,7 @@ export const expertAdminConverter: FirestoreDataConverter<Expert> = {
         name: expert.name, 
         shortInfo: expert.shortInfo,
         selfIntro: expert.selfIntro,
-        followerNum: expert.followerNum,
+        follower: expert.follower,
         status: expert.status,
         permPrice: expert.permPrice, 
         monthlyPrice: expert.monthlyPrice,
@@ -57,12 +58,15 @@ export const expertAdminConverter: FirestoreDataConverter<Expert> = {
         avatar: data.avatar,
         imageURL: data.imageURL,
         name: data.name,
-        followerNum: data.followerNum,
+        follower: data.follower,
         permPrice: data.permPrice,
         monthlyPrice: data.monthlyPrice,
         shortInfo: data.shortInfo,
         selfIntro: data.selfIntro,
         status: data.status,
+        halfYear: data.halfYear,
+        oneYear: data.oneYear,
+        twoYear: data.twoYear
       };
     },
   };
@@ -88,6 +92,7 @@ export const predAdminConverter: FirestoreDataConverter<Prediction> = {
       snapshot: QueryDocumentSnapshot,
     ): Prediction {
       const data = snapshot.data();
+      const dateRelease = data.dateRelease ?  (data.dateRelease as FirebaseFirestore.Timestamp).toDate() : undefined
       return {
         assetName: data.assetName,
         dateIn: (data.dateIn as FirebaseFirestore.Timestamp).toDate(),
@@ -95,7 +100,7 @@ export const predAdminConverter: FirestoreDataConverter<Prediction> = {
         priceOut: data.priceOut,
         cutLoss: data.cutLoss,
         deadLine: (data.deadLine as FirebaseFirestore.Timestamp).toDate(),
-        dateRelease: data.dateRelease,
+        dateRelease: dateRelease,
         priceRelease: data.priceRelease,
         id: snapshot.id,
         note: data.note,

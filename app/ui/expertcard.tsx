@@ -5,52 +5,47 @@ import { useDownloadURL } from "react-firebase-hooks/storage";
 import { storage } from "../lib/firebase/firebase";
 import { getStorage, ref as storageRef } from 'firebase/storage';
 import { Expert } from "../lib/definitions";
+import { Table } from "flowbite-react";
 
-export default function ExpertCard({ expert }: { expert:Expert }) {
+export default function ExpertCard({ expert }: { expert: Expert }) {
 
   const [imagedownloadURL, loading, error] = useDownloadURL(storageRef(storage, expert.avatar ?? "uploads/profileImage/1111"));
 
 
   return (
-    <Link className="justify-center" href={{ pathname: `/expertdetails/${expert.id}` }}>
-      <div className=" p-2   rounded-sm">
-        <Card className="">
-          <CardHeader className=" gap-3 flex">
-          
-          <User name={expert.name}
+    <div>{error?.message}
+      {expert.avatar}
+      <Link className="justify-center" href={{ pathname: `/expert/details/${expert.id}` }}>
+        <div className=" p-2   rounded-sm">
+          <Card className="">
+            <CardHeader className=" gap-3 flex">
+              <User name={expert.name}
                 avatarProps={{
-                  src:  imagedownloadURL 
+                  src: imagedownloadURL
                 }}
               />
-          </CardHeader>
-
-
-          <Divider />
-          <CardBody>
-          {/* {
-            <Image className="max-w-40 max-h-40"
-              alt="nextui logo"
-              radius="sm"
-              // fill = "true"
-              src={imagedownloadURL}
-            />} */}
-            <ul>
-              <p>Số người đăng ký: {expert.followerNum}</p>
-              <p>Tỷ lệ lãi 12/94</p>
-
-            </ul>
-
-          </CardBody>
-          {/* <Divider/> */}
-          {/* <CardFooter> */}
-          {/* <Link
-      isExternal
-      showAnchorIcon
-      href="https://github.com/nextui-org/nextui"
-    >
-     {expert.selfIntro}
-    </Link> */}
-          {/* </CardFooter> */}
-        </Card>
-      </div></Link>);
+              {expert.follower.length}
+            </CardHeader>
+            <Divider />
+            <CardBody>
+      
+              <div className="flex w-1/2"> 	&nbsp;6 th:<p className="text-sky-400">	&nbsp;&nbsp;{(expert.halfYear!*100).toFixed(2) + "%"}</p></div>
+              <div className="flex w-1/2"> 12 th:<p className="text-sky-400">	&nbsp;&nbsp;{(expert.oneYear!*100).toFixed(2) + "%"}</p></div>
+              <div className="flex w-1/2"> 24 th:<p className="text-sky-400">	&nbsp;&nbsp;{(expert.twoYear!*100).toFixed(2) + "%"}</p></div>
+      
+            </CardBody>
+            {/* <Divider/> */}
+            {/* <CardFooter> */}
+            {/* <Link
+        isExternal
+        showAnchorIcon
+        href="https://github.com/nextui-org/nextui"
+      >
+       {expert.selfIntro}
+      </Link> */}
+            {/* </CardFooter> */}
+          </Card>
+        </div></Link>
+    </div>
+      );
 }

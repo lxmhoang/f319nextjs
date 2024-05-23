@@ -107,10 +107,12 @@ export type Prediction = {
   status: string;
   note: string;
   portion: number;
+  long?: boolean
 }
 
 export type User = {
   uid: string;
+  accessId: string;
   displayName: string;
   amount: number;
   disabled: boolean;
@@ -119,7 +121,20 @@ export type User = {
     isAdmin: boolean,
     isExpert: boolean
   };
-  following: {[key:string] : {}};
+
+  following: {
+    eid: string, 
+    uid: string,
+    endDate: Date,
+    perm: boolean,
+    subcriptionDocId: string,
+  }[];
+  
+  // {[key:string] : {
+  //   perm: boolean,
+  //   endDate: Date,
+  //   subcriptionDocId: string
+  // }};
   metadata?: {};
   phoneNumber?: string
   isAdmin?: boolean,
@@ -141,13 +156,22 @@ export type Expert = {
   avatar: string;
   imageURL: string;
   name: string;
-  followerNum: number;
+  follower: {
+    eid: string, 
+    uid: string,
+    endDate: Date,
+    perm: boolean,
+    subcriptionDocId: string,
+  }[];
   permPrice: number;
   monthlyPrice: number;
   selfIntro: string;
   shortInfo: string;
   status: ExpertStatus;
-  preds?: Prediction[]
+  preds?: Prediction[];
+  halfYear?: number;
+  oneYear?: number;
+  twoYear?: number;
 }
 
 export type Transaction = {
@@ -156,7 +180,7 @@ export type Transaction = {
   toUid: string;
   fromUid: string;
   amount: number;
-  date?: Date
+  date: Date
   note?: string
   imageURL?: string[]
   notebankacc?: string
@@ -225,7 +249,7 @@ export const predConverter: FirestoreDataConverter<Prediction> = {
       priceRelease: data.priceRelease,
       id: snapshot.id,
       note: data.note,
-      status: data.status,
+      status: data.status ?? "Unknown",
       portion: data.portion
     };
   },
@@ -254,7 +278,7 @@ export const transConverter: FirestoreDataConverter<Transaction> = {
       fromUid: data.fromUid,
       amount: data.amount,
       tranType: data.tranType,
-      date: data.date,
+      date: (data.date as FirebaseFirestore.Timestamp).toDate(),
       imageURL: data.imageURL,
       note: data.note,
       id: snapshot.id,
@@ -272,27 +296,49 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
       name: expert.name, 
       shortInfo: expert.shortInfo,
       selfIntro: expert.selfIntro,
-      followerNum: expert.followerNum,
+      follower: expert.follower,
       status: expert.status,
       permPrice: expert.permPrice, 
       monthlyPrice: expert.monthlyPrice,
+      halfYear: expert.halfYear,
+      oneYear: expert.oneYear,
+      twoYear: expert.twoYear
     };
   },
   fromFirestore(
     snapshot: QueryDocumentSnapshot
   ): Expert {
     const data = snapshot.data();
+    const follower = data.follower ? (data.follower as  {
+      eid: string;
+      uid: string;
+      endDate: FirebaseFirestore.Timestamp;
+      perm: boolean;
+      subcriptionDocId: string;
+  }[]).map((item) => {
+    return {
+      eid: item.eid,
+      uid:item.uid,
+      perm: item.perm,
+      subcriptionDocId: item.subcriptionDocId,
+      endDate: item.endDate.toDate()
+    }
+  }) : []
     return {
       id: snapshot.id,
       avatar: data.avatar,
       imageURL: data.imageURL,
       name: data.name,
-      followerNum: data.followerNum,
+      follower:follower,
+      
       permPrice: data.permPrice,
       monthlyPrice: data.monthlyPrice,
       shortInfo: data.shortInfo,
       selfIntro: data.selfIntro,
       status:  ExpertStatus.activated,
+      halfYear: data.halfYear ?? 1,
+      oneYear: data.oneYear ?? 1,
+      twoYear: data.twoYear ?? 1
     };
   },
 };
@@ -303,6 +349,7 @@ export const userConverter: FirestoreDataConverter<User> = {
   toFirestore(user: WithFieldValue<User>): DocumentData {
     return {
       following: user.following,
+      accessId: user.accessId,
       uid: user.uid,
       displayName: user.displayName,
       amount: user.amount,
@@ -318,8 +365,25 @@ export const userConverter: FirestoreDataConverter<User> = {
     options: SnapshotOptions
   ): User {
     const data = snapshot.data(options);
+    const following = data.following ? (data.following as  {
+      eid: string;
+      uid: string;
+      endDate: FirebaseFirestore.Timestamp;
+      perm: boolean;
+      subcriptionDocId: string;
+  }[]).map((item) => {
+    return {
+      eid: item.eid,
+      uid:item.uid,
+      perm: item.perm,
+      subcriptionDocId: item.subcriptionDocId,
+      endDate: item.endDate.toDate()
+    }
+  }) : []
+  
     return {
       uid: snapshot.id,
+      accessId: data.accessId,
       displayName: data.displayName,
       amount: data.amount,
       disabled: data.disabled,
@@ -329,7 +393,7 @@ export const userConverter: FirestoreDataConverter<User> = {
       phoneNumber: data.phoneNumber,
       isAdmin: data.email == 'lxmhoang@gmail.com' ? true : data.isAdmin ?? false,
       isExpert: data.isExpert ?? false,
-      following: data.following ?? []
+      following: following
     };
   },
 };

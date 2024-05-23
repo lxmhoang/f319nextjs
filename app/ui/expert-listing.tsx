@@ -7,7 +7,7 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
   
   return (
 
-    <div className="p-5">
+    <div className="p-2">
 
       <div>
       </div>

@@ -2,17 +2,13 @@
 "use server"
 // khong dung firebase client o day vi nhu the request.auth se bi null
 import { z } from 'zod';
-// import {  doc, setDoc, updateDoc } from 'firebase/firestore';
-// import { auth, db } from './firebase/firebase';
-// import { storage } from './firebase/firebase';
-import { getStorage, ref, uploadBytes } from "firebase/storage";
-import { ExpertStatus, Prediction, Transaction, User, userConverter } from './definitions';
-import { error } from 'console';
-import { addANewTransaction, getCurrentUser, getUidFromIdToken, serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc, serverUpdateDoc } from './firebaseadmin/firebaseadmin';
-import {  getFirestore } from 'firebase-admin/firestore';
-import { predAdminConverter, userAdminConverter } from './firebaseadmin/adminconverter';
-// import { getAuth } from 'firebase-admin/auth';
-// import { getAuth as clientAuth } from 'firebase/auth';
+import { ref, uploadBytes } from "firebase/storage";
+import { ExpertStatus, Prediction, Transaction, User } from './definitions';
+import { addANewTransaction, serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc, serverUpdateDoc } from './firebaseadmin/adminfirestore';
+import { getFirestore } from 'firebase-admin/firestore';
+import { predAdminConverter, userAdminConverter } from './firebase/adminconverter';
+import { storage } from './firebase/firebase';
+import { getCurrentUser } from './firebaseadmin/adminauth';
 
 
 
@@ -74,7 +70,7 @@ export async function registerExpert(_prevState: RegisterExpertFormState, formDa
       justDone: false
     };
   }
-  
+
   console.log("uid for expert register : " + curUser?.uid)
   const uid = curUser.uid
   const validatedFields = RegisterExpert.safeParse({
@@ -102,22 +98,22 @@ export async function registerExpert(_prevState: RegisterExpertFormState, formDa
   if (!(monthlyPrice && permPrice && userInfo?.amount && userInfo.amount >= fee)) {
     return {
       errors: {
-        generic:["khong du tien"]
+        generic: ["khong du tien"]
       },
-      message: 'khong du tien, so tien cua ban chi co ' + userInfo?.amount + ' trong khi phi  dang ky la ' + fee ,
+      message: 'khong du tien, so tien cua ban chi co ' + userInfo?.amount + ' trong khi phi  dang ky la ' + fee,
       justDone: false
     };
     // ok
-  }  
+  }
 
   const remain = userInfo.amount - fee
 
   console.log('111')
-  await serverUpdateDoc('user/' + uid, {amount: remain})
+  await serverUpdateDoc('user/' + uid, { amount: remain })
   // await updateUser(uid, {amount:remain})
-  
 
-  
+
+
   console.log('aaa')
   // const docRef = doc(db, 'expert/' + uid)
   // const docRef = await  dbAdmin.collection('expert').doc(uid).set({
@@ -131,55 +127,48 @@ export async function registerExpert(_prevState: RegisterExpertFormState, formDa
   //     visible: true
   //   })
 
-    await serverSetDoc('expert/' + uid, {
-      name: formData.get('name'),
-      shortIntro: formData.get('shortIntro'),
-      monthlyPrice: formData.get('monthlyPrice'),
-      permPrice: formData.get('permPrice'),
-      // subscriptionPrice: formData.get('subscriptionPrice'),
-      status: ExpertStatus.activated,
-      created: new Date(),
-      visible: true
-    })
-    
-    console.log('done add new expert' + uid)
+  await serverSetDoc('expert/' + uid, {
+    name: formData.get('name'),
+    shortIntro: formData.get('shortIntro'),
+    monthlyPrice: formData.get('monthlyPrice'),
+    permPrice: formData.get('permPrice'),
+    // subscriptionPrice: formData.get('subscriptionPrice'),
+    status: ExpertStatus.activated,
+    created: new Date(),
+    visible: true
+  })
 
+  console.log('done add new expert' + uid)
+  const file = formData.get('avatar') as File
+  if (file) {
+    const storageRef = ref(storage, '/expertAvatar/' + uid)
+    const snapshot = await uploadBytes(storageRef, file)
+    console.log('Uploaded a blob or file! with ref : ' + snapshot.ref.toString() + " pah " +
+      snapshot.ref.fullPath);
+    await serverUpdateDoc('/expert/' + uid, { avatar: snapshot.ref.fullPath })
+    // await updateDoc(docRef, { avatar: snapshot.ref.fullPath })
+    console.log("successful update avatar ref to expert data, begin to return ")
+    // revalidatePath('/profile');
+    // redirect('/profile');
     return {
-      errors: {
-      
-      },
-      message: "Xin chuc mung !!! Bạn bây giờ đã là chuyên gia",
+      errors: {},
+      message: "Bạn bây giờ đã là chuyên gia",
       justDone: true
     };
-    // const file = formData.get('avatar') as File
-    // if (file) {
-    //   const storageRef = ref(storage, '/expertAvatar/' + docRef.id)
-    //   const snapshot = await uploadBytes(storageRef, file)
-    //   console.log('Uploaded a blob or file! with ref : ' + snapshot.ref.toString() + " pah " +
-    //   snapshot.ref.fullPath);
-    //   await updateDoc(docRef, { avatar: snapshot.ref.fullPath })
-    //   console.log("successful update avatar ref to expert data, begin to return ")
-    //   // revalidatePath('/profile');
-    //   // redirect('/profile');
-    //   return {
-    //     errors: {},
-    //     message: "Bạn bây giờ đã là chuyên gia",
-    //     justDone: true
-    //   };
 
 
-    // } else {
-    //   console.log('done, no upload file')
-    //   // revalidatePath('/profile');
-    //   // redirect('/profile');
-    //   return {
-    //     message: 'Bạn bây giờ đã là chuyên gia',
-    //     errors: {},
-    //     justDone: true
-    //   };
-    // }
+  } else {
+    console.log('done, no upload file')
+    // revalidatePath('/profile');
+    // redirect('/profile');
+    return {
+      message: 'Bạn bây giờ đã là chuyên gia',
+      errors: {},
+      justDone: true
+    };
+  }
 
- 
+
 
 }
 
@@ -269,11 +258,11 @@ export async function createNewTransaction(prevState: AddNewTransFormState, form
       justDone: false
     };
   }
-  
+
   const tranType = formData.get('tranType') as string
   const notebankacc = formData.get('notebankacc') as string
   const toUid = tranType == 'withDraw' ? process.env.THUQUY_UID : formData.get('toUid') as string
-  const fromUid = tranType == 'deposit' ? process.env.THUQUY_UID : formData.get('fromUid') as string
+  const fromUid = tranType == 'deposit' ? process.env.THUQUY_UID ?? "unknown" : formData.get('fromUid') as string
 
   const tran: Transaction = {
     tranType: formData.get('tranType') as string,
@@ -288,7 +277,7 @@ export async function createNewTransaction(prevState: AddNewTransFormState, form
   console.log("transaction to be added : " + JSON.stringify(tran))
 
   if (tranType == 'withDraw') {
-    const result = await serverQueryCollection<User>('user',{ uid: fromUid }, userAdminConverter)
+    const result = await serverQueryCollection<User>('user', [{ key: 'uid', operator: '==', value: fromUid }], userAdminConverter)
     if (result.length != 1) {
       console.log('sth wrong with uid, number of user found :')
 
@@ -342,7 +331,7 @@ export async function createNewTransaction(prevState: AddNewTransFormState, form
 // Search User
 
 const SearchUserForPaymentFormSchema = z.object({
-  paymentId: z.string({
+  accessId: z.string({
     invalid_type_error: ' payment Id phai la chuoi'
   })
 
@@ -356,28 +345,16 @@ const SearchUser = SearchUserForPaymentFormSchema
 export type SearchUseFormState = {
   errors?: {
     [key: string]: string[]
-    // general?: string[]
-    // paymentId?: string[];
   };
   user?: string;
   message?: string | null;
 };
 
 export async function searchUserForPayment(prevState: SearchUseFormState, formData: FormData) {
-  const paymentId = formData.get('paymentId')
-
-  // if (!paymentId) {
-  //   return {
-  //     errors: {
-  //       paymentId: ["hay dien payment ID"]
-  //     },
-  //     message: 'Hãy điền đầy đủ thông tin',
-  //   };
-
-  // }
-  console.log(JSON.stringify(paymentId))
+  const accessId = formData.get('accessId')
+  console.log(JSON.stringify(accessId))
   const validatedFields = SearchUser.safeParse({
-    paymentId: formData.get('paymentId'),
+    accessId: formData.get('accessId'),
   });
 
   if (!validatedFields.success) {
@@ -387,7 +364,7 @@ export async function searchUserForPayment(prevState: SearchUseFormState, formDa
     };
   }
 
-  const searchResult = await serverQueryCollection<User>("user", { paymentId: paymentId }, userAdminConverter)
+  const searchResult = await serverQueryCollection<User>("user", [{ key: "accessId", operator: "==", value: accessId as string }], userAdminConverter)
 
   if (searchResult && searchResult.length == 1) {
     return {
@@ -461,7 +438,7 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
     // note: formData.get('note'),
   });
 
-  console.log("Prediction to be added : portion " + formData.get('portion') +" assetName " + formData.get('assetName') + formData.get('priceIn') + formData.get('takeProfitPrice') + " ----" + formData.get('cutLossPrice') + Date() + formData.get('deadLine'))
+  console.log("Prediction to be added : portion " + formData.get('portion') + " assetName " + formData.get('assetName') + formData.get('priceIn') + formData.get('takeProfitPrice') + " ----" + formData.get('cutLossPrice') + Date() + formData.get('deadLine'))
   if (!validatedFields.success) {
     console.log("error: " + JSON.stringify(validatedFields.error.flatten()))
     return {
@@ -481,8 +458,8 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
   if (uid) {
     // const customClaims = await getCurrentUser()
     // const isExpert = customClaims.isExpert
-    const userInfo = await serverGetModal<User>('user/' + uid,userAdminConverter)
-    if (!userInfo  || !userInfo.isExpert) {
+    const userInfo = await serverGetModal<User>('user/' + uid, userAdminConverter)
+    if (!userInfo || !userInfo.isExpert) {
       console.log("not expert")
       return {
         errors: {
@@ -523,7 +500,7 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
   }
 
 
-  const result = await serverAddNewModal<Prediction>('expert/' + uid + '/preds',pred, predAdminConverter)
+  const result = await serverAddNewModal<Prediction>('expert/' + uid + '/preds', pred, predAdminConverter)
   if (result) {
 
     console.log("prediction has been added : " + JSON.stringify(result))

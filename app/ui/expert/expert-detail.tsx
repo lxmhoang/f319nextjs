@@ -5,11 +5,10 @@ import clsx from 'clsx';
 import { Expert, Prediction } from "@/app/lib/definitions";
 import { useAppContext } from "@/app/lib/context";
 import { useEffect, useState } from "react";
-import { getPredsFromExpert } from "@/app/lib/firebase/firestore";
-import { subcribleToAnExpert } from "@/app/lib/firebaseadmin/firebaseadmin";
 import { ConfirmationModal } from "../confirm";
 import { Button } from "../button";
 import { addComma } from "@/app/lib/utils";
+import { subcribleToAnExpert, viewExpertPreds } from "@/app/lib/firebaseadmin/adminfirestore";
 
 type AlertModal = {
   isShown: boolean
@@ -24,34 +23,30 @@ type AlertModal = {
 export default function ExpertDetail({ expert }: { expert: Expert }) {
 
   const { user } = useAppContext()
-  const [donePreds, setDonePreds] = useState<Prediction[]>([])
-  const [progressPreds, setInprogressPreds] = useState<Prediction[]>([])
+  const [predsInfo, setPredsInfo] = useState<{
+    needFollow: boolean;
+    data: {
+      numOfInProgress: number;
+      onTrackPreds: Prediction[];
+      donePreds: Prediction[];
+    }
+  }>()
+  // const [donePreds, setDonePreds] = useState<Prediction[]>([])
+  // const [progressPreds, setInprogressPreds] = useState<Prediction[]>([])
 
   useEffect(() => {
     const exc = async () => {
-      const donePreds = await getPredsFromExpert(user, expert, false)
-      console.log('done  exxxx' + JSON.stringify(donePreds))
-      setDonePreds(donePreds)
-
-      const wipPreds = await getPredsFromExpert(user, expert, true)
-      console.log('done  yyyyy' + JSON.stringify(donePreds))
-      setInprogressPreds(wipPreds)
-
+      const res = await viewExpertPreds(user, expert)
+      console.log('done  exxxx' + res)
+      setPredsInfo(JSON.parse(res))
     }
 
-
     if (expert) {
-      console.log('exxxxx')
       exc()
     }
   }, [expert]
   )
 
-
-
-  const shouldHideProgressPreds = () => {
-    return !user || (user.uid != expert.id && user.following[expert.id] == null)
-  }
 
   const follow = async (eid: string, perm: boolean) => {
 
@@ -75,7 +70,9 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
 
   const handlePermSub = () => {
     if (user && expert) {
+      console.log('handlePermSub')
       if (user.amount < expert.permPrice) {
+        console.log('handlePermSub222')
         setAlertState({
           isShown: true,
           title: 'Không đủ tiền',
@@ -86,6 +83,7 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
           }
         })
       } else {
+        console.log('handlePermSub333')
         // du tien roi
         setAlertState(initAlertState)
         follow(expert.id, true)
@@ -131,17 +129,15 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
 
       </div>
       <div className="sm:w-3/4 p-1">
-        {expert && (donePreds || progressPreds) ? (
+        {predsInfo ? (
 
           <div>
 
-            {shouldHideProgressPreds() ?
-              (<><p>Có {progressPreds.length} khuyến nghị đang tiếp diễn bị ẩn </p>
+            {predsInfo.needFollow ?
+              (<><p>Có {predsInfo.data.numOfInProgress} khuyến nghị đang tiếp diễn bị ẩn </p>
                 <div className="flex justify-center">
                   <Button className="m-5 w-1/2"
                     onClick={() => {
-                      const message = expert.monthlyPrice + " 1 tháng hoặc " + expert.permPrice + "  vĩnh viễn ?"
-                      // setShowConfirmation(true)
                       setAlertState({
                         isShown: true,
                         title: 'Theo dõi chuyên gia này ?',
@@ -158,14 +154,8 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
 
                 <div> Các khuyến nghị đang tiếp diễn </div>
                 <Accordion >
-                  {progressPreds.map((item, index) => {
-                    // console.log("aaaaa" + item.stockCode)
-                    // console.log("ooooo" + item.cutLossPrice)
+                  {predsInfo.data.onTrackPreds.map((item, index) => {
                     const content = "Giá vào : " + item.priceIn + " Giá ra  : " + item.priceOut
-
-                    // const profit = item.priceRelease ?? 0 * 100 / item.priceIn
-                    // const profitPercentage = (Math.round(profit * 100) / 100).toFixed(2);
-                    // const title = <p className="text-sky-400"> {item.assetName}  </p>
                     return (<AccordionItem key={"c_" + index} title={item.assetName}><p className="text-sky-400">{content}</p></AccordionItem>)
                   }
 
@@ -181,13 +171,35 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
 
 
             <Accordion >
-              {donePreds.map((item, index) => {
-                // console.log("aaaaa" + item.stockCode)
-                // console.log("ooooo" + item.cutLossPrice)
-                const action = item.priceOut == item.priceRelease ?
+              {predsInfo.data.donePreds.map((item, index) => {
+                const dateInStr = new Date(item.dateIn).toLocaleDateString('vi')
+                const dateReleaseStr = item.dateRelease ? new Date(item.dateRelease).toLocaleDateString('vi') : ""
+                const deadLineStr = new Date(item.deadLine).toLocaleDateString('vi')
+                const action = item.status == "WIN" ?
                   "Chốt lời" :
-                  item.priceRelease == item.cutLoss ? "Cắt lỗ" : "Can thiệp"
-                const content = (<div><p>Giá vào : {item.priceIn} </p>{action}: {item.priceRelease}</div>)
+                  item.status == "LOSE" ? "Cắt lỗ" : "Can thiệp"
+                const content = (
+                  <div>
+                    <p>
+                      Ngày vào : {dateInStr}
+                    </p>
+                    <p>
+                      Giá vào : {item.priceIn}
+                    </p>
+                    <p>
+                      Dự đoán chốt lời - cắt lỗ:   {item.priceOut} - {item.cutLoss}
+                    </p>
+                    <p>
+                      Hạn cuối nắm giữ: {deadLineStr}
+                    </p>
+                    <p className="text-yellow-500">
+                      Giá kết thúc : {item.priceRelease} ({action})
+                    </p>
+                    <p className="text-yellow-500">
+                      Ngày kết thúc : {dateReleaseStr}
+                    </p>
+                  </div>
+                )
                 const content2 = "aaaa"
                 const priceRelease = item.priceRelease ?? 0
 
@@ -199,7 +211,7 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
                     "text-red-400": profit < 100
                   }
                 )}> {item.assetName} {profitPercentage}% </p>
-                return (<AccordionItem key={"c_" + index} title={title}>{content}</AccordionItem>)
+                return (<AccordionItem key={"c_" + index} textValue={"content"} title={title}>{content}</AccordionItem>)
               }
 
               )}
@@ -213,7 +225,7 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
 
 
       </div>
-      {shouldHideProgressPreds() && expert ?
+      {expert ?
         (<>
           <ConfirmationModal
             isOpen={alertState?.isShown}

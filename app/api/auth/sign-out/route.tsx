@@ -2,8 +2,8 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
-import { revokeAllSessions } from "@/app/lib/firebaseadmin/firebaseadmin";
 import { APIResponse } from "@/app/lib/definitions";
+import { revokeAllSessions } from "@/app/lib/firebaseadmin/adminauth";
 
 export async function GET() {
   const sessionCookie = cookies().get("__session")?.value;

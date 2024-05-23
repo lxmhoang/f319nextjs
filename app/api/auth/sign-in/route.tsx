@@ -2,8 +2,8 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
-import { createSessionCookie } from "@/app/lib/firebaseadmin/firebaseadmin";
 import { APIResponse } from "@/app/lib/definitions";
+import { createSessionCookie } from "@/app/lib/firebaseadmin/adminauth";
 
 export async function POST(request: NextRequest) {
   const reqBody = (await request.json()) as { idToken: string };

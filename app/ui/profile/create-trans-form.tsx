@@ -42,11 +42,6 @@ export default function TransCreationForm(Props: TransCreationProps) {
                 <p>
                   {addTransState.message}
                 </p>
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit.
-                  Nullam pulvinar risus non risus hendrerit venenatis.
-                  Pellentesque sit amet hendrerit risus, sed porttitor quam.
-                </p>
               </ModalBody>
               <ModalFooter>
                 <ButtonReact color="danger" variant="light" onPress={onClose}>
@@ -62,8 +57,7 @@ export default function TransCreationForm(Props: TransCreationProps) {
       </Modal>
       <div className='p-1'>
       </div>
-      <Divider />
-      {user ? (
+      {/* {user ? (
         <ul>
           <li>UID: {user.uid}</li>
           <li>Display name: {user.displayName}</li>
@@ -77,11 +71,8 @@ export default function TransCreationForm(Props: TransCreationProps) {
       ) : (
         <>
         <Divider /></>
-      )}
+      )} */}
 
-<Divider />
-      {/* {JSON.stringify(searchState.user)} */}
-      <Divider />
       {/* <div>{ state.message.length == 0 ? "no error" : "cccc" + Object.keys(JSON.stringify(state.errors)).length}</div> */}
       <form action={dispatchAddtran}>
         <div className="rounded-md bg-black-50">

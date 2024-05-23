@@ -1,29 +1,25 @@
-
+'use server'
+'serve-only'
 
 import {
 	collection,
-	onSnapshot,
 	query,
 	getDocs,
 	doc,
-	getDoc,
 	updateDoc,
-	orderBy,
-	Timestamp,
-	runTransaction,
 	where,
-	addDoc,
 	DocumentData,
-	DocumentReference,
-	Firestore,
 	Query,
 	FirestoreDataConverter,
-	writeBatch,
 	getDocFromServer,
+	or,
 } from "firebase/firestore";
 
-import { db } from "@/app/lib/firebase/firebase";
-import { Expert, Prediction, Subscription, Transaction, User, expertConverter, predConverter, subscriptionConverter, transConverter, userConverter } from "../definitions";
+import { expertConverter, transConverter } from "../definitions";
+import { db } from "./firebase";
+// import { adminDB, test } from "../firebaseadmin/firebaseadmin";
+
+
 
 
 function applyQueryFilters(q: Query<DocumentData, DocumentData>, params: { [key: string]: string }) {
@@ -36,8 +32,8 @@ function applyQueryFilters(q: Query<DocumentData, DocumentData>, params: { [key:
 	if (params.price) {
 		q = query(q, where("price", "==", params.price));
 	}
-	if (params.paymentId) {
-		q = query(q, where("paymentId", "==", params.paymentId));
+	if (params.accessId) {
+		q = query(q, where("accessId", "==", params.accessId));
 	}
 	if (params.status) {
 		q = query(q, where("status", "==", params.status));
@@ -45,7 +41,6 @@ function applyQueryFilters(q: Query<DocumentData, DocumentData>, params: { [key:
 	if (params.uid) {
 		q = query(q, where("uid", "==", params.uid));
 	}
-
 
 	return q;
 }
@@ -55,39 +50,6 @@ export async function clientFetchObject<ModelType>(path: string, converter: Fire
 	const snap = await getDocFromServer(docRef)
 	return snap.data()
 }
-
-// export async function getAUserByID(id: string) {
-
-// 	console.log('begin fetch user info2222')
-// 	const docRef = doc(db, "user", id).withConverter(userConverter)
-// 	const docSnap = await getDocFromServer(docRef)
-// 	console.log('done fetch user info222')
-
-// 	// const docRef = doc(db, "user", id).withConverter(userConverter);
-
-// 	// const docSnap = await getDoc(docRef)
-// 	var user = docSnap.data()
-// 	return user
-// }
-
-// async function getAnExpertById(id: string) {
-
-// 	const docRef = doc(db, "expert", id).withConverter(expertConverter);
-
-// 	const docSnap = await getDoc(docRef)
-// 	var expert = docSnap.data()
-// 	if (expert) {
-// 		const predRef = collection(db, "expert", id, "preds").withConverter(predConverter)
-
-// 		let preds = (await getDocs(predRef)).docs.map(doc => doc.data())
-// 		expert.preds = preds
-// 	}
-
-// 	return expert
-// }
-
-
-
 
 
 export async function clientSearchCollection<ModelType>(name: string, filters = {}, converter: FirestoreDataConverter<ModelType>) {
@@ -99,30 +61,13 @@ export async function clientSearchCollection<ModelType>(name: string, filters = 
 	})
 }
 
-
 export async function updateRefID(userDocID: string, refID: string) {
 	let docRef = doc(db, 'user/' + userDocID)
 	return updateDoc(docRef, { refID: refID })
 }
 
-export async function searchUser(filters = {}) {
-	let q = query(collection(db, "user"));
-
-
-	q = applyQueryFilters(q, filters)
-	const results = await getDocs(q.withConverter(userConverter));
-	return results.docs.map(doc => {
-
-		return doc.data()
-
-	});
-
-}
-
 export async function getExperts(filters = {}) {
 	let q = query(collection(db, "expert"));
-
-
 	const expertQuery = applyQueryFilters(q, filters).withConverter(expertConverter);
 
 	const results = await getDocs(expertQuery);
@@ -131,16 +76,18 @@ export async function getExperts(filters = {}) {
 	});
 }
 
-export async function getPredsFromExpert(user: User | undefined, expert: Expert | undefined, inProgress: boolean) {
-	if (!expert) {
-		return Promise.resolve([])
-	}
-	const hideInprogressOnes = !user || (user.following[expert.id] == null && user.uid != expert.id)
-	console.log(hideInprogressOnes ? 'hide them ' : 'show them sub')
-	let q = query(collection(db, 'expert', expert.id, 'preds').withConverter(predConverter))
-	q = query(q, where('status', inProgress ? '==' : '!=', 'Inprogress'))
 
-	const querySnapshot = await getDocs(q);
-	return querySnapshot.docs.map((doc) => doc.data())
+export async function getMyTransHistory(uid: string) {
+	// const user = await getCurrentUser()
+	if (uid) {
+		console.log('uid ' + uid)
+		let q = query(collection(db, 'transaction').withConverter(transConverter))
+		q = query(q, or(where('fromUid','==', uid), where('toUid','==', uid)))
+		const querySnapshot = await getDocs(q)
+		return querySnapshot.docs.map((doc) => doc.data())
+	} else {
+		console.log('not usr')
+		return []
+	}
 
 }

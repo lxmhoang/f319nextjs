@@ -18,7 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 <TopNav />
 {/* <TopBar hamClick={() => setIsOpen(true) } /> */}
 
-<div className="mt-[66px] mb-[54px]">
+<div className=" mb-[54px]">
 
   {/* <SideBar handleClose={handleClose } isOpen={isOpen} /> */}
   {children}

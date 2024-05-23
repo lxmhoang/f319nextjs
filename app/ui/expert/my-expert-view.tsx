@@ -52,13 +52,13 @@ export default function MyExpertView({ expert }: { expert: Expert }) {
                 return {
                     id: pred.id,
                     assetName: pred.assetName,
-                    priceIn: pred.priceIn,
-                    priceOut: pred.priceOut,
-                    deadLine: pred.deadLine.toDateString(),
-                    dateIn: pred.dateIn.toDateString(),
-                    cutLoss: pred.cutLoss,
+                    priceIn: pred.priceIn.toFixed(2),
+                    priceOut: pred.priceOut.toFixed(2),
+                    deadLine: pred.deadLine.toLocaleDateString('vi'),
+                    dateIn: pred.dateIn.toLocaleDateString('vi'),
+                    cutLoss: pred.cutLoss.toFixed(2),
                     status: pred.status,
-                    curPrice: curPrice,
+                    curPrice: curPrice.toFixed(2),
                     curStatus: (curPrice * 100 / pred.priceIn - 100).toFixed(2) + "%"
                 }
             }) : []} submit={function (predIDs: string[]): void {

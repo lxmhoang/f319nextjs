@@ -1,5 +1,4 @@
 'use client';
-import { CustomerField, User } from '@/app/lib/definitions';
 import Link from 'next/link';
 import {
   CheckIcon,
@@ -8,8 +7,6 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 
-import { Button } from '@/app/ui/button';
-import { RegisterExpertFormState, registerExpert } from '@/app/lib/action';
 import { useFormState } from 'react-dom';
 import {Image} from "@nextui-org/react";
 import { useState } from 'react';
@@ -17,6 +14,10 @@ import { ConfirmationModal } from '../confirm';
 import { DocumentTextIcon } from '@heroicons/react/24/solid';
 import { redirect } from 'next/dist/server/api-utils';
 import { useRouter } from 'next/navigation';
+import { RegisterExpertFormState, registerExpert } from '../../lib/action';
+import { User } from '../../lib/definitions';
+import React from 'react';
+import { Button } from '../button';
 
 export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
 
@@ -43,7 +44,7 @@ export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
     state.message = undefined
     if (state.justDone) {
       state.justDone = false
-      router.replace("/profile/expert")
+      router.replace("/advisor")
     }
   };
 
@@ -148,22 +149,6 @@ export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
               Ra giá cho gói theo dõi vĩnh viễn 
             </label>
             <div className="relative">
-              {/* <select
-                id="subscriptionPrice"
-                name="subscriptionPrice"
-                className="peer block w-1/2 cursor-pointer rounded-md border border-gray-200 py-2 pl-10 text-sm outline-2 text-sky-500 placeholder:text-gray-500"
-                defaultValue="{subscriptionPrice[0]}"
-                aria-describedby="customer-error"
-              >
-                <option value="" disabled>
-                   Chọn mức giá theo tháng cho người theo dõi
-                </option>
-                {subscriptionPrice?.map((sub) => (
-                  <option key={sub} value={sub}>
-                    {sub}
-                  </option>
-                ))}
-              </select> */}
                               <input
                   id="permPrice"
                   name="permPrice"

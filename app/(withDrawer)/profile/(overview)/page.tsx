@@ -1,22 +1,35 @@
-import { Divider } from "@nextui-org/react";
+'use client'
 
-export default async function Page({params} : {params: {id: string}} ) {
+import { useAppContext } from "@/app/lib/context";
+import { Divider } from "@nextui-org/react";
+import { redirect } from "next/navigation";
+
+export default  function Page() {
+
+  const {user} = useAppContext()  
   
+  if (user == undefined) {
+     return (
+      <> Please Sign in</>
+     )
+  }
+
+  const ref = user.accessId
   
     return (
       
       
       <div>
-        Danh sach chuyen gia dang theo doi
-    <Divider />
-     .....
-
-    <Divider />
-        Danh sach Khuyen nghi
-    <Divider />
-     .....
+        {user.displayName}
+      
+      <div>
+       Share url này để kiếm tiền affiliate : 
+       
+       
+       <p>http://localhost:3000/{ref}</p>
 
       </div>
       
+      </div>
       )
     }

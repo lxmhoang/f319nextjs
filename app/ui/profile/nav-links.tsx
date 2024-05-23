@@ -19,7 +19,7 @@ const links = [
     icon: ArrowLeftEndOnRectangleIcon,
   },
   {
-    name: 'Lịch sử giao dịch', href: '/profile/transaction',
+    name: 'Lịch sử giao dịch', href: '/profile/transactions',
     icon: ArrowsRightLeftIcon,
   }
 ];

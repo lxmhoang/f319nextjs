@@ -1,19 +1,16 @@
 'use client';
 import { useRouter } from 'next/navigation'
 
-import { Button } from '@/app/ui/button';
-import { createNewPrediction } from '@/app/lib/action';
 import { useFormState } from 'react-dom';
 import { useEffect, useState } from 'react';
 import { Divider, useDisclosure, Autocomplete, AutocompleteItem, Slider } from '@nextui-org/react';
-import { CompanyRTInfo, expertConverter, predConverter } from '@/app/lib/definitions';
+import { CompanyRTInfo, predConverter } from '@/app/lib/definitions';
 import { ConfirmationModal } from '../confirm';
-import { useAppContext } from '@/app/lib/context';
-import { getLocalStockList, getRealTimeStockData } from '@/app/lib/getStockData';
-import { useDocument } from 'react-firebase-hooks/firestore';
-import { doc } from 'firebase/firestore';
-import { db } from '@/app/lib/firebase/firebase';
-import { clientFetchObject, clientSearchCollection } from '@/app/lib/firebase/firestore';
+import { useAppContext } from '../../lib/context';
+import { getLocalStockList, getRealTimeStockData } from '../../lib/getStockData';
+import { clientSearchCollection } from '@/app/lib/firebase/firestore';
+import { createNewPrediction } from '@/app/lib/action';
+import { Button } from '../button';
 
 
 let parser = (data: { [key: string]: any }) => {
@@ -108,7 +105,7 @@ export default function PredictCreationForm() {
     }
 
     const handleLeftBtn = () => {
-        router.push('/profile/expert')
+        router.push('/advisor')
         setShowModal(false);
     };
 

@@ -3,12 +3,10 @@ import {
   signInWithPopup,
 } from "firebase/auth";
 
-import Cookies from "js-cookie";
 import { auth } from "./firebase";
 import { APIResponse } from "../definitions";
 
 
-// auth.setPersistence({type: 'NONE'});
 export async function signInWithGoogle(refID:string | null) {
   const provider = new GoogleAuthProvider();
 

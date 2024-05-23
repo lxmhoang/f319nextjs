@@ -51,26 +51,23 @@ export default function ReviewPrediction({ preds, submit }: {
   {
     id: string | undefined,
     assetName: string,
-    priceIn: number,
-    priceOut: number,
+    priceIn: string,
+    priceOut: string,
     deadLine: string,
     dateIn: string,
-    cutLoss: number,
-    curPrice: number,
+    cutLoss: string,
+    curPrice: string,
     status: string
   }[],
   submit: (predIDs: string[]) => void
 }) {
 
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set([]));
+
   const [width, setWidth] = useState<number>(window.innerWidth)
-  console.log('selected ' + selectedKeys)
-  console.log('selected keys ' + selectedKeys == "all" ? "aaa" : Array.from(selectedKeys.values()))
   const space = width <= 768 ? width : width - 256
   const num = Math.trunc(space * 0.8 / 100)
-  console.log('preds ' + JSON.stringify(preds))
   const columns = masterCols.slice(0, num)
-
   const updateDimensions = () => {
     if (typeof window !== 'undefined') {
       console.log("width " + window.innerWidth)
@@ -85,7 +82,6 @@ export default function ReviewPrediction({ preds, submit }: {
   console.log('master preds ' + JSON.stringify(preds))
   return (
     <>
-      {width}
       <Table className=" w-full" aria-label="Example table with dynamic content"
         // selectionMode="multiple"
         selectedKeys={selectedKeys}

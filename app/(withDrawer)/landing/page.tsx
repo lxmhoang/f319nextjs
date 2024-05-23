@@ -30,27 +30,4 @@ export default function Landing() {
       {refID}
     </>
   );
-
-
-  // const [experts, loading, error] = useCollectionDataOnce <Expert>
-  // (collection(getFirestore(firebaseApp), "hooks"), {
-  //  getOptions: {source: "default"}
-  // });
-
-
-  // const data = experts?.docs.map(doc => {
-  // 	return {
-  // 		id: doc.id,
-  // 		imageURL: doc.data().imageURL ,
-  // 		followerNum: doc.data().followerNum,
-  // 		name: doc.data().name,
-  // 		selfIntro: doc.data().selfIntro,
-  // 		shortInfo: doc.data().shortInfo,
-
-  // 		// ...doc.data()//,
-  // 		// Only plain objects can be passed to Client Components from Server Components
-  // 		// timestamp: doc.data().timestamp.toDate(),
-  // 	};
-  // })
-
 }

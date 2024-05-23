@@ -19,20 +19,16 @@ export const firebaseConfig = {
   measurementId: process.env.KEY_MEASUREMENT_ID
 };
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-
-// export const firebaseApp =
-//   getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
-// export const auth = getAuth(firebaseApp);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-export const cloudFunc = getFunctions(app);
+export const clientApp = initializeApp(firebaseConfig);
+export const auth = getAuth(clientApp);
+export const db = getFirestore(clientApp);
+export const storage = getStorage(clientApp);
+export const cloudFunc = getFunctions(clientApp);
 
 const useEmulator = process.env.USE_EMULATOR as string;
 
 // console.log('connecting to emulator' + useEmulator)
-if (false) {
+if (true) {
 
   console.log('connecting to emulator')
   connectFirestoreEmulator(db, '127.0.0.1', 8080);

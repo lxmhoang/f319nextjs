@@ -11,7 +11,7 @@ const {onRequest} = require("firebase-functions/v2/https");
 
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
-const {onDocumentCreated} = require("firebase-functions/v2/firestore");
+const {onDocumentCreated, onDocumentDeleted} = require("firebase-functions/v2/firestore");
 // const {onCreate} = require("firebase-functions/v2/auth");
 const {initializeApp} = require("firebase-admin/app");
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
@@ -49,8 +49,8 @@ initializeApp();
 exports.createUserDoc = auth.user().onCreate((user) => {
     const data = JSON.parse(JSON.stringify(user))
     data.amount = 0
-    const paymentId = Math.random().toString(36).substring(2,8)
-    data['paymentId'] = paymentId
+    const accessId = Math.random().toString(36).substring(2,8)
+    data['accessId'] = accessId
     getFirestore().collection('user').doc(user.uid).set(data)
 
     logger.log(user.displayName)
@@ -58,7 +58,11 @@ exports.createUserDoc = auth.user().onCreate((user) => {
 
 exports.createExpertHandler = onDocumentCreated("expert/{expertId}", (event) => {
     getFirestore().doc('/user/' + event.params.expertId).update({isExpert: true})
-    // getAuth().setCustomUserClaims(event.params.expertId, {"isExpert" : true})   
+})
+
+
+exports.deleteExpertHandler = onDocumentDeleted("expert/{expertId}", (event) => {
+    getFirestore().doc('/user/' + event.params.expertId).update({isExpert: false})
 })
 
 exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (event) => {
@@ -91,7 +95,7 @@ exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (even
                 logger.info("Ref ID : " + refID)
                 if (refID) {
                     // chia tien cho ref
-                    getFirestore().collection('user').where("paymentId","==",refID).get().then((snapshot) => {
+                    getFirestore().collection('user').where("accessId","==",refID).get().then((snapshot) => {
                         if (snapshot.docs.length == 1) {
 
                         const refUserDocID = snapshot.docs[0].id
@@ -212,13 +216,21 @@ exports.createSubscription = onDocumentCreated("/subscription/{documentId}", (ev
         console.log('Write succeeded! with uid' + uid + "  eid " + eid);
 
         const subInfo = {
+            eid: eid,
+            uid: uid,
             perm: perm,
             endDate: date,
-            subcriptionDocId: event.id
+            subcriptionDocId: event.data.id
         }
-        const fieldPath = new FieldPath(['following', eid.toString()])
-        const str = 'following.'+eid
-        getFirestore().collection('user').doc(uid).update(str, subInfo)
+        // const fieldPath = new FieldPath(['following', eid.toString()])
+        // const str = 'following.'+eid
+        // getFirestore().collection('user').doc(uid).update(str, subInfo)
+        getFirestore().doc('user/' + uid).update({
+            following: FieldValue.arrayUnion(subInfo)
+        })
+        getFirestore().doc('expert/' + eid).update({ 
+            follower: FieldValue.arrayUnion(subInfo)
+        })
         // getFirestore().collection('user').doc(uid).collection('following').add({ 
         //     eid: eid,
         //     perm: data.perm,
@@ -228,9 +240,6 @@ exports.createSubscription = onDocumentCreated("/subscription/{documentId}", (ev
         // })
 
 
-        getFirestore().collection('expert').doc(eid).update({ 
-            follower: FieldValue.arrayUnion(subInfo)
-        })
 
     });
     

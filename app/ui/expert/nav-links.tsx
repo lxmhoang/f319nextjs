@@ -12,16 +12,16 @@ import { ClipboardDocumentIcon, PlusIcon } from '@heroicons/react/24/solid';
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
 const links = [
-  { name: 'Overview', href: '/profile/expert', icon: HomeIcon },
+  { name: 'Overview', href: '/advisor', icon: HomeIcon },
   {
-    name: 'Thêm khuyến nghị', href: '/profile/expert/prediction/new',
+    name: 'Thêm khuyến nghị', href: '/advisor/prediction/new',
     icon: PlusIcon,
   },
   {
-    name: 'Lịch sử khuyến nghị', href: '/profile/expert/prediction',
+    name: 'Lịch sử khuyến nghị', href: '/advisor/prediction',
     icon: ClipboardDocumentIcon,
   },
-  { name: 'Subscription', href: '/profile/expert/subscription', icon: UserGroupIcon },
+  { name: 'Subscription', href: '/advisor/subscription', icon: UserGroupIcon },
 ];
 
 export default function NavLinks() {

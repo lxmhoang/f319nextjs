@@ -19,7 +19,7 @@ export default function BottomNav() {
                 key: "Home",
                 icon: HomeIcon,
                 path: "/",
-                actived: !(pathname.includes('/wallet') || pathname.includes('/profile') || pathname.includes('/profile/expert') || pathname.includes('/expert'))
+                actived: !(pathname.includes('/wallet') || pathname.includes('/profile') || pathname.includes('/advisor') || pathname.includes('/expert'))
             },
             {
                 title: "Expert",
@@ -39,15 +39,15 @@ export default function BottomNav() {
                 title: "Corner",
                 key: "Corner",
                 icon: WalletIcon,
-                path: "/profile/expert",
-                actived: pathname.startsWith('/profile/expert')
+                path: "/advisor",
+                actived: pathname.startsWith('/advisor')
             },
             {
                 title: "Profile",
                 key: "Profile",
                 icon: UserCircleIcon,
                 path: "/profile",
-                actived: pathname.includes('/profile') && !pathname.includes('/profile/expert')
+                actived: pathname.includes('/profile')
             }
         ]
         :
@@ -90,7 +90,7 @@ export default function BottomNav() {
             })}>
                 {tabInfo.map((tab) => {
                     return (
-                        <>
+                        <div key={tab.key} >
                             <Link href={tab.path} type="button" className="inline-flex flex-col items-center justify-center px-5 border-x  border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 group dark:border-gray-600 dark:text-gray-400 text-gray-500 ">
                                 <tab.icon className={clsx('w-5 h-5', {
                                     "dark:text-blue-500": tab.actived,
@@ -99,7 +99,7 @@ export default function BottomNav() {
                                 })} fill="currentColor" />
                                 <span className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:group-hover:text-blue-500">{tab.title}</span>
                             </Link>
-                        </>
+                        </div>
                     )
                 }
                 )}
