@@ -8,7 +8,8 @@ import { useEffect, useState } from "react";
 
 
 export default function Page() {
-  const [width, setWidth] = useState<number>(window.innerWidth ?? 100)
+  // const initValue = typeof window == undefined ? 100 : window.innerWidth
+  const [width, setWidth] = useState<number>(200)
   const space = width <= 768 ? width : width - 256
   const num = Math.trunc(space * 0.8 / 100)
   const columns = masterCols.slice(0, num)
