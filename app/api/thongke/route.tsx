@@ -108,7 +108,7 @@ export async function GET(request: Request) {
     }
 
   } catch (error) {
-    return new Response(`Webhook error:.message}`, {
+    return new Response(`Webhook error: ` + JSON.stringify(error), {
       status: 400,
     })
   }
