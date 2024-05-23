@@ -25,10 +25,9 @@ export const db = getFirestore(clientApp);
 export const storage = getStorage(clientApp);
 export const cloudFunc = getFunctions(clientApp);
 
-const useEmulator = process.env.USE_EMULATOR as string;
+// const useEmulator = process.env.USE_EMULATOR as string;
 
-// console.log('connecting to emulator' + useEmulator)
-if (true) {
+if (false) {
 
   console.log('connecting to emulator')
   connectFirestoreEmulator(db, '127.0.0.1', 8080);

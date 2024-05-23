@@ -114,17 +114,17 @@ export async function getFollowExpertByIDList(idList: string[]) {
     for (const eid of idList) {
         const info = await serverGetModal<Expert>('expert/' + eid, expertAdminConverter)
         if (info) {
-          result.push(info)
+            result.push(info)
         }
-      }
-     return result 
+    }
+    return result
 }
 async function getActivesubscriptionOf(uid: string, eid: string) {
     let today = new Date()
-    let results = await adminDB.collection("subscription").where("eid", "==", eid).where("uid", "==", uid).where('endDate','>=', today)
-    .withConverter(subscriptionAdminConverter).get();
+    let results = await adminDB.collection("subscription").where("eid", "==", eid).where("uid", "==", uid).where('endDate', '>=', today)
+        .withConverter(subscriptionAdminConverter).get();
 
-    console.log("result = " + results.docs.length )
+    console.log("result = " + results.docs.length)
 
     return results.docs.map(doc => {
         return doc.data()
@@ -133,9 +133,9 @@ async function getActivesubscriptionOf(uid: string, eid: string) {
 
 
 export async function serverAddNewModal<ModelType>(collectionPath: string, data: ModelType, converter: FirestoreDataConverter<ModelType>) {
-	const predCollection = adminDB.collection(collectionPath).withConverter(converter)
-	const docRef = await predCollection.add(data)
-	return docRef
+    const predCollection = adminDB.collection(collectionPath).withConverter(converter)
+    const docRef = await predCollection.add(data)
+    return docRef
 }
 
 export async function serverGetModal<ModelType>(docPath: string, converter: FirestoreDataConverter<ModelType>) {
@@ -144,39 +144,39 @@ export async function serverGetModal<ModelType>(docPath: string, converter: Fire
     return docSnap.data()
 }
 
-export async function serverQueryCollection<ModelType>(path: string, filters : {key: string, operator: WhereFilterOp, value: any}[], converter: FirestoreDataConverter<ModelType>) {
-	let ref = adminDB.collection(path)// query(collection(db, name));
+export async function serverQueryCollection<ModelType>(path: string, filters: { key: string, operator: WhereFilterOp, value: any }[], converter: FirestoreDataConverter<ModelType>) {
+    let ref = adminDB.collection(path)// query(collection(db, name));
     console.log(filters)
     var q = undefined
-    for (const { key,operator,value } of filters) {
-         q =  q ? q.where(key, operator , value) : ref.where(key,operator,value)
+    for (const { key, operator, value } of filters) {
+        q = q ? q.where(key, operator, value) : ref.where(key, operator, value)
     }
     // var snapshot = undefined
     // if (!q) return {
 
     // }
     const snapshot = q ? await q?.withConverter(converter).get() : await ref.withConverter(converter).get()
-    
-     return snapshot.docs.map(doc => {
+
+    return snapshot.docs.map(doc => {
         return doc.data()
     })
 }
 
 
-export async function serverUpdateDoc(path: string, data:{}) {
+export async function serverUpdateDoc(path: string, data: {}) {
     return adminDB.doc(path).update(data)
 }
-export async function serverSetDoc(path: string, data:{}) {
+export async function serverSetDoc(path: string, data: {}) {
     return adminDB.doc(path).set(data)
 }
 
 export async function serverApprovePendingTrans(tranIDs: string[]) {
-	const batch = adminDB.batch()
-	tranIDs.forEach((id) => {
-		const docRef = adminDB.doc('transaction/'+ id)
-		batch.update(docRef, { status: "adminApproved" })
-	})
-	await batch.commit()
+    const batch = adminDB.batch()
+    tranIDs.forEach((id) => {
+        const docRef = adminDB.doc('transaction/' + id)
+        batch.update(docRef, { status: "adminApproved" })
+    })
+    await batch.commit()
 }
 
 export async function getTotalPredOfExpert(eid: string) {
@@ -237,70 +237,70 @@ export async function activateExpert(docId: string) {
 
 
 export async function viewExpertPreds(user: User | undefined, expert: Expert | undefined) {
-	if (!expert) {
-		return Promise.resolve(JSON.stringify({
-			needFollow: true,
-			data: {
-				numOfInProgress: 0,
-				onTrackPreds: [],
-				donePreds: []
-			}
-		})
-		)
-	}
-	const getDonePredOnly = !user || !didFollow(user, expert)
-	// const hideInprogressOnes = !user || (user.following[expert.id] == null && user.uid != expert.id)
-	// console.log(hideInprogressOnes ? 'hide them ' : 'show them sub')
-	const e1 : Prediction = {
-		assetName: "",
-		dateIn: new Date(),
-		priceIn: 0,
-		priceOut: 0,
-		cutLoss: 0,
-		deadLine: new Date(),
-		status: "",
-		note: "",
-		portion: 0
-	}
-	let response = await serverQueryCollection<Prediction>('expert/' + expert.id + '/preds',[] , predAdminConverter)
-	console.log('res ' + JSON.stringify(response))
-	let allPreds : Prediction[] =  response// JSON.parse(response)
-	// console.log('allPreds ' + JSON.stringify(allPreds))
-	// let data = result.docs
+    if (!expert) {
+        return Promise.resolve(JSON.stringify({
+            needFollow: true,
+            data: {
+                numOfInProgress: 0,
+                onTrackPreds: [],
+                donePreds: []
+            }
+        })
+        )
+    }
+    const getDonePredOnly = !user || !didFollow(user, expert)
+    // const hideInprogressOnes = !user || (user.following[expert.id] == null && user.uid != expert.id)
+    // console.log(hideInprogressOnes ? 'hide them ' : 'show them sub')
+    const e1: Prediction = {
+        assetName: "",
+        dateIn: new Date(),
+        priceIn: 0,
+        priceOut: 0,
+        cutLoss: 0,
+        deadLine: new Date(),
+        status: "",
+        note: "",
+        portion: 0
+    }
+    let response = await serverQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
+    console.log('res ' + JSON.stringify(response))
+    let allPreds: Prediction[] = response// JSON.parse(response)
+    // console.log('allPreds ' + JSON.stringify(allPreds))
+    // let data = result.docs
 
 
 
-	// console.log('query' )
-	// let q = query(collection(db, 'expert', expert.id, 'preds').withConverter(predConverter))
-	// // q = getDonePredOnly ? 
-	// // 		query(q, where('status',  '!=' , 'Inprogress')) 
-	// // 		: 
-	// // 		q
+    // console.log('query' )
+    // let q = query(collection(db, 'expert', expert.id, 'preds').withConverter(predConverter))
+    // // q = getDonePredOnly ? 
+    // // 		query(q, where('status',  '!=' , 'Inprogress')) 
+    // // 		: 
+    // // 		q
 
-	// console.log('22222' )
-	// const querySnapshot = await getDocsFromServer(q);
-	// // console.log('que3333ry' )
-	// const allPreds = querySnapshot.docs.map((doc) => doc.data())
-	const inProgressPreds = allPreds.filter((item) => {return item.status == 'Inprogress'})
-	const donePreds = allPreds.filter((item) => {return item.status != 'Inprogress'}).sort((a,b) => {return (b.dateIn.getTime() - a.dateIn.getTime()) })
-	const result = {
-		needFollow: getDonePredOnly,
-		data: {
-			numOfInProgress: inProgressPreds.length,
-			onTrackPreds:  getDonePredOnly ? [] : inProgressPreds,
-			donePreds: donePreds
-		}
-	}
+    // console.log('22222' )
+    // const querySnapshot = await getDocsFromServer(q);
+    // // console.log('que3333ry' )
+    // const allPreds = querySnapshot.docs.map((doc) => doc.data())
+    const inProgressPreds = allPreds.filter((item) => { return item.status == 'Inprogress' })
+    const donePreds = allPreds.filter((item) => { return item.status != 'Inprogress' }).sort((a, b) => { return (b.dateIn.getTime() - a.dateIn.getTime()) })
+    const result = {
+        needFollow: getDonePredOnly,
+        data: {
+            numOfInProgress: inProgressPreds.length,
+            onTrackPreds: getDonePredOnly ? [] : inProgressPreds,
+            donePreds: donePreds
+        }
+    }
     console.log('result ' + JSON.stringify(result))
-	return JSON.stringify(result)
+    return JSON.stringify(result)
 
 }
 
 
 const ADMIN_APP_NAME = "stock-319";
 
- const adminApp = createFirebaseAdminApp()
- const adminDB = getFirestore(adminApp)
+const adminApp = createFirebaseAdminApp()
+const adminDB = getFirestore(adminApp)
 
 function formatPrivateKey(key: string) {
     console.log("key : " + key)
@@ -314,13 +314,12 @@ function createFirebaseAdminApp() {
     }
 
     const useEmulator = process.env.USE_EMULATOR as string;
-    console.log('use emulator ' + useEmulator)
 
-    if (true) {
+    if (false) {
         process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
         process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
         process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
-      }
+    }
 
     const params = {
         projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
