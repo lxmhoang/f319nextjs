@@ -3,7 +3,6 @@ import Breadcrumbs from "@/app/ui/breadcrumbs";
 import ExpertCard from "@/app/ui/expertcard";
 import { db } from "@/app/lib/firebase/firebase";
 import { useDocument } from "react-firebase-hooks/firestore";
-import { Expert, ExpertStatus, User, expertConverter } from "@/app/lib/definitions";
 import { Textarea } from "@nextui-org/react";
 import ExpertRegisterForm from "@/app/ui/profile/create-expert-form";
 import { redirect } from "next/navigation";
@@ -12,6 +11,8 @@ import { doc } from "firebase/firestore";
 import MyExpertView from "@/app/ui/expert/my-expert-view";
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
+import { Expert, ExpertStatus, expertConverter } from "@/app/model/expert";
+import { User } from "@/app/model/user";
 // import withAuth from "@/app/lib/withAuth";
 // export default withAuth(Page)
 

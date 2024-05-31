@@ -15,8 +15,9 @@ import {
 	or,
 } from "firebase/firestore";
 
-import { expertConverter, transConverter } from "../definitions";
 import { db } from "./firebase";
+import { expertConverter } from "@/app/model/expert";
+import { transConverter } from "@/app/model/transaction";
 // import { adminDB, test } from "../firebaseadmin/firebaseadmin";
 
 
@@ -45,12 +46,6 @@ function applyQueryFilters(q: Query<DocumentData, DocumentData>, params: { [key:
 	return q;
 }
 
-export async function clientFetchObject<ModelType>(path: string, converter: FirestoreDataConverter<ModelType>) {
-	const docRef = doc(db, path).withConverter(converter)
-	const snap = await getDocFromServer(docRef)
-	return snap.data()
-}
-
 
 export async function clientSearchCollection<ModelType>(name: string, filters = {}, converter: FirestoreDataConverter<ModelType>) {
 	let q = query(collection(db, name));
@@ -60,6 +55,16 @@ export async function clientSearchCollection<ModelType>(name: string, filters = 
 		return doc.data()
 	})
 }
+
+
+
+export async function clientFetchObject<ModelType>(path: string, converter: FirestoreDataConverter<ModelType>) {
+	const docRef = doc(db, path).withConverter(converter)
+	const snap = await getDocFromServer(docRef)
+	return snap.data()
+}
+
+
 
 export async function updateRefID(userDocID: string, refID: string) {
 	let docRef = doc(db, 'user/' + userDocID)
@@ -72,6 +77,7 @@ export async function getExperts(filters = {}) {
 
 	const results = await getDocs(expertQuery);
 	return results.docs.map(doc => {
+
 		return doc.data()
 	});
 }

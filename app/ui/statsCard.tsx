@@ -1,6 +1,6 @@
 import { Card, CardBody, CardFooter, CardHeader, Divider, Image, Link } from "@nextui-org/react";
 
-export default function StatsCard({num, infos}:{num: number, infos: string[]}) {
+export default function StatsCard({num, infos}:{num: string, infos: string[]}) {
     return (
         <div className="p-2 sm:p-5" >
         <Card  className="max-w sm:max-w-[400px]">

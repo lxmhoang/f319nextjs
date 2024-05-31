@@ -1,8 +1,6 @@
 'use client'
 
 import { useAppContext } from "@/app/lib/context";
-import { Divider } from "@nextui-org/react";
-import { redirect } from "next/navigation";
 
 export default  function Page() {
 
@@ -17,8 +15,6 @@ export default  function Page() {
   const ref = user.accessId
   
     return (
-      
-      
       <div>
         {user.displayName}
       

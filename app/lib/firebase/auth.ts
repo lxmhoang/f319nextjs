@@ -7,8 +7,9 @@ import { auth } from "./firebase";
 import { APIResponse } from "../definitions";
 
 
-export async function signInWithGoogle(refID:string | null) {
+export async function signInWithGoogle(refID: string | null) {
   const provider = new GoogleAuthProvider();
+  console.log('aaaaa =====')
 
   try {
     const userCreds = await signInWithPopup(auth, provider);
@@ -34,8 +35,8 @@ export async function signInWithGoogle(refID:string | null) {
 export async function signOut() {
   try {
     await auth.signOut();
-    
-  const response = await fetch("/api/auth/sign-out", {
+
+    const response = await fetch("/api/auth/sign-out", {
       headers: {
         "Content-Type": "application/json",
       },

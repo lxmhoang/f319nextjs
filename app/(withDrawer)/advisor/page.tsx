@@ -3,7 +3,6 @@ import Breadcrumbs from "@/app/ui/breadcrumbs";
 import ExpertCard from "@/app/ui/expertcard";
 import { db } from "@/app/lib/firebase/firebase";
 import { useDocument } from "react-firebase-hooks/firestore";
-import { Expert, ExpertStatus, User, expertConverter } from "@/app/lib/definitions";
 import { Textarea } from "@nextui-org/react";
 import ExpertRegisterForm from "@/app/ui/profile/create-expert-form";
 import { redirect } from "next/navigation";
@@ -12,77 +11,8 @@ import { doc } from "firebase/firestore";
 import MyExpertView from "@/app/ui/expert/my-expert-view";
 import Link from "next/link";
 import { Button } from "@/app/ui/button";
-// import withAuth from "@/app/lib/withAuth";
-// export default withAuth(Page)
-
-// const monthlyPlans =
-//   [
-//     {
-//       key: '100kmonthly',
-//       value: 100000,
-//       label: '100K 1 tháng',
-//       des: 'Mỗi tháng bạn sẽ nhận được 100K từ mỗi người theo dõi chọn gói này'
-//     },
-//     {
-//       key: '200kmonthly',
-//       value: 200000,
-//       label: '200K 1 tháng',
-//       des: 'Mỗi tháng bạn sẽ nhận được 200K từ mỗi người theo dõi chọn gói này'
-//     },
-//     {
-//       key: '500Kmonthly',
-//       value: 500000,
-//       label: '500K 1 tháng',
-//       des: 'Mỗi tháng bạn sẽ nhận được 500K từ mỗi người theo dõi chọn gói này'
-//     },
-//     {
-//       key: '1Mmonthly',
-//       value: 1000000,
-//       label: '1 triệu 1 tháng',
-//       des: 'Mỗi tháng bạn sẽ nhận được 1 triệu từ mỗi người theo dõi chọn gói này'
-//     },
-//     {
-//       key: '2Mmonthly',
-//       value: 2000000,
-//       label: '2 triệu 1 tháng',
-//       des: 'Mỗi tháng bạn sẽ nhận được 2 triệu từ mỗi người theo dõi chọn gói này'
-//     }
-//   ]
-
-//   const permPlans = 
-//   [
-//     {
-//       key: '500Kperm',
-//       value: 500000,
-//       label: '500K vĩnh viễn',
-//       des: 'Bạn sẽ nhận được 500K từ mỗi người theo dõi vĩnh viễn'
-//     },
-//     {
-//       key: '1Mperm',
-//       value: 200000,
-//       label: '200K 1 tháng',
-//       des: 'Mỗi tháng bạn sẽ nhận được 200K từ mỗi người theo dõi chọn gói này'
-//     },
-//     {
-//       key: '500Kmonthly',
-//       value: 500000,
-//       label: '500K 1 tháng',
-//       des: 'Mỗi tháng bạn sẽ nhận được 500K từ mỗi người theo dõi chọn gói này'
-//     },
-//     {
-//       key: '1Mmonthly',
-//       value: 1000000,
-//       label: '1 triệu 1 tháng',
-//       des: 'Mỗi tháng bạn sẽ nhận được 1 triệu từ mỗi người theo dõi chọn gói này'
-//     },
-//     {
-//       key: '2Mmonthly',
-//       value: 2000000,
-//       label: '2 triệu 1 tháng',
-//       des: 'Mỗi tháng bạn sẽ nhận được 2 triệu từ mỗi người theo dõi chọn gói này'
-//     }
-
-//   ]
+import { Expert, ExpertStatus, expertConverter } from "@/app/model/expert";
+import { User } from "@/app/model/user";
 
 export default function Page() {
   const { user } = useAppContext()

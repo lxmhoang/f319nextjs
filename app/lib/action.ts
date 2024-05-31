@@ -3,12 +3,16 @@
 // khong dung firebase client o day vi nhu the request.auth se bi null
 import { z } from 'zod';
 import { ref, uploadBytes } from "firebase/storage";
-import { ExpertStatus, Prediction, Transaction, User } from './definitions';
 import { addANewTransaction, serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc, serverUpdateDoc } from './firebaseadmin/adminfirestore';
 import { getFirestore } from 'firebase-admin/firestore';
-import { predAdminConverter, userAdminConverter } from './firebase/adminconverter';
 import { storage } from './firebase/firebase';
 import { getCurrentUser } from './firebaseadmin/adminauth';
+import { User, userAdminConverter } from '../model/user';
+import { Expert, ExpertStatus } from '../model/expert';
+import { Transaction } from '../model/transaction';
+import { Prediction, predAdminConverter } from '../model/prediction';
+import { revalidatePath } from 'next/cache';
+import { compressFile } from './utils';
 
 
 
@@ -44,6 +48,93 @@ export type RegisterExpertFormState = {
   justDone?: boolean
 };
 
+export async function editExpert(fileWrapper: FormData | undefined,_prevState: RegisterExpertFormState, formData: FormData) {
+
+  const curUser = await getCurrentUser()
+  if (!curUser) {
+    return {
+      errors: {
+        uid: ["uid khong ton tai"],
+        name: [""],
+        // subscriptionPrice: [""],
+        shortIntro: [""]
+      },
+      message: 'Không tìm thấy user',
+      justDone: false
+    };
+  }
+
+  console.log("uid for expert register : " + curUser?.uid)
+  const uid = curUser.uid
+  const newName = formData.get('name')
+  const newshortIntro = formData.get('shortIntro')
+  const newmonthlyPrice =  Number(formData.get('monthlyPrice'))
+  const newPermPrice = Number(formData.get('permPrice'))
+  const validatedFields = RegisterExpert.safeParse({
+    name: formData.get('name'),
+    shortIntro: formData.get('shortIntro'),
+    monthlyPrice: Number(formData.get('monthlyPrice')),
+    permPrice: Number(formData.get('permPrice')),
+    // subscriptionPrice: formData.get('subscriptionPrice'),
+    // avatar: formData.get('avatar'),
+  });
+
+  if (!validatedFields.success) {
+    return {
+      errors: validatedFields.error.flatten().fieldErrors,
+      justDone: false
+    };
+  }
+
+  // if (newName != curExpert.name || newshortIntro != curExpert.shortIntro || newmonthlyPrice != curExpert.monthPerform || newPermPrice || curExpert.permPrice) {
+
+    await serverUpdateDoc('expert/' + uid, {
+      name: formData.get('name'),
+      shortIntro: formData.get('shortIntro'),
+      monthlyPrice: formData.get('monthlyPrice'),
+      permPrice: formData.get('permPrice'),
+    })
+  // } else {
+  //   console.log('no new info to update')
+  // }
+  // const avatar = formData.get('avatar') as File
+
+  // console.log('attached info ===================== type ' + attached.type + '   size   ' + attached.size)
+
+  if (fileWrapper) {
+    
+    const attached = fileWrapper.get('avatar') as File
+    
+    console.log('attached info ===================== type ' + attached.type + '   size   ' + attached.size)
+
+    // console.log('aaaa has file ===================== type ' + attached.type + '   size   ' + attached.size)
+    const storageRef = ref(storage, '/expertAvatar/' + uid)
+    const snapshot = await uploadBytes(storageRef, attached)
+    console.log('Uploaded a blob or file! with ref : ' + snapshot.ref.toString() + " pah " +
+      snapshot.ref.fullPath);
+    await serverUpdateDoc('/expert/' + uid, { avatar: snapshot.ref.fullPath })
+    console.log("successful update avatar ref to expert data, begin to return ")
+
+    revalidatePath('/advisor/edit');
+    return {
+      errors: {},
+      message: "Đã sửa xong",
+      justDone: true
+    };
+  } else {
+    console.log('aaaa NO file =====================')
+    console.log('done, no upload file')
+    revalidatePath('/advisor/edit');
+    // redirect('/profile');
+    return {
+      message: 'Đã sửa xong',
+      errors: {},
+      justDone: true
+    };
+  }
+
+
+}
 
 export async function registerExpert(_prevState: RegisterExpertFormState, formData: FormData) {
 
@@ -496,8 +587,11 @@ export async function createNewPrediction(prevState: PredictionFormState, formDa
     deadLine: deadLine,
     status: "Inprogress",
     note: '',
-    portion: portion
+    portion: portion,
+    ownerId: uid
   }
+
+  console.log('prediction : ' + JSON.stringify(pred))
 
 
   const result = await serverAddNewModal<Prediction>('expert/' + uid + '/preds', pred, predAdminConverter)

@@ -5,8 +5,8 @@ import Cookies from "js-cookie";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebase";
 import { User as FireBaseUser, getAuth } from "firebase/auth";
-import { User, userConverter } from "../definitions";
 import { doc, onSnapshot } from "firebase/firestore";
+import { User, userConverter } from "@/app/model/user";
 
 
 const AppContext = createContext<{ user: User | undefined }>({ user: undefined });

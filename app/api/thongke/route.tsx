@@ -1,119 +1,128 @@
 // import { expertAdminConverter, predAdminConverter, userAdminConverter } from "@/app/lib/firebaseadmin/adminconverter";
 // import { serverQueryCollection, serverSetDoc, serverUpdateDoc } from "@/app/lib/firebaseadmin/firebaseadmin";
-import { expertAdminConverter, predAdminConverter, subscriptionAdminConverter } from "@/app/lib/firebase/adminconverter";
 import { serverQueryCollection, serverUpdateDoc } from "@/app/lib/firebaseadmin/adminfirestore";
 import getStockData, { getTodayMatchedVolume } from "@/app/lib/getStockData";
+import { getPivotDates } from "@/app/lib/statistic";
+import { getPerformanceSince } from "@/app/lib/utils";
+import { expertAdminConverter } from "@/app/model/expert";
+import { Prediction, predAdminConverter } from "@/app/model/prediction";
+import { subscriptionAdminConverter } from "@/app/model/subscription";
 
 const datesAreOnSameDay = (first: Date, second: Date) =>
   first.getFullYear() === second.getFullYear() &&
   first.getMonth() === second.getMonth() &&
   first.getDate() === second.getDate();
 
+// update performance of every activated expert, run at 5PM every day
+
 export async function GET(request: Request) {
   try {
     var message: string[] = ["start \n"]
-    var halfYear = new Date()
-    halfYear.setMonth(halfYear.getMonth()-6)
 
-    var oneYear = new Date()
-    oneYear.setMonth(oneYear.getMonth()-12)
+    const pivotDates = getPivotDates(new Date())
+    const pivotWeek = pivotDates[0]
+    const pivotMonth = pivotDates[1]
+    const pivotQuarter = pivotDates[2]
+    const pivotYear = pivotDates[3]
+    const minDate = pivotDates.reduce((a, b) => { return a < b ? a : b; });
 
-    var twoYear = new Date()
-    twoYear.setMonth(twoYear.getMonth()-24)
+    message.push('pivotWeek ' + pivotWeek.toLocaleDateString('vi') + '\n')
+    message.push('pivotMonth ' + pivotMonth.toLocaleDateString('vi') + '\n')
+    message.push('pivotQuarter ' + pivotQuarter.toLocaleDateString('vi') + '\n')
+    message.push('pivotYear ' + pivotYear.toLocaleDateString('vi') + '\n')
+    message.push('minDate ' + minDate.toLocaleDateString('vi') + '\n')
 
-    const pivotDates = [halfYear, oneYear, twoYear]
-    message.push('pivotDates ' + pivotDates.map((date) => date.toLocaleDateString('vi')).toString() + '\n')
-    let experts = await serverQueryCollection('expert', [
-      { key: 'status', operator: '==', value: "activated" }
-    
-    ], expertAdminConverter)
 
-    for (const pivotDay of pivotDates) {
-      const index = pivotDates.indexOf(pivotDay)
-      for (const expert of experts) {
-        var perform = 1.0
-        const eid = expert.id
-        let allPreds = await serverQueryCollection('expert/' + eid + '/preds', [] , predAdminConverter)
-        // let openPreds = await serverQueryCollection('expert/' + eid + '/preds', [
-        //   { key: 'status', operator: '==', value: "Inprogress" },
-        //   { key: 'dateIn', operator: '>=', value: pivotDay }
-        // ], predAdminConverter)
-        let openPreds = allPreds.filter((item) => {
-          return item.status =="Inprogress" && item.dateIn >= pivotDay
-        })
-  
-        message.push('expert id : ' + eid +  ' name ' + expert.name +'\n\n\n\n')
-  
-        for (const pred of openPreds) {
-          message.push('pred id : ' + pred.id ?? "" )
-          const matchedPriceToday = await getTodayMatchedVolume(pred.assetName)
-          message.push(' asset ' + pred.assetName +  ' priceIn: ' + pred.priceIn + ' priceOut = ' + pred.priceOut + ' cutloss ' + pred.cutLoss + ' deadline ' + pred.deadLine.toLocaleString('vi') + ' portion ' + pred.portion +  '% . \n MatchedPriceToday :  ' + matchedPriceToday.toString() )
-          const max = Math.max.apply(Math, matchedPriceToday)
-          const min = Math.min.apply(Math, matchedPriceToday)
-          message.push('  max : ' + max + '  min:  ' + min +  '  date :  ' + (new Date()).toLocaleString('vi')  + '\n')
-  
-          const toDayValue = true ? min/1000 : max/1000
-          const curPerform = true ? toDayValue / pred.priceIn : pred.priceIn / toDayValue
-          const curProfit = (curPerform - 1) * pred.portion / 100 + 1
-          message.push('incremental ratio of this pred ===== ' + ((curPerform-1) * 100).toFixed(2) +'%  profit ' +  + ((curProfit-1) * 100).toFixed(2) + '% \n\n\n\n')
-          perform = perform * curProfit
-          const priceOut = pred.priceOut * 1000
-          const cutLoss = pred.cutLoss * 1000
-          if (matchedPriceToday.includes(priceOut) || (max >= priceOut && min <= priceOut)) {
-            message.push('hit price Out \n')
-            const path = 'expert/' + eid + '/preds/' + pred.id ?? ""
-            await serverUpdateDoc(path, {
-              priceRelease: pred.priceOut,
-              dateRelease: new Date(),
-              status: "Closed"
-            })
-            message.push('set to closed : ' + path + '\n')
-            // mark cut loss
-          } else if ((matchedPriceToday.includes(pred.cutLoss * 1000)) || (max >= cutLoss && min <= cutLoss)) {
-            message.push('hit cutLoss \n')
-            const path = 'expert/' + eid + '/preds/' + pred.id ?? ""
-            await serverUpdateDoc(path, {
-              priceRelease: pred.cutLoss,
-              dateRelease: new Date(),
-              status: "Closed"
-            })
-            message.push('set to closed : ' + path + '\n')
-          } else if  (datesAreOnSameDay(new Date(), pred.deadLine)){
-            message.push(' hit dead Line ')
-            const path = 'expert/' + eid + '/preds/' + pred.id ?? ""
-            await serverUpdateDoc(path, {
-              priceRelease: max,
-              dateRelease: new Date(),
-              status: "Closed"
-            })
-  
-          }
+
+    console.log('minDat22e ==== : ' + minDate.toLocaleDateString('vi') + ' expert count ')
+    let experts = await serverQueryCollection('expert', [{ key: 'status', operator: '==', value: 'activated' }], expertAdminConverter)
+
+
+    // console.log('2222222 ==== : ' + minDate.toLocaleDateString('vi') + ' expert count ' + experts.length)
+    for (const expert of experts) {
+      // var perform = 1.0
+      const eid = expert.id
+      let allPreds = await serverQueryCollection<Prediction>('expert/' + eid + '/preds', [{ key: 'dateIn', operator: '>=', value: minDate }], predAdminConverter)
+
+      // let openPreds = allPreds.filter((item) => {
+      //   return item.status == "Inprogress"
+      // })
+
+      console.log('minDate ==== : ' + minDate.toLocaleDateString('vi'))
+      message.push('expert id : ' + eid + ' name ' + expert.name + '\n\n\n\n')
+
+      const weekData = await getPerformanceSince(pivotWeek, allPreds)
+      message.push(...weekData.message)
+
+      const monthData = await getPerformanceSince(pivotMonth, allPreds)
+      message.push(...monthData.message)
+
+      const quarterData = await getPerformanceSince(pivotQuarter, allPreds)
+      message.push(...quarterData.message)
+
+      const yearData = await getPerformanceSince(pivotYear, allPreds)
+      message.push(...yearData.message)
+
+      const perInfo = {
+        curPerformance: {
+          week: weekData.performance,
+          month: monthData.performance,
+          quarter: quarterData.performance,
+          year: yearData.performance
         }
-  
-        // let closePreds = await serverQueryCollection('expert/' + eid + '/preds', [{ key: 'status', operator: '!=', value: "Inprogress" },
-        // { key: 'dateIn', operator: '>=', value: pivotDay }], predAdminConverter)
-
-        let closePreds = allPreds.filter((item) => {
-          return item.status != "Inprogress" && item.dateIn >= pivotDay
-        })
-        for (const pred of closePreds) {
-          if (pred.priceRelease) {
-            const ratio = pred.priceRelease / pred.priceIn
-            const predPerform = true ? ratio : 1/ratio
-            const profit = (predPerform -1) * pred.portion / 100 + 1
-            message.push(' \n  Perform of close Pred ===== ' + predPerform.toFixed(2)   + '  profit ' +  profit.toFixed(2) + '\n')
-            perform = perform * profit
-          }
-        }
-
-        let timeInfo = index == 0 ? {"halfYear" : perform} : index == 1 ? {"oneYear": perform} : {"twoYear": perform}
-        let result = await serverUpdateDoc('expert/' + eid,timeInfo)
-
-  
-        message.push('\n expert performance of ' + JSON.stringify(timeInfo) +' =====' + perform + '\n\n\n\n')
-  
       }
+
+      let result = await serverUpdateDoc('expert/' + eid, perInfo)
+      message.push('\n expert performance info ' + JSON.stringify(perInfo.curPerformance) + '\n\n\n\n')
+
     }
+    // }
+
+    // update followerNum for every expert
+
+    message.push(' =======================================================    \n')
+    message.push(' Begin to followerNum for every expert    \n')
+
+    const expertIDs = experts.map(doc => doc.id)
+
+    const allSub = await serverQueryCollection('subscription', [{ key: 'endDate', operator: '>=', value: new Date() }], subscriptionAdminConverter)
+    const sumSubValue = allSub.map ((item) => item.value).reduce((a,b) => a+b , 0)
+    const currentSub = allSub.filter((item) => { 
+      const endDate = item.endDate ?? new Date('2030-01-01')
+      return item.perm || endDate >= new Date()
+    })
+
+    const subs = currentSub.map((item) => {
+      return {
+        uid: item.uid,
+        eid: item.eid
+      }
+    })
+
+    message.push(' allSub' + JSON.stringify(allSub) + '   \n')
+
+
+    const result = expertIDs.map((id) => {
+      return {
+        id: id,
+        num: subs.filter((sub) => {
+          return sub.eid == id
+        }
+        ).length
+      }
+    })
+
+    message.push(' result' + JSON.stringify(result) + '   \n')
+
+    var nosub = 0
+    for (const e of result) {
+      message.push(' update expert ' + e.id + ' with follower Num' + e.num + '  \n')
+      await serverUpdateDoc('expert/' + e.id, { followerNum: e.num })
+      nosub += e.num
+    }
+
+    const noe = experts.length
+    await serverUpdateDoc('stats/latest', { noe: noe, nosub: nosub, sumSubValue: sumSubValue })
 
   } catch (error) {
     return new Response(`Webhook error: ` + JSON.stringify(error), {

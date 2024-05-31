@@ -1,13 +1,16 @@
 'use server'
 import { FirestoreDataConverter, WhereFilterOp, getFirestore } from "firebase-admin/firestore"
-import { Expert, ExpertStatus, Prediction, Subscription, Transaction, User } from "../definitions"
-import { expertAdminConverter, predAdminConverter, subscriptionAdminConverter, userAdminConverter } from "../firebase/adminconverter"
 import { getCurrentUser } from "./adminauth"
 // import { getas adminDB } from "./firebaseadmin"
 import { didFollow } from "../utils"
 
 import admin from "firebase-admin"
 import { getApps } from "firebase-admin/app"
+import { Expert, ExpertStatus, expertAdminConverter } from "@/app/model/expert"
+import { User, userAdminConverter } from "@/app/model/user"
+import { Transaction } from "@/app/model/transaction"
+import { Subscription, subscriptionAdminConverter } from "@/app/model/subscription"
+import { Prediction, predAdminConverter } from "@/app/model/prediction"
 
 
 export async function subcribleToAnExpert(eid: string, perm: boolean) {
@@ -124,7 +127,7 @@ async function getActivesubscriptionOf(uid: string, eid: string) {
     let results = await adminDB.collection("subscription").where("eid", "==", eid).where("uid", "==", uid).where('endDate', '>=', today)
         .withConverter(subscriptionAdminConverter).get();
 
-    console.log("result = " + results.docs.length)
+    // console.log("result = " + results.docs.length)
 
     return results.docs.map(doc => {
         return doc.data()
@@ -144,10 +147,40 @@ export async function serverGetModal<ModelType>(docPath: string, converter: Fire
     return docSnap.data()
 }
 
+export async function serverCount(name: string) {
+    const colRef = adminDB.collectionGroup(name)
+    const snapshot = await colRef.count().get()
+    return snapshot.data().count
+}
+
+export async function serverGetStat() {
+    const docRef = adminDB.doc('stats/latest')
+    const docSnap = await docRef.get()
+    return docSnap.data() ?? {}
+
+}
+
+export async function serverQueryCollectionGroup<ModelType>(name: string, filters: { key: string, operator: WhereFilterOp, value: any }[], converter: FirestoreDataConverter<ModelType>) {
+
+    console.log('filer' + JSON.stringify(filters))
+    const colGroup = adminDB.collectionGroup(name)
+    var q = undefined
+    for (const { key, operator, value } of filters) {
+        q = q ? q.where(key, operator, value) : colGroup.where(key, operator, value)
+    }
+    console.log('aa333a' + JSON.stringify(q))
+    const snapshot = q ? await q?.withConverter(converter).get() : await colGroup.withConverter(converter).get()
+    
+    console.log('dddd')
+    return snapshot.docs
+    
+}
+
 export async function serverQueryCollection<ModelType>(path: string, filters: { key: string, operator: WhereFilterOp, value: any }[], converter: FirestoreDataConverter<ModelType>) {
     let ref = adminDB.collection(path)// query(collection(db, name));
-    console.log(filters)
+    // console.log(filters)
     var q = undefined
+    console.log('44444 ==== : ' )
     for (const { key, operator, value } of filters) {
         q = q ? q.where(key, operator, value) : ref.where(key, operator, value)
     }
@@ -178,29 +211,6 @@ export async function serverApprovePendingTrans(tranIDs: string[]) {
     })
     await batch.commit()
 }
-
-export async function getTotalPredOfExpert(eid: string) {
-    const expertData = await getAnExpertById(eid)
-    return expertData && expertData.preds ? expertData.preds.length : 0
-}
-
-async function getAnExpertById(id: string) {
-
-    const docRef = adminDB.collection('expert').doc(id).withConverter(expertAdminConverter);
-
-    const docSnap = await docRef.get()
-    var expert = docSnap.data()
-    if (expert) {
-        const predRef = adminDB.collection("expert/" + id + "/preds").withConverter(predAdminConverter)
-
-        let preds = (await predRef.get()).docs.map(doc => doc.data())
-        expert.preds = preds
-    }
-
-    return expert
-}
-
-
 
 export async function addANewTransaction(tran: Transaction) {
     console.log("tran ======" + JSON.stringify(tran))
@@ -251,19 +261,8 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
     const getDonePredOnly = !user || !didFollow(user, expert)
     // const hideInprogressOnes = !user || (user.following[expert.id] == null && user.uid != expert.id)
     // console.log(hideInprogressOnes ? 'hide them ' : 'show them sub')
-    const e1: Prediction = {
-        assetName: "",
-        dateIn: new Date(),
-        priceIn: 0,
-        priceOut: 0,
-        cutLoss: 0,
-        deadLine: new Date(),
-        status: "",
-        note: "",
-        portion: 0
-    }
     let response = await serverQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
-    console.log('res ' + JSON.stringify(response))
+    // console.log('res ' + JSON.stringify(response))
     let allPreds: Prediction[] = response// JSON.parse(response)
     // console.log('allPreds ' + JSON.stringify(allPreds))
     // let data = result.docs
@@ -297,10 +296,12 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
 }
 
 
-const ADMIN_APP_NAME = "stock-319";
+const ADMIN_APP_NAME = "stock-319-admin";
 
 const adminApp = createFirebaseAdminApp()
 const adminDB = getFirestore(adminApp)
+
+// adminDB.settings({ ignoreUndefinedProperties: true })
 
 function formatPrivateKey(key: string) {
     console.log("key : " + key)

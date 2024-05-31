@@ -1,4 +1,4 @@
-import { Expert, predConverter } from "@/app/lib/definitions";
+import { Expert } from "@/app/model/expert";
 import ExpertCard from "../expertcard";
 import { collection, or, query, where } from "firebase/firestore";
 import { db } from "@/app/lib/firebase/firebase";
@@ -7,6 +7,7 @@ import ReviewPrediction from "./reviewPrediction";
 import { useFetchRealTimeStockPrice } from "@/app/lib/hooks/useFetchRealTimeStockPrice";
 import { useEffect, useState } from "react";
 import { getRealTimeStockData } from "@/app/lib/getStockData";
+import { predConverter } from "@/app/model/prediction";
 
 
 export default function MyExpertView({ expert }: { expert: Expert }) {

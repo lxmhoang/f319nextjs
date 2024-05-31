@@ -1,7 +1,7 @@
 import Link from "next/link";
 import ExpertCard from "./expertcard";
-import { Expert } from "../lib/definitions";
 import { User } from "@nextui-org/user";
+import { Expert } from "../model/expert";
 
 export default function ExpertListing({ expertList }: { expertList: Expert[] }) {
   
@@ -14,8 +14,6 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
       <div className="block sm:grid sm:grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
         {expertList.map(
           (expert, index) => {
-            const image = expert.imageURL
-            //   console.log("aaaa" + expert.imageURL);
             return <div key={index}>
             
               <ExpertCard expert={expert} key={index}/>

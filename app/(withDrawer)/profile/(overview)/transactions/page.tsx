@@ -1,9 +1,9 @@
 'use client'
 import { useAppContext } from "@/app/lib/context";
-import { Transaction, transConverter } from "@/app/lib/definitions";
-import { clientSearchCollection, getMyTransHistory } from "@/app/lib/firebase/firestore";
+import { getMyTransHistory } from "@/app/lib/firebase/firestore";
 import { addComma } from "@/app/lib/utils";
-import { Divider, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, getKeyValue } from "@nextui-org/react";
+import { Transaction } from "@/app/model/transaction";
+import { Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, getKeyValue } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 
 

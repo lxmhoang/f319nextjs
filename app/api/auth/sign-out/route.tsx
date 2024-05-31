@@ -8,12 +8,14 @@ import { revokeAllSessions } from "@/app/lib/firebaseadmin/adminauth";
 export async function GET() {
   const sessionCookie = cookies().get("__session")?.value;
 
+  console.log('aaaaa did signout cookie session will be delete ' + JSON.stringify(sessionCookie))
+
   if (!sessionCookie)
     return NextResponse.json<APIResponse<string>>({ success: false, error: "Session not found." }, { status: 400 });
   console.log('aaaaa deleting cookie session')
-  cookies().delete("__session");
 
   await revokeAllSessions(sessionCookie);
+  cookies().delete("__session");
 
   return NextResponse.json<APIResponse<string>>({ success: true, data: "Signed out successfully." });
 }

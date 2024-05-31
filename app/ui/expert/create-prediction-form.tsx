@@ -4,13 +4,15 @@ import { useRouter } from 'next/navigation'
 import { useFormState } from 'react-dom';
 import { useEffect, useState } from 'react';
 import { Divider, useDisclosure, Autocomplete, AutocompleteItem, Slider } from '@nextui-org/react';
-import { CompanyRTInfo, predConverter } from '@/app/lib/definitions';
+import { CompanyRTInfo } from '@/app/lib/definitions';
 import { ConfirmationModal } from '../confirm';
 import { useAppContext } from '../../lib/context';
 import { getLocalStockList, getRealTimeStockData } from '../../lib/getStockData';
-import { clientSearchCollection } from '@/app/lib/firebase/firestore';
 import { createNewPrediction } from '@/app/lib/action';
 import { Button } from '../button';
+import { Prediction, predConverter } from '@/app/model/prediction';
+import { Datepicker, Label, TextInput } from 'flowbite-react';
+import { clientSearchCollection } from '@/app/lib/firebase/firestore';
 
 
 let parser = (data: { [key: string]: any }) => {
@@ -23,62 +25,62 @@ type rawCom = {
 }
 
 
-let parserCompRTInfo = (array: { [key: string]: any }[]) => {
-    if (array.length == 0)
-        return null
-    const data = array[0]
-    const result: CompanyRTInfo = {
-        code: data.a,
-        thamChieu: data.b,
-        maxPrice: data.c,
-        minPrice: data.d,
-        muagia3Price: data.e,
-        muagia3Volume: data.f,
-        muagia2Price: data.g,
-        muagia2Volume: data.h,
-        muagia1Price: data.i,
-        muagia1Volume: data.j,
-        khoplenhTangGiam: data.k,
-        khoplenhPrice: data.l,
-        khoplenhVolume: data.m,
-        khoplenhTotalVolume: data.n,
-        bangia1Price: data.o,
-        bangia1Volume: data.p,
-        bangia2Price: data.q,
-        bangia2Volume: data.r,
-        bangia3Price: data.s,
-        bangia3Volume: data.t,
-        u: data.u,
-        khoplenhMax: data.v,
-        khoplenhMin: data.w,
-        nuocngoaiBuy: data.x,
-        nuocngoaiSell: data.t,
-        z: data.a,
-        time: data.time,
-        tb: data.tb,
-        ts: data.ts
-    }
+// let parserCompRTInfo = (array: { [key: string]: any }[]) => {
+//     if (array.length == 0)
+//         return null
+//     const data = array[0]
+//     const result: CompanyRTInfo = {
+//         code: data.a,
+//         thamChieu: data.b,
+//         maxPrice: data.c,
+//         minPrice: data.d,
+//         muagia3Price: data.e,
+//         muagia3Volume: data.f,
+//         muagia2Price: data.g,
+//         muagia2Volume: data.h,
+//         muagia1Price: data.i,
+//         muagia1Volume: data.j,
+//         khoplenhTangGiam: data.k,
+//         khoplenhPrice: data.l,
+//         khoplenhVolume: data.m,
+//         khoplenhTotalVolume: data.n,
+//         bangia1Price: data.o,
+//         bangia1Volume: data.p,
+//         bangia2Price: data.q,
+//         bangia2Volume: data.r,
+//         bangia3Price: data.s,
+//         bangia3Volume: data.t,
+//         u: data.u,
+//         khoplenhMax: data.v,
+//         khoplenhMin: data.w,
+//         nuocngoaiBuy: data.x,
+//         nuocngoaiSell: data.t,
+//         z: data.a,
+//         time: data.time,
+//         tb: data.tb,
+//         ts: data.ts
+//     }
 
-    return result;
-}
+//     return result;
+// }
 
 export default function PredictCreationForm() {
     const { user } = useAppContext()
     const [remainPortion, setRemainPortion] = useState<number>()
 
-    useEffect(() =>  {
+    useEffect(() => {
         const getPreds = async () => {
             if (!user) {
                 return
             }
 
-         const preds = await clientSearchCollection('expert/' + user.uid + '/preds', {status: "Inprogress"}, predConverter)
-         const sum = preds.map((i) => i.portion).reduce( (a,b) => a+b,0)
-         setRemainPortion(100-sum)
+            const preds = await clientSearchCollection('expert/' + user.uid + '/preds', { status: "Inprogress" }, predConverter)
+            const sum = preds.map((i) => i.portion).reduce((a, b) => a + b, 0)
+            setRemainPortion(100 - sum)
         }
 
         getPreds()
-       
+
 
     }, [user])
 
@@ -86,11 +88,8 @@ export default function PredictCreationForm() {
     const [selectedStock, setSelectedStock] = useState<string>()
     const [selectedStockPrice, setSelectedStockPrice] = useState<number>()
     const [stockCodes, setStockCodes] = useState<string[]>([])
-    // const [selectedComp, setSelectedCompComp] = useState<rawCom>()
-    const minTakeProfitPrice = selectedStockPrice ? selectedStockPrice * 1.1 : 0
-    const maxCutLossPrice = selectedStockPrice ? selectedStockPrice * 0.9 : 0
-
-    // const [compInfo, err] = useFetchData<CompanyRTInfo | null>("https://banggia.cafef.vn/stockhandler.ashx?userlist=" + selectedComp?.Symbol ?? "", parserCompRTInfo)   
+    const minTakeProfitPrice = selectedStockPrice ? Math.round(selectedStockPrice * 1.1 * 10) / 10 : 0
+    const maxCutLossPrice = selectedStockPrice ? Math.round(selectedStockPrice * 0.9 * 10) / 10 : 0
 
     const router = useRouter()
 
@@ -98,6 +97,8 @@ export default function PredictCreationForm() {
     const [addPredictState, dispatchAddtran] = useFormState(createNewPrediction, initialFormState);
     const [showModal, setShowModal] = useState(false);
     const { isOpen, onOpen, onOpenChange } = useDisclosure();
+    const minDeadLine = new Date(new Date().getTime() + (5 * 24 * 60 * 60 * 1000))
+    const defaultDeadLine = new Date(new Date().getTime() + (20 * 24 * 60 * 60 * 1000))
     console.log('render with add predict state : ' + JSON.stringify(addPredictState))
     if (addPredictState.justDone == true) {
         setShowModal(true)
@@ -172,7 +173,7 @@ export default function PredictCreationForm() {
             {/* <div className='p-1'>
                 {selectedComp ? selectedComp.Symbol : ""}
             </div> */}
-            {remainPortion}
+            {/* {remainPortion}f */}
             <form action={dispatchAddtran} className='p-4'>
 
 
@@ -208,18 +209,23 @@ export default function PredictCreationForm() {
                             (<>Loading list ... </>)
                     }
                 </div>
-                <label htmlFor="takeProfitPrice" className="mb-2 block text-sm font-medium">
-                    Giá mục tiêu chốt lãi
-                </label>
-                <div className="mb-4 max-w">
-                    <input
+
+                <div className="mb-2 mr-4 block max-w-screen-sm">
+                    <Label value="Giá mục tiêu chốt lãi" />
+                    <TextInput className='w-1/2' step={0.01} type="number" name="takeProfitPrice" min={minTakeProfitPrice} defaultValue={minTakeProfitPrice} placeholder="minTakeProfitPrice" required />
+                </div>
+                <div className="mb-4 max-w max-w-screen-sm">
+                    <Label value="Giá cắt lỗ" />
+                    <TextInput className='w-1/2'  step={0.01} type="number" name="cutLossPrice" max={maxCutLossPrice} defaultValue={maxCutLossPrice} placeholder="maxCutLossPrice" required />
+
+                    {/* <input
                         name="takeProfitPrice"
                         className="peer block w-1/3 rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
                         placeholder="Giá mục tiêu chốt lời"
                         // startContent={<HeartIcon size={18} />}
                         type="number"
                     // min={minTakeProfitPrice}
-                    />
+                    /> */}
                 </div>
                 <div id="customer-error" aria-live="polite" aria-atomic="true">
                     {/* {addPredictState.errors?.priceOut &&
@@ -229,7 +235,7 @@ export default function PredictCreationForm() {
                             </p>
                         ))} */}
                 </div>
-                <label htmlFor="cutLossPrice" className="mb-2 block text-sm font-medium">
+                {/* <label htmlFor="cutLossPrice" className="mb-2 block text-sm font-medium">
                     Giá cắt lỗ
                 </label>
                 <div className="mb-4 max-w">
@@ -241,7 +247,7 @@ export default function PredictCreationForm() {
                         type="number"
                     //  max={maxCutLossPrice}
                     />
-                </div>
+                </div> */}
                 <div id="customer-error" aria-live="polite" aria-atomic="true">
                     {/* {addPredictState.errors?.cutLoss &&
                         addPredictState.errors.cutLoss.map((error: string) => (
@@ -250,10 +256,10 @@ export default function PredictCreationForm() {
                             </p>
                         ))} */}
                 </div>
-                <label htmlFor="deadLine" className="mb-2 block text-sm font-medium">
+                {/* <label htmlFor="deadLine" className="mb-2 block text-sm font-medium">
                     Ngày cuối cùng nắm giữ
-                </label>
-                <div className="mb-4 max-w">
+                </label> */}
+                {/* <div className="mb-4 max-w">
                     <input
                         name="deadLine"
                         className="peer block w-1/3 rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
@@ -261,7 +267,13 @@ export default function PredictCreationForm() {
                         // startContent={<HeartIcon size={18} />}
                         type="date"
                     />
+                </div> */}
+
+                <div className="mb-4 block max-w-screen-sm">
+                    <Label htmlFor="deadLine" value=" Ngày cuối cùng nắm giữ" />
+                    <Datepicker  className='w-1/2'  name="deadLine" defaultDate={defaultDeadLine} minDate={minDeadLine} autoHide={true} maxDate={new Date(2027, 1, 1)} required />
                 </div>
+
                 <div id="customer-error" aria-live="polite" aria-atomic="true">
                     {/* {addPredictState.errors?.deadLine &&
                         addPredictState.errors.deadLine.map((error: string) => (
@@ -272,7 +284,7 @@ export default function PredictCreationForm() {
                 </div>
                 <div className="mb-4 max-w">
                     <Slider
-                    name='portion'
+                        name='portion'
                         label={"Max portion : " + remainPortion + "%"}
                         step={10}
                         maxValue={remainPortion}

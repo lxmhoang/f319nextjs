@@ -1,4 +1,7 @@
-import { Expert, User } from "./definitions";
+import { Expert } from "../model/expert";
+import { Prediction } from "../model/prediction";
+import { User } from "../model/user";
+import { getTodayMatchedVolume } from "./getStockData";
 
 export function convert(num: number) {
   let formatter = Intl.NumberFormat('en', { notation: 'compact' });
@@ -22,10 +25,83 @@ export function didFollow(user: User, expert: Expert) {
     return false
   }
   const today = new Date()
-  const endDate = followInfo.endDate 
+  const endDate = followInfo.endDate
   return (followInfo.perm == true || followInfo.endDate >= new Date())
 
   // return user && user.following && Object.keys(user.following).includes(expert.id) && ( user.following[expert.id].perm == true ||  user.following[expert.id].endDate >= new Date())
 
 
+}
+
+export function perfConver(per: number) {
+  const prefix = per > 1 ? "+" : per == 1 ? "" : "-"
+  const color = per > 1 ? "text-sky-400" : per == 1 ? "text-white" : "text-red-400"
+  const distant = per > 1 ? per - 1 : 1 - per
+  console.log('number ' + per + '  color  ' + color)
+  const str = prefix + (distant*100).toFixed(2) + "%"
+  return {
+    color: color,
+    info: str
+  }
+}
+
+export async function getPerformanceSince(date: Date, data: Prediction[]) {
+  
+ console.log('getPerformanceSince')
+  let openPreds = data.filter((item) => {
+    return item.status == "Inprogress" && item.dateIn >= date
+  })
+
+  var perform = 1
+  var message: string[] = []
+
+  message.push('start checking pred since  : ' + date.toLocaleDateString('vi') )
+
+  for (const pred of openPreds) {
+
+    message.push('pred id : ' + pred.id ?? "" )
+    const matchedPriceToday = await getTodayMatchedVolume(pred.assetName)
+    message.push(' asset ' + pred.assetName +  ' priceIn: ' + pred.priceIn + ' priceOut = ' + pred.priceOut + ' cutloss ' + pred.cutLoss + ' deadline ' + pred.deadLine.toLocaleString('vi') + ' portion ' + pred.portion +  '% . \n MatchedPriceToday :  ' + matchedPriceToday.toString() )
+         
+    const max = Math.max.apply(Math, matchedPriceToday)
+    const min = Math.min.apply(Math, matchedPriceToday)
+    message.push('  max : ' + max + '  min:  ' + min +  '  date :  ' + (new Date()).toLocaleString('vi')  + '\n')
+  
+    const toDayValue = true ? min : max
+    const curPerform = true ? toDayValue / pred.priceIn : pred.priceIn / toDayValue
+    const curProfit = (curPerform - 1) * pred.portion / 100 + 1
+    message.push('incremental ratio of this pred ===== ' + ((curPerform - 1) * 100).toFixed(2) + '%  profit ' + + ((curProfit - 1) * 100).toFixed(2) + '% \n\n\n\n')
+    perform = perform * curProfit
+  }
+  let closePreds = data.filter((item) => {
+    return item.status != "Inprogress" && item.dateIn >= date
+  })
+  for (const pred of closePreds) {
+    if (pred.priceRelease) {
+      const ratio = pred.priceRelease / pred.priceIn
+      const predPerform = true ? ratio : 1 / ratio
+      const profit = (predPerform - 1) * pred.portion / 100 + 1
+      message.push(' \n  Perform of close Pred '+ pred.id+ ' datein : ' + pred.dateIn.toLocaleDateString('vi') +' ===== ' + predPerform.toFixed(2) + '  profit ' + profit.toFixed(2) + '\n')
+      perform = perform * profit
+    }
+  }
+
+  return {
+    performance: perform,
+    message: message
+
+  }
+}    
+
+import imageCompression from "browser-image-compression";
+const defaultOptions = {
+  maxSizeMB: 1,
+};
+
+export async function compressFile(imageFile: File, options = defaultOptions) {
+
+  console.log('size before ' + imageFile.size)
+  const newFile = await imageCompression(imageFile, options);
+  console.log('size after ' + newFile.size)
+  return newFile
 }

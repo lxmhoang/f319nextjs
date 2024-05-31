@@ -10,9 +10,9 @@ import {
 import { Button } from '@/app/ui/button';
 import { SearchUseFormState, createNewTransaction, registerExpert, searchUserForPayment } from '@/app/lib/action';
 import { useFormState } from 'react-dom';
-import { ChangeEvent, useEffect, useReducer, useState } from 'react';
 import { Divider, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button as ButtonReact, useDisclosure } from '@nextui-org/react';
-import { User } from '@/app/lib/definitions';
+import { User } from '@/app/model/user';
+
 
 interface TransCreationProps {
   user: User,

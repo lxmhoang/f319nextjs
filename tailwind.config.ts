@@ -23,6 +23,7 @@ const config: Config = {
   },
   darkMode: 'class',
   plugins: [
+    require('daisyui'),
     nextui({
     addCommonColors: true,
     }),

@@ -1,7 +1,7 @@
-'use client'
+
 
 import PredictCreationForm from "@/app/ui/expert/create-prediction-form";
-export default function Page() {
+export default async function Page() {
   return (
 
     <>

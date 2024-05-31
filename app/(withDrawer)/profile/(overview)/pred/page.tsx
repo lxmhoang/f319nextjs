@@ -1,8 +1,7 @@
 'use client'
 import { useAppContext } from "@/app/lib/context";
-import { Expert } from "@/app/lib/definitions";
-import { clientFetchObject, getExperts } from "@/app/lib/firebase/firestore";
 import { getFollowExpertByIDList } from "@/app/lib/firebaseadmin/adminfirestore";
+import { Expert } from "@/app/model/expert";
 import ExpertCard from "@/app/ui/expertcard";
 import { Divider } from "@nextui-org/react";
 import { useEffect, useState } from "react";

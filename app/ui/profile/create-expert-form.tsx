@@ -8,34 +8,57 @@ import {
 } from '@heroicons/react/24/outline';
 
 import { useFormState } from 'react-dom';
-import {Image} from "@nextui-org/react";
-import { useState } from 'react';
+import { Divider, Image } from "@nextui-org/react";
+import { useEffect, useState } from 'react';
 import { ConfirmationModal } from '../confirm';
 import { DocumentTextIcon } from '@heroicons/react/24/solid';
 import { redirect } from 'next/dist/server/api-utils';
 import { useRouter } from 'next/navigation';
-import { RegisterExpertFormState, registerExpert } from '../../lib/action';
-import { User } from '../../lib/definitions';
+import { RegisterExpertFormState, editExpert, registerExpert } from '../../lib/action';
 import React from 'react';
 import { Button } from '../button';
+import { User } from '@/app/model/user';
+import { Expert } from '@/app/model/expert';
+import { getBlob, ref } from 'firebase/storage';
+import { storage } from '@/app/lib/firebase/firebase';
 
-export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
 
-  const [selectedMonthLyPrice, setselectedMonthLyPrice] = useState(100000)
-  const [selectedPermPrice, setselectedPermPrice] = useState(500000)
+export default function ExpertRegisterForm({ userInfo, expert }: { userInfo: User, expert?: Expert | undefined }) {
+  const isEdit: boolean = expert != undefined
+  const [selectedMonthLyPrice, setselectedMonthLyPrice] = useState(expert ? expert.monthlyPrice : 100000)
+  const [selectedPermPrice, setselectedPermPrice] = useState(expert ? expert.permPrice : 500000)
   const registerPrice = selectedMonthLyPrice * 5 + selectedPermPrice
   const [uploadAvatar, setAvatar] = useState<File>()
-  const initialState = { message: "", errors: {}, justDone: false};
+  const [currentExpertAvatar, setCurrentExpertAvatar] = useState<Blob>()
+  const initialState = { message: "", errors: {}, justDone: false };
   const [state, dispatch] = useFormState<RegisterExpertFormState, FormData>(registerExpert, initialState);
   const router = useRouter()
 
+  const avatarURL = uploadAvatar ? URL.createObjectURL(uploadAvatar) : currentExpertAvatar ? URL.createObjectURL(currentExpertAvatar) : undefined
+
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+
+
+    const getAvatarBlob = async (url: string) => {
+      const blob = await getBlob(ref(storage, url))
+      setCurrentExpertAvatar(blob)
+
+    }
+
+    if (expert && expert.avatar) {
+      getAvatarBlob(expert.avatar)
+    }
+
+
+  }, [])
 
 
   console.log("stateeee" + JSON.stringify(state))
   if ((state.message) && showModal == false) {
     setShowModal(true)
-}
+  }
   const handleConfirmationConfirm = async () => {
     // handleNewPassword();
     // go go go
@@ -53,22 +76,27 @@ export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
   };
 
   return (
-    
-    <div className='p-6'>
-       <ConfirmationModal
-                isOpen={showModal}
-                onClose={handleConfirmationCancel}
-                onLeftButtonClick={handleConfirmationConfirm}
-                title={state.message ?? "No message"}
-                message={""}
-                leftButtonText='Okey'
-            />
-      <form action = {dispatch}>
 
-     
+    <div className='p-6'>
+      <ConfirmationModal
+        isOpen={showModal}
+        onClose={handleConfirmationCancel}
+        onLeftButtonClick={handleConfirmationConfirm}
+        title={state.message ?? "No message"}
+        message={""}
+        leftButtonText='Okey'
+      />
+      <div className='mb-5'>
+      {isEdit ? (<>Edit </>) : (<>Create new</>)}
+
+      </div>
+      <Divider />
+      <form action={dispatch} className='mt-5'>
+
+
         <div className="rounded-md bg-black-50">
-          <input type="hidden" id="uid" name="uid" value={userInfo.uid}/>
-         {/* Name */}
+          <input type="hidden" id="uid" name="uid" value={userInfo.uid} />
+          {/* Name */}
           <div className="mb-4">
             <label htmlFor="name" className="mb-2 block text-sm font-medium">
               Tên hiển thị
@@ -96,7 +124,7 @@ export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
                 ))}
             </div>
           </div>
-      
+
           {/* monthly  price */}
           <div className="mb-4">
             <label htmlFor="customer" className="mb-2 block text-sm font-medium">
@@ -119,19 +147,19 @@ export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
                   </option>
                 ))}
               </select> */}
-                              <input
-                  id="monthlyPrice"
-                  name="monthlyPrice"
-                  type="number"
-                  placeholder="Số tiền nhận mỗi tháng cho một user theo dõi theo tháng"
-                  defaultValue={selectedMonthLyPrice}
-                  className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
-                  required
-                  onChange={(e) => {
-                    setselectedMonthLyPrice(Number(e.target.value))
-                  }}
+              <input
+                id="monthlyPrice"
+                name="monthlyPrice"
+                type="number"
+                placeholder="Số tiền nhận mỗi tháng cho một user theo dõi theo tháng"
+                defaultValue={selectedMonthLyPrice}
+                className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
+                required
+                onChange={(e) => {
+                  setselectedMonthLyPrice(Number(e.target.value))
+                }}
 
-                />
+              />
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
             </div>
             <div id="customer-error" aria-live="polite" aria-atomic="true">
@@ -146,22 +174,22 @@ export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
           {/* Perm price */}
           <div className="mb-4">
             <label htmlFor="permPrice" className="mb-2 block text-sm font-medium">
-              Ra giá cho gói theo dõi vĩnh viễn 
+              Ra giá cho gói theo dõi vĩnh viễn
             </label>
             <div className="relative">
-                              <input
-                  id="permPrice"
-                  name="permPrice"
-                  type="number"
-                  placeholder="Số tiền nhận 1 lần cho mỗi người theo dõi vĩnh viễn"
-                  defaultValue={selectedPermPrice}
-                  className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
-                  required step={50000}
-                  
-                  onChange={(e) => {
-                    setselectedPermPrice(Number(e.target.value))
-                  }}
-                />
+              <input
+                id="permPrice"
+                name="permPrice"
+                type="number"
+                placeholder="Số tiền nhận 1 lần cho mỗi người theo dõi vĩnh viễn"
+                defaultValue={selectedPermPrice}
+                className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
+                required step={50000}
+
+                onChange={(e) => {
+                  setselectedPermPrice(Number(e.target.value))
+                }}
+              />
               <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
             </div>
             <div id="customer-error" aria-live="polite" aria-atomic="true">
@@ -203,35 +231,56 @@ export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
                 ))}
             </div>
           </div>
-           {/* Upload file */}
+          {/* Upload file */}
+{/* {expert?.avatar} */}
 
-        <input
-          type="file"
-          placeholder='select avatar'
-          name="avatar"
-          onChange={(e) => {
-            const file = e.target.files ? e.target.files[0] : undefined;
-            // if (file != undefined) {
+{avatarURL}
+          <input
+            type="file"
+            placeholder='select avatar'
+            name="avatar"
+            required = {avatarURL == undefined}
+            onChange={(e) => {
+              const file = e.target.files ? e.target.files[0] : undefined;
+              // if (file != undefined) {
               setAvatar(file)
 
-            // }
-            // setSelectedFile(file);
-          }}
-        />
-
-          {uploadAvatar && (
-          <div className='flex column p-4 w-100 h-100'>
+              // }
+              // setSelectedFile(file);
+            }}
+          />
+          {
+           ( <div className='flex column p-4 w-100 h-100'>
             <Image
-              src={URL.createObjectURL(uploadAvatar)}
+              src={avatarURL}
               // style={styles.image}
               alt="Thumb"
+              
+      width={150}
             />
             {/* <button onClick={removeSelectedImage} style={styles.delete}>
-              Remove This Image
-            </button> */}
-          </div>
-        )}
-        {/* <button onClick={upload}>Upload file</button> */}
+            Remove This Image
+          </button> */}
+          </div>) 
+
+          }
+
+          {
+          // uploadAvatar && (
+          //   <div className='flex column p-4 w-100 h-100'>
+          //     <Image
+          //       src={avatarURL}
+          //       // style={styles.image}
+          //       alt="Thumb"
+          //       sizes='200'
+          //     />
+          //     {/* <button onClick={removeSelectedImage} style={styles.delete}>
+          //     Remove This Image
+          //   </button> */}
+          //   </div>
+          // )
+          }
+          {/* <button onClick={upload}>Upload file</button> */}
         </div>
         <div className="mt-6 flex justify-end gap-4">
           <Link
@@ -240,7 +289,7 @@ export default function ExpertRegisterForm({  userInfo }: { userInfo: User }) {
           >
             Cancel
           </Link>
-          <Button type="submit">Đăng ký</Button>
+          <Button type="submit">{isEdit ? "Sửa thông tin " : "Đăng ký "}</Button>
         </div>
       </form>
     </div>

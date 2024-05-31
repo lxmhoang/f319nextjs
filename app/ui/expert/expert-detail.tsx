@@ -2,13 +2,14 @@
 import ExpertCard from "../expertcard";
 import { Accordion, AccordionItem, Divider } from "@nextui-org/react";
 import clsx from 'clsx';
-import { Expert, Prediction } from "@/app/lib/definitions";
 import { useAppContext } from "@/app/lib/context";
 import { useEffect, useState } from "react";
 import { ConfirmationModal } from "../confirm";
 import { Button } from "../button";
-import { addComma } from "@/app/lib/utils";
+import { addComma, perfConver } from "@/app/lib/utils";
 import { subcribleToAnExpert, viewExpertPreds } from "@/app/lib/firebaseadmin/adminfirestore";
+import { Prediction } from "@/app/model/prediction";
+import { Expert } from "@/app/model/expert";
 
 type AlertModal = {
   isShown: boolean
@@ -120,7 +121,7 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
     }
 
   };
-
+  console.log('expert data : ' + JSON.stringify(expert))
 
   return (
     <div className="block sm:flex sm:flex-row sm:flex-wrap">
@@ -200,17 +201,17 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
                     </p>
                   </div>
                 )
-                const content2 = "aaaa"
                 const priceRelease = item.priceRelease ?? 0
 
                 const profit = priceRelease * 100 / item.priceIn
                 const profitPercentage = (Math.round(profit * 100) / 100).toFixed(2);
+                const profitInfo = perfConver(priceRelease / item.priceIn).info
                 const title = <p className={clsx(
                   {
                     "text-sky-400": profit >= 100,
                     "text-red-400": profit < 100
                   }
-                )}> {item.assetName} {profitPercentage}% </p>
+                )}> {item.assetName} {profitInfo} </p>
                 return (<AccordionItem key={"c_" + index} textValue={"content"} title={title}>{content}</AccordionItem>)
               }
 
