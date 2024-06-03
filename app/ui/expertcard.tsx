@@ -26,14 +26,14 @@ export default function ExpertCard({ expert }: { expert: Expert }) {
 
 
   return (
-    <div className=" max-w-sm">
+    <div className="">
       {/* {expert.avatar} */}
       <Link className="justify-center" href={{ pathname: `/expert/details/${expert.id}` }}>
         <div className="p-2 rounded-sm">
-          <Card className="">
+          <Card className="w-[200px] h-[150px] m-5 bg-slate-900">
             <CardHeader className=" gap-3 flex">
 
-              <Image src={imagedownloadURL} width={120} className="rounded-full" />
+              <Image src={imagedownloadURL} width={50} className="rounded-full" />
               <div className="block">
 
                 <Label value={expert.name} />

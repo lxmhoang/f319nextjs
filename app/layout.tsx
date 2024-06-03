@@ -1,17 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import TopNav from "./ui/topnav";
 import { AppWrapper } from "./lib/context";
-import { AuthProvider } from "./components/auth-provider";
-import BottomNav from "./ui/botnav";
-import { DarkThemeToggle, Flowbite, Sidebar, ThemeModeScript } from "flowbite-react";
-import { UserGroupIcon } from "@heroicons/react/24/outline";
-import SideBar from "./ui/sidebar";
-import StatsCard from "./ui/statsCard";
-import type { CustomFlowbiteTheme } from "flowbite-react";
-import TopBar from "./ui/topbar";
-import { useState } from "react";
+import { Flowbite, ThemeModeScript } from "flowbite-react";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -29,6 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+      <link rel="shortcut icon" href="/images/favicon.ico" />
         <ThemeModeScript />
       </head>
       <body className="{inter.className} h-full" >
