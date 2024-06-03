@@ -7,7 +7,7 @@ import StatsCard from "../ui/statsCard";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { convert, perfConver } from "../lib/utils";
-import { Carousel } from "flowbite-react";
+import { Button, Carousel } from "flowbite-react";
 import { activate } from "firebase/remote-config";
 import { serverGetStat } from "../lib/firebaseadmin/adminfirestore";
 

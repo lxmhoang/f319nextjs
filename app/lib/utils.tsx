@@ -37,7 +37,7 @@ export function perfConver(per: number) {
   const prefix = per > 1 ? "+" : per == 1 ? "" : "-"
   const color = per > 1 ? "text-sky-400" : per == 1 ? "text-white" : "text-red-400"
   const distant = per > 1 ? per - 1 : 1 - per
-  console.log('number ' + per + '  color  ' + color)
+  // console.log('number ' + per + '  color  ' + color)
   const str = prefix + (distant*100).toFixed(2) + "%"
   return {
     color: color,

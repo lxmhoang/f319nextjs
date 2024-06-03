@@ -83,6 +83,7 @@ export async function GET(request: Request) {
     message.push(' =======================================================    \n')
     message.push(' Begin to followerNum for every expert    \n')
 
+    console.log('=======================================================44')
     const expertIDs = experts.map(doc => doc.id)
 
     const allSub = await serverQueryCollection('subscription', [{ key: 'endDate', operator: '>=', value: new Date() }], subscriptionAdminConverter)
@@ -100,8 +101,7 @@ export async function GET(request: Request) {
     })
 
     message.push(' allSub' + JSON.stringify(allSub) + '   \n')
-
-
+    
     const result = expertIDs.map((id) => {
       return {
         id: id,

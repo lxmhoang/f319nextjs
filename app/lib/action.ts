@@ -201,22 +201,6 @@ export async function registerExpert(_prevState: RegisterExpertFormState, formDa
 
   console.log('111')
   await serverUpdateDoc('user/' + uid, { amount: remain })
-  // await updateUser(uid, {amount:remain})
-
-
-
-  console.log('aaa')
-  // const docRef = doc(db, 'expert/' + uid)
-  // const docRef = await  dbAdmin.collection('expert').doc(uid).set({
-  //     name: formData.get('name'),
-  //     shortIntro: formData.get('shortIntro'),
-  //     monthlyPrice: formData.get('monthlyPrice'),
-  //     permPrice: formData.get('permPrice'),
-  //     // subscriptionPrice: formData.get('subscriptionPrice'),
-  //     status: ExpertStatus.activated,
-  //     created: new Date(),
-  //     visible: true
-  //   })
 
   await serverSetDoc('expert/' + uid, {
     name: formData.get('name'),

@@ -7,7 +7,6 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 const {auth}  = require('firebase-functions');
-const {onRequest} = require("firebase-functions/v2/https");
 
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
@@ -15,8 +14,6 @@ const {onDocumentCreated, onDocumentDeleted} = require("firebase-functions/v2/fi
 // const {onCreate} = require("firebase-functions/v2/auth");
 const {initializeApp} = require("firebase-admin/app");
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
-const { getAuth } = require('firebase-admin/auth');
-const { FieldPath } = require('firebase/firestore');
 
 // The es6-promise-pool to limit the concurrency of promises.
 const PromisePool = require("es6-promise-pool").default;
@@ -56,16 +53,16 @@ exports.createUserDoc = auth.user().onCreate((user) => {
     logger.log(user.displayName)
 });
 
-exports.createExpertHandler = onDocumentCreated("expert/{expertId}", (event) => {
+exports.createExpertHandler = onDocumentCreated({document: "/expert/{expertId}", region: 'asia-southeast1'}, (event) => {
     getFirestore().doc('/user/' + event.params.expertId).update({isExpert: true})
-})
+});
 
 
-exports.deleteExpertHandler = onDocumentDeleted("expert/{expertId}", (event) => {
+exports.deleteExpertHandler = onDocumentDeleted({document: "expert/{expertId}", region: 'asia-southeast1'}, (event) => {
     getFirestore().doc('/user/' + event.params.expertId).update({isExpert: false})
-})
+});
 
-exports.createTransaction = onDocumentCreated("/transaction/{documentId}", (event) => {
+exports.createTransaction = onDocumentCreated({document: "transaction/{documentId}", region: 'asia-southeast1'}, (event) => {
 
     const data = event.data.data();
     logger.log("new transaction created", event.params.documentId, data);
@@ -191,19 +188,11 @@ exports.followerNum = onSchedule("25 * * * *", async (event) => {
     } catch (err) {
         throw err
     }
-
-    // expertIDs.forEach((expertID) => async () => {
-    //     logger.info("======"+expertID)
-    //    const subSnapshot = await getFirestore().collection('subscription').where('endDate','>=', toDay).where('eid', 'in' ,expertIDs).get()
-    //    const numberOfFollower = subSnapshot.docs.filter { doc => doc.eid }
-    //    getFirestore().collection('expert').doc(expertID).update({followerNum:numberOfFollower})
-    // })
-
   });
 
 
 
-exports.createSubscription = onDocumentCreated("/subscription/{documentId}", (event) => {
+exports.createSubscription = onDocumentCreated({ document: "subscription/{documentId}", region: 'asia-southeast1'}, (event) => {
 
     const data = event.data.data();
     const date = new Date()
@@ -245,7 +234,7 @@ exports.createSubscription = onDocumentCreated("/subscription/{documentId}", (ev
     
 
 
-})
+});
 
 
 // exports.makeuppercase = onDocumentCreated("/messages/{documentId}", (event) => {
