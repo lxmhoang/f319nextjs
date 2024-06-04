@@ -5,9 +5,6 @@ import { cookies } from "next/headers";
 
 import admin from "firebase-admin"
 import { getApps } from "firebase-admin/app";
-// import { adminApp, adminAuth } from "./firebaseadmin";
-
-
 
 async function getSession() {
     try {
@@ -66,13 +63,13 @@ export async function revokeAllSessions(session: string) {
 }
 
 
-const ADMIN_APP_NAME = "stock-319";
+const ADMIN_APP_NAME = "stock-319-admin";
 
 const adminApp = createFirebaseAdminApp()
 const adminAuth = getAuth(adminApp)
 
 function formatPrivateKey(key: string) {
-    console.log("key : " + key)
+    // console.log("key : " + key)
     return key ? key.replace(/\\n/g, "\n") : "aa"
 }
 function createFirebaseAdminApp() {
@@ -82,11 +79,15 @@ function createFirebaseAdminApp() {
         return result
     }
 
-
-    if (false) {
+// use emulator
+    if (process.env.USE_EMULATOR == 'true') {
+        console.log('admin auth connecting to emulator')
         process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
         process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
         process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
+    } else {
+        console.log('admin auth NOT connecting to emulator' + process.env.USE_EMULATOR)
+
     }
 
     const params = {

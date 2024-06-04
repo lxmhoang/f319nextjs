@@ -1,24 +1,22 @@
 
-import { cache } from "react";
-import { getExperts } from "../lib/firebase/firestore";
 import { getPivotDates } from "../lib/statistic";
 import LeaderBoard from "../ui/rank";
 import StatsCard from "../ui/statsCard";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { convert, perfConver } from "../lib/utils";
-import { Button, Carousel } from "flowbite-react";
-import { activate } from "firebase/remote-config";
-import { serverGetStat } from "../lib/firebaseadmin/adminfirestore";
+import { Carousel } from "flowbite-react";
+import { serverGetStat, serverQueryCollection } from "../lib/firebaseadmin/adminfirestore";
+import { expertAdminConverter } from "../model/expert";
 
-export const revalidate = false
-
-const fetchData = unstable_cache(async () => getExperts(), ['getExpertsOnHomePage'], { revalidate: 60 * 60 * 2 })
+const cacheTime = 60*60*2
 
 export default async function Home() {
 
-  const experts = await unstable_cache(async () => getExperts({ status: "activated" }), ['getExpertsOnHomePage'], { revalidate: 60 * 60 * 2 })()
-  const stats = await unstable_cache(async () => serverGetStat(), ['getStatsOnHomePage'], { revalidate: 60 })()
+  const experts = await unstable_cache(async () =>  serverQueryCollection('expert', [{key: "status", operator: "==", value: "activated"}], expertAdminConverter), ['getExpertsOnHomePage'], {revalidate: cacheTime})()
+  
+  // await unstable_cache(async () => getExperts({ status: "activated" }), ['getExpertsOnHomePage'], { revalidate: cacheTime })()
+  const stats = await unstable_cache(async () => serverGetStat(), ['getStatsOnHomePage'], { revalidate: cacheTime })()
 
 
 

@@ -314,12 +314,16 @@ function createFirebaseAdminApp() {
         return result
     }
 
-    const useEmulator = process.env.USE_EMULATOR as string;
 
-    if (false) {
+// use emulator
+    if (process.env.USE_EMULATOR == 'true') {
+        console.log('admin fire store connecting to emulator')
         process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
         process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
         process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
+    } else {
+        console.log('admin fire store NOT connecting to emulator ' + process.env.USE_EMULATOR + process.env.KEY_MEASUREMENT_ID)
+
     }
 
     const params = {

@@ -71,18 +71,6 @@ export async function updateRefID(userDocID: string, refID: string) {
 	return updateDoc(docRef, { refID: refID })
 }
 
-export async function getExperts(filters = {}) {
-	let q = query(collection(db, "expert"));
-	const expertQuery = applyQueryFilters(q, filters).withConverter(expertConverter);
-
-	const results = await getDocs(expertQuery);
-	return results.docs.map(doc => {
-
-		return doc.data()
-	});
-}
-
-
 export async function getMyTransHistory(uid: string) {
 	// const user = await getCurrentUser()
 	if (uid) {

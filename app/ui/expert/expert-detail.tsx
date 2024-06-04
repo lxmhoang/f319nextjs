@@ -32,13 +32,11 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
       donePreds: Prediction[];
     }
   }>()
-  // const [donePreds, setDonePreds] = useState<Prediction[]>([])
-  // const [progressPreds, setInprogressPreds] = useState<Prediction[]>([])
 
   useEffect(() => {
     const exc = async () => {
       const res = await viewExpertPreds(user, expert)
-      console.log('done  exxxx' + res)
+      console.log('viewExpertPreds' + res)
       setPredsInfo(JSON.parse(res))
     }
 

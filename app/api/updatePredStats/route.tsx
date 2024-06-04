@@ -6,8 +6,12 @@ import { Prediction, predAdminConverter } from "@/app/model/prediction"
 export async function GET(request: Request) {
     var message: string[] = ["start \n"]
     try {
-
-        const allInprogressPreds = await serverQueryCollectionGroup<Prediction>('preds', [{ key: 'status', operator: '==', value: 'Inprogress' }], predAdminConverter)
+        const allPreds = await serverQueryCollectionGroup<Prediction>('preds', [], predAdminConverter)
+        // const data = allInprogressPreds.map((item) => item.data())
+      //   return new Response(JSON.stringify(data), {
+      //     status: 200
+      // })
+        const allInprogressPreds = allPreds.filter((doc) => { return doc.data().status == 'Inprogress'})
         for (const doc of allInprogressPreds) {
           const pred = doc.data()
           const ref = doc.ref
