@@ -21,7 +21,7 @@ export default function LeaderBoard(props: BoardProps) {
             <div className="flex justify-center  h-[30px]">
                 <Label className="m-2" value={range} />
             </div>
-            <div className="overflow-auto h-[230px] ">
+            <div className="overflow-auto h-[260px] ">
 
                 <List unstyled className="max-w-md ">
                     {props.data.map((item, index) => {

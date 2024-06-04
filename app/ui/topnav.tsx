@@ -145,7 +145,7 @@ const guessBarMenuList =
   };
 
   return (
-    <Navbar shouldHideOnScroll={false} position="sticky" isBordered className="h-[66px] sm:h-[66px] " maxWidth='full'
+    <Navbar shouldHideOnScroll={false} position="sticky" isBordered className="bg-transparent dark:bg-transparent h-[66px] sm:h-[66px] " maxWidth='full'
       justify-between="left" isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
       <NavbarMenuToggle
         aria-label={isMenuOpen ? "Close menu" : "Open menu"}

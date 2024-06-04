@@ -90,14 +90,15 @@ export default function BottomNav() {
             })}>
                 {tabInfo.map((tab) => {
                     return (
-                        <div key={tab.key} >
-                            <Link href={tab.path} type="button" className="inline-flex flex-col items-center justify-center px-5 border-x  border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 group dark:border-gray-600 dark:text-gray-400 text-gray-500 ">
-                                <tab.icon className={clsx('w-5 h-5', {
-                                    "dark:text-blue-500": tab.actived,
-                                    "dark:text-blue-600": tab.actived,
-
-                                })} fill="currentColor" />
-                                <span className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:group-hover:text-blue-500">{tab.title}</span>
+                        <div key={tab.key} className="inline-flex flex-col items-center justify-center   border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 group dark:border-gray-600 dark:text-gray-400 text-gray-500 " >
+                            <Link href={tab.path} type="button" className="">
+                                <div className="px-2">
+                                    <tab.icon className={clsx('w-5 h-5', {
+                                        "dark:text-blue-500": tab.actived,
+                                        "dark:text-blue-600": tab.actived,
+                                    })} fill="currentColor" />
+                                </div>
+                                <div><span className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:group-hover:text-blue-500">{tab.title}</span></div>
                             </Link>
                         </div>
                     )
