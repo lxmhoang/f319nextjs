@@ -26,7 +26,7 @@ export async function GET(request: Request) {
             // const curPerform = true ? toDayValue / pred.priceIn : pred.priceIn / toDayValue
             // const curProfit = (curPerform - 1) * pred.portion / 100 + 1
             // message.push('incremental ratio of this pred ===== ' + ((curPerform-1) * 100).toFixed(2) +'%  profit ' +  + ((curProfit-1) * 100).toFixed(2) + '% \n\n\n\n')
-            if (matchedPriceToday.includes(pred.priceOut) || (min <= pred.priceOut)) {
+            if (matchedPriceToday.includes(pred.priceOut) || (min >= pred.priceOut)) {
               message.push('hit price Out, close '+ ref.path + 'with price Release ' + pred.priceOut + '\n')
 
               // const path = 'expert/' + pred.ownerId + '/preds/' + pred.id ?? ""
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
                 dateRelease: new Date(),
                 status: "WIN"
               })
-            } else if ((matchedPriceToday.includes(pred.cutLoss)) || (max >= pred.cutLoss )) {
+            } else if ((matchedPriceToday.includes(pred.cutLoss)) || (max <= pred.cutLoss )) {
               message.push('hit cutLoss, close '+ ref.path + ' with price Release ' + pred.cutLoss + '\n')
               await serverUpdateDoc(ref.path, {
                 priceRelease: pred.cutLoss,

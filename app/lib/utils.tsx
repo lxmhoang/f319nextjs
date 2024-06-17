@@ -82,7 +82,7 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
       const ratio = pred.priceRelease / pred.priceIn
       const predPerform = true ? ratio : 1 / ratio
       const profit = (predPerform - 1) * pred.portion / 100 + 1
-      message.push(' \n  Perform of close Pred '+ pred.id+ ' datein : ' + pred.dateIn.toLocaleDateString('vi') +' ===== ' + predPerform.toFixed(2) + '  profit ' + profit.toFixed(2) + '\n')
+      message.push(' \n  Perform of close Pred '+ pred.id+ ' datein : ' + pred.dateIn.toLocaleDateString('vi') +' ===== ' + predPerform + '  profit ' + profit + '\n')
       perform = perform * profit
     }
   }
