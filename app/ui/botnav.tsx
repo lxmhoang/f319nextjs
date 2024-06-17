@@ -10,7 +10,7 @@ import { ChartBarIcon, UserCircleIcon, WalletIcon } from "@heroicons/react/16/so
 export default function BottomNav() {
     const { user } = useAppContext()
     const isExpert = user?.isExpert ?? false
-    const pathname = usePathname()
+    const pathname = usePathname() ?? "/"
 
     const tabInfo = isExpert ?
         [
@@ -54,33 +54,34 @@ export default function BottomNav() {
         [
             {
                 title: "Home",
-                key: "Home",
+                key: "Home2",
                 icon: HomeIcon,
                 path: "/",
-                actived: true
+                actived: !(pathname.includes('/wallet') || pathname.includes('/profile') || pathname.includes('/advisor') || pathname.includes('/expert'))
             },
             {
                 title: "Expert",
-                key: "Expert",
+                key: "Expert2",
                 icon: ChartBarIcon,
                 path: "/expert",
-                actived: true
+                actived: pathname.startsWith('/expert')
             },
             {
                 title: "Wallet",
-                key: "Wallet",
+                key: "Wallet2",
                 icon: WalletIcon,
                 path: "/wallet",
-                actived: true
+                actived: pathname.startsWith('/wallet')
             },
             {
                 title: "Profile",
-                key: "Profile",
+                key: "Profile2",
                 icon: UserCircleIcon,
                 path: "/profile",
-                actived: true
+                actived: pathname.startsWith('/profile')
             }
         ]
+
 
     return (
         <>
@@ -90,15 +91,24 @@ export default function BottomNav() {
             })}>
                 {tabInfo.map((tab) => {
                     return (
-                        <div key={tab.key} className="inline-flex flex-col items-center justify-center   border-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 group dark:border-gray-600 dark:text-gray-400 text-gray-500 " >
+                        <div key={tab.key} className={clsx("inline-flex flex-col items-center justify-center border-gray-200  group dark:border-gray-600 ", {
+                            "dark:bg-blue-800 dark:text-gray-200 bg-gray-100 text-gray-600": tab.actived,
+                            "dark:bg-blue-600 dark:text-blue-300 bg-gray-300 text-gray-800": !tab.actived,
+                        })} >
                             <Link href={tab.path} type="button" className="">
                                 <div className="px-2">
+                                    {/* {tab.actived ? "a" : "n"} */}
                                     <tab.icon className={clsx('w-5 h-5', {
-                                        "dark:text-blue-500": tab.actived,
-                                        "dark:text-blue-600": tab.actived,
+                                        // "dark:text-blue-500": tab.actived,
+                                        // "dark:text-blue-600": !tab.actived,
                                     })} fill="currentColor" />
                                 </div>
-                                <div><span className="text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:group-hover:text-blue-500">{tab.title}</span></div>
+                                <div><span className={clsx("text-sm ", {
+
+                                    // "dark:text-red-500": tab.actived,
+                                    // "dark:text-blue-600": !tab.actived,
+
+                                })}>{tab.title}</span></div>
                             </Link>
                         </div>
                     )

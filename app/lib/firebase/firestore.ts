@@ -75,8 +75,7 @@ export async function getMyTransHistory(uid: string) {
 	// const user = await getCurrentUser()
 	if (uid) {
 		console.log('uid ' + uid)
-		let q = query(collection(db, 'transaction').withConverter(transConverter))
-		q = query(q, or(where('fromUid','==', uid), where('toUid','==', uid)))
+		let q = collection(db, 'user/' + uid + '/trans').withConverter(transConverter)
 		const querySnapshot = await getDocs(q)
 		return querySnapshot.docs.map((doc) => doc.data())
 	} else {

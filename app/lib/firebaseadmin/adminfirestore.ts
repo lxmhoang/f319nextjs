@@ -8,7 +8,7 @@ import admin from "firebase-admin"
 import { getApps } from "firebase-admin/app"
 import { Expert, ExpertStatus, expertAdminConverter } from "@/app/model/expert"
 import { User, userAdminConverter } from "@/app/model/user"
-import { Transaction } from "@/app/model/transaction"
+import { TranType, Transaction } from "@/app/model/transaction"
 import { Subscription, subscriptionAdminConverter } from "@/app/model/subscription"
 import { Prediction, predAdminConverter } from "@/app/model/prediction"
 
@@ -69,7 +69,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
     }
 
     const tran: Transaction = {
-        tranType: "subTran",
+        tranType: TranType.followRank,
         toUid: expertToSub.id,
         fromUid: user.uid,
         amount: Number(fee),
@@ -180,16 +180,12 @@ export async function serverQueryCollection<ModelType>(path: string, filters: { 
     let ref = adminDB.collection(path)// query(collection(db, name));
     // console.log(filters)
     var q = undefined
-    console.log('44444 ==== : ' )
+    console.log('serverQueryCollection : ' + path)
     for (const { key, operator, value } of filters) {
         q = q ? q.where(key, operator, value) : ref.where(key, operator, value)
     }
-    // var snapshot = undefined
-    // if (!q) return {
-
-    // }
     const snapshot = q ? await q?.withConverter(converter).get() : await ref.withConverter(converter).get()
-
+    // console.log('====serverQueryCollection result =====' + JSON.stringify(snapshot.docs))
     return snapshot.docs.map(doc => {
         return doc.data()
     })
@@ -258,7 +254,8 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
         })
         )
     }
-    const getDonePredOnly = !user || !didFollow(user, expert)
+    const getDonePredOnly = !(user && didFollow(user, expert) || (user && user.uid == expert.id)) 
+    console.log('getDonePredOnly ' + getDonePredOnly + '  user ' + user)
     // const hideInprogressOnes = !user || (user.following[expert.id] == null && user.uid != expert.id)
     // console.log(hideInprogressOnes ? 'hide them ' : 'show them sub')
     let response = await serverQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
@@ -290,7 +287,7 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
             donePreds: donePreds
         }
     }
-    console.log('result ' + JSON.stringify(result))
+    // console.log('result ' + JSON.stringify(result))
     return JSON.stringify(result)
 
 }

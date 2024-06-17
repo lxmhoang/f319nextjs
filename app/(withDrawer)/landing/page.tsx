@@ -8,7 +8,7 @@ import { Divider } from "@nextui-org/react";
 export default function Landing() {
 
   const searchParams = useSearchParams()
-  const refID = searchParams.get('ref')?.toString()
+  const refID = searchParams ? searchParams.get('ref')?.toString() : undefined
   
   var cache = null
   try {

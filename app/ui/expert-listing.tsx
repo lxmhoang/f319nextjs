@@ -17,7 +17,7 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
           (expert, index) => {
             return <div key={index}>
             
-              <ExpertCard expert={expert} key={index}/>
+              <ExpertCard expertInfo={JSON.stringify(expert)} key={index}/>
             </div>
           }
           // <Card title={expert.name}/>

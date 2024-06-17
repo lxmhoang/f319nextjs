@@ -16,7 +16,7 @@ export type User = {
     email?: string;
     customClaims: {
         isAdmin: boolean,
-        isExpert: boolean
+        expertExpire: boolean
     };
 
     following: {
@@ -29,7 +29,9 @@ export type User = {
     metadata?: {};
     phoneNumber?: string
     isAdmin?: boolean,
-    isExpert?: boolean
+    isExpert?: boolean,
+    expertExpire?: number
+    expertType?: string
 }
 
 
@@ -68,6 +70,10 @@ export const userConverter: FirestoreDataConverter<User> = {
                 endDate: item.endDate.toDate()
             }
         }) : []
+        const isExpert = data.expertExpire ? 
+        new Date(Number(data.expertExpire)) > new Date()
+        : 
+        false 
 
         return {
             uid: snapshot.id,
@@ -80,7 +86,9 @@ export const userConverter: FirestoreDataConverter<User> = {
             customClaims: data.customClaims,
             phoneNumber: data.phoneNumber,
             isAdmin: data.email == 'lxmhoang@gmail.com' ? true : data.isAdmin ?? false,
-            isExpert: data.isExpert ?? false,
+            expertExpire: data.expertExpire,
+            expertType: data.expertType,
+            isExpert: isExpert,
             following: following
         };
     },
@@ -104,6 +112,10 @@ export const userAdminConverter: AdminFirestoreDataConverter<User> = {
         snapshot: AdminQueryDocumentSnapshot
     ): User {
         const data = snapshot.data();
+        const isExpert = data.expertExpire ? 
+        new Date(Number(data.expertExpire)) > new Date()
+        : 
+        false 
         return {
             uid: snapshot.id,
             accessId: data.accessId,
@@ -115,7 +127,9 @@ export const userAdminConverter: AdminFirestoreDataConverter<User> = {
             metadata: data.metadata,
             customClaims: data.customClaims,
             phoneNumber: data.phoneNumber,
-            isExpert: data.isExpert
+            expertExpire: data.expertExpire,
+            expertType: data.expertType,
+            isExpert: isExpert
         };
     },
 };

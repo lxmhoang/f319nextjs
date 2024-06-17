@@ -6,26 +6,31 @@ import {
 import { auth } from "./firebase";
 import { APIResponse } from "../definitions";
 
+export async function postIdToken(idToken:string) {
+  const response = await fetch("/api/auth/sign-in", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ idToken }),
+  });
+  const resBody = (await response.json()) as unknown as APIResponse<string>;
+  if (response.ok && resBody.success) {
+    console.log('update idToken success')
+    return true;
+  } else return false;
+
+}
+
 
 export async function signInWithGoogle(refID: string | null) {
   const provider = new GoogleAuthProvider();
-  console.log('aaaaa =====')
 
   try {
     const userCreds = await signInWithPopup(auth, provider);
     const idToken = await userCreds.user.getIdToken();
-    const response = await fetch("/api/auth/sign-in", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ idToken }),
-    });
-    const resBody = (await response.json()) as unknown as APIResponse<string>;
-    if (response.ok && resBody.success) {
-      console.log('sign in success')
-      return true;
-    } else return false;
+    return await postIdToken(idToken)
+    
   } catch (error) {
     console.error("Error signing in with Google", error);
     return false;

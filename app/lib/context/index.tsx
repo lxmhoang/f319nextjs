@@ -9,7 +9,7 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { User, userConverter } from "@/app/model/user";
 
 
-const AppContext = createContext<{ user: User | undefined }>({ user: undefined });
+const AppContext = createContext<{ user: User | undefined, firebaseUser: FireBaseUser | null }>({ user: undefined, firebaseUser: null });
 
 
 
@@ -20,7 +20,6 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         console.log("useEffect ")
         const unsubscribe = auth.onAuthStateChanged((authUser) => {
-            // console.log("onAuthStateChanged for firebase auth " + authUser?.email)
             console.log("onAuthStateChanged check again: " + getAuth().currentUser?.email)
             setFireBaseUser(authUser)
         });
@@ -31,19 +30,13 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
     useEffect(() => {
 
         console.log('firebaseUser new value received :  ' + firebaseUser)
-
-        const updateToken = async (fbUsr: FireBaseUser) => {
-            const token = await fbUsr.getIdToken();
-            console.log("firebaseIdToken saved : " + token.slice(0, 10))
-            Cookies.set("firebaseIdToken", token, { secure: true })
-        }
-
+        const token = firebaseUser?.getIdTokenResult()
 
         const unsubscribe = firebaseUser ?
             onSnapshot(doc(db, "user", firebaseUser.uid).withConverter(userConverter), (doc) => {
                 console.log('onAuthStateChanged onSnapshot fetch user info' + JSON.stringify(doc.data()))
 
-                updateToken(firebaseUser)
+                // updateToken(firebaseUser)
                 setUser(doc.data())
             })
             :
@@ -63,7 +56,7 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
 
 
     return (
-        <AppContext.Provider value={{ user }}>
+        <AppContext.Provider value={{ user, firebaseUser }}>
             {children}
         </AppContext.Provider>
     )

@@ -36,14 +36,14 @@ function createFirebaseApp() {
   return initializeApp(firebaseConfig)
 }
 
-function createAuth() {
-  const instance = getAuth(clientApp)
-  if (useEmulator) {
-    connectAuthEmulator(instance, 'http://127.0.0.1:9099', { disableWarnings: true })
-  }
-  return instance
+// function createAuth() {
+//   const instance = getAuth(clientApp)
+//   if (useEmulator) {
+//     connectAuthEmulator(instance, 'http://127.0.0.1:9099', { disableWarnings: true })
+//   }
+//   return instance
 
-}
+// }
 
 // const useEmulator = process.env.USE_EMULATOR as string;
 

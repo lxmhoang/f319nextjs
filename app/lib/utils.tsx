@@ -1,5 +1,6 @@
 import { Expert } from "../model/expert";
 import { Prediction } from "../model/prediction";
+import { TranType } from "../model/transaction";
 import { User } from "../model/user";
 import { getTodayMatchedVolume } from "./getStockData";
 
@@ -104,4 +105,19 @@ export async function compressFile(imageFile: File, options = defaultOptions) {
   const newFile = await imageCompression(imageFile, options);
   console.log('size after ' + newFile.size)
   return newFile
+}
+
+export function sortByField<T, Key extends keyof T >(data: T[] ,field: Key) {
+
+  return data.toSorted((n1, n2) => {
+    if (n1[field] > n2[field]) {
+      return 1;
+    }
+
+    if (n1[field]< n2[field]) {
+      return -1;
+    }
+    return 0;
+  })
+
 }

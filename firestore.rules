@@ -9,6 +9,9 @@ service cloud.firestore {
       allow read: if request.auth.uid == resource.data.eid
     }
     match /user/{userId} {
+      match /trans/{tranId} {
+        allow read: if true
+      }
       allow read: if request.auth != null && request.auth.uid == userId
     }
     match /expert/{eid} {

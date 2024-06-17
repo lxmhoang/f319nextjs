@@ -1,6 +1,8 @@
 "use client"
-import TransCreationForm from "@/app/ui/profile/create-trans-form";
+// import WithDrawTransCreationForm from "@/app/ui/profile/create-trans-form";
 import { useAppContext } from "@/app/lib/context";
+import { TranType } from "@/app/model/transaction";
+import WithDrawTransCreationForm from "@/app/ui/profile/withdraw-tran-form";
 
 export default function Page() {
 
@@ -9,7 +11,7 @@ export default function Page() {
   return (<>
     {
       user ?
-      (<TransCreationForm user={user} transactionType="withDraw" />) :
+      (<WithDrawTransCreationForm user={user} />) :
       (<>Loading</>)
     }
   </>)

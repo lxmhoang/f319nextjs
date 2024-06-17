@@ -17,14 +17,20 @@ export async function getRealTimeStockData(stocks: string[]) {
   try {
     const param = stocks
     console.log("params " + param)
-    const data = await fetch(urlRealTime + param)
+    const data = await fetch(urlRealTime + param, {
+      next: { revalidate: 0 },
+    })
     const result = await data.json()
-    let object : {[key: string] : number} = {}
-    result.map((d: { a: string, v: number }) => {
+    let object : {[key: string] : {high: number, low: number}} = {}
+    result.map((d: { a: string, v: number,w : number }) => {
       const key = d.a as string
-      const value = d.v // hight, d.w is low
+      const value = {
+        high :d.v ,// hight, d.w is low,
+        low: d.w
+      }
       object[key] = value
     })
+    console.log("getRealTimeStockData " + JSON.stringify(object))
 
     return object
   }
@@ -68,8 +74,9 @@ export async function getTodayMatchedVolume(stock: string) {
 
 export async function getLocalStockList() {
 
-  const string = await fs.readFile(process.cwd() + '/public/stockList.json', 'utf-8')
-  const array =  string.split(',')
+  const string = await fs.readFile(process.cwd() + '/public/stockListnew.json', 'utf-8')
+  // const array =  string.split(',')
+  const array =  JSON.parse(string)
   return array
 }
 

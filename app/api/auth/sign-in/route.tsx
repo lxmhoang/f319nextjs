@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 import { APIResponse } from "@/app/lib/definitions";
-import { createSessionCookie } from "@/app/lib/firebaseadmin/adminauth";
+import { createSessionCookie, getUserInfoFromSession } from "@/app/lib/firebaseadmin/adminauth";
 import { getAuth } from "firebase-admin/auth";
 
 export async function POST(request: NextRequest) {
@@ -15,15 +15,24 @@ export async function POST(request: NextRequest) {
   //   return;
   // }
 
-  console.log('aaaaa idtoken' + JSON.stringify(idToken))
+  // console.log('========== idtoken posted' + JSON.stringify(idToken))
   const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
 
-  const sessionCookie = await createSessionCookie(idToken, { expiresIn });
+  const oldcookie = cookies().get("__session")?.value
+  const old = await getUserInfoFromSession(oldcookie)
+
+  console.log('========= old user info' + JSON.stringify(old))
   
-  console.log('aaaaa sessionCookie' + JSON.stringify(sessionCookie))
+
+  const sessionCookie = await createSessionCookie(idToken, { expiresIn });
+
+
+  const new22 = await getUserInfoFromSession(sessionCookie)
+  console.log('========= new22 user info' + JSON.stringify(new22))
+  
+  // console.log('aaaaa newly created sessionCookie' + JSON.stringify(sessionCookie))
+  
   cookies().set("__session", sessionCookie, { maxAge: expiresIn, httpOnly: true, secure: true });
-  // const sessionCookietest = cookies().get("__session")?.value;
-  // console.log('aaaaa  test    sessionCookie' + JSON.stringify(sessionCookie))
 
   return NextResponse.json<APIResponse<string>>({ success: true, data: "Signed in successfully." });
 }

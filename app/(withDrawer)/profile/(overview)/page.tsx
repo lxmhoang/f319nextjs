@@ -1,31 +1,21 @@
-'use client'
+// 'use client'
+import MyProfileOverView from '@/app/ui/profile/my-profile-overview';
+import { headers } from 'next/headers';
 
-import { useAppContext } from "@/app/lib/context";
+// import { useAppContext } from "@/app/lib/context";s
+export default async function Page() {
 
-export default  function Page() {
+  const headersList = headers();
+  const host =  headersList.get('host') ?? ""; // to get domain
+  const url = headersList.get('next-url'); // to get url
 
-  const {user} = useAppContext()  
-  
-  if (user == undefined) {
-     return (
-      <> Please Sign in</>
-     )
-  }
+  return (
+    <>
+   <MyProfileOverView host={host} />
+    
+    </>
+  )
 
-  const ref = user.accessId
-  
-    return (
-      <div>
-        {user.displayName}
-      
-      <div>
-       Share url này để kiếm tiền affiliate : 
-       
-       
-       <p>http://localhost:3000/{ref}</p>
 
-      </div>
-      
-      </div>
-      )
+
     }

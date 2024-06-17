@@ -10,6 +10,9 @@ import { addComma, perfConver } from "@/app/lib/utils";
 import { subcribleToAnExpert, viewExpertPreds } from "@/app/lib/firebaseadmin/adminfirestore";
 import { Prediction } from "@/app/model/prediction";
 import { Expert } from "@/app/model/expert";
+import { login } from "@/app/lib/client";
+import ExpertHorView from "../expertHorView";
+import ExpertVertView from "../expertVertView";
 
 type AlertModal = {
   isShown: boolean
@@ -21,7 +24,8 @@ type AlertModal = {
   rightBtnClick?: VoidFunction
 }
 
-export default function ExpertDetail({ expert }: { expert: Expert }) {
+export default function ExpertDetail({ expertData }: { expertData: string }) {
+  const expert: Expert = JSON.parse(expertData)
 
   const { user } = useAppContext()
   const [predsInfo, setPredsInfo] = useState<{
@@ -43,13 +47,15 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
     if (expert) {
       exc()
     }
-  }, [expert]
+  }, [user]
   )
 
 
   const follow = async (eid: string, perm: boolean) => {
+    console.log('begin to follow')
 
     const result = await subcribleToAnExpert(eid, perm)
+    // console.log('result ' + JSON.stringify(result))
     setError(result.error)
   }
   const [numOfPreds, setNumOfPreds] = useState<number>()
@@ -124,7 +130,7 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
   return (
     <div className="block sm:flex sm:flex-row sm:flex-wrap">
       <div className="justify-center sm:w-1/4">
-        {expert ? (<ExpertCard expert={expert} />) : ""}
+        {expert ? (<ExpertVertView expertInfo={expertData} />) : ""}
 
       </div>
       <div className="sm:w-3/4 p-1">
@@ -133,22 +139,36 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
           <div>
 
             {predsInfo.needFollow ?
-              (<><p>Có {predsInfo.data.numOfInProgress} khuyến nghị đang tiếp diễn bị ẩn </p>
-                <div className="flex justify-center">
-                  <Button className="m-5 w-1/2"
-                    onClick={() => {
-                      setAlertState({
-                        isShown: true,
-                        title: 'Theo dõi chuyên gia này ?',
-                        message: addComma(expert.monthlyPrice) + " 1 tháng hoặc " + addComma(expert.permPrice) + "  vĩnh viễn ?",
-                        leftBtnTitle: "Chọn gói tháng " + addComma(expert.monthlyPrice),
-                        leftBtnClick: handleMonthlySub,
-                        rightBtntitle: "Chọn gói vĩnh viễn " + expert.permPrice,
-                        rightBtnClick: handlePermSub
-                      })
-                    }}
+              (<>
+                <p>Có {predsInfo.data.numOfInProgress} khuyến nghị đang tiếp diễn bị ẩn </p>
+                <div className="flex justify-left">
+                  { user ? 
+                    <Button className="m-5 w-max-sm"
+                      onClick={() => {
+                        setAlertState({
+                          isShown: true,
+                          title: 'Theo dõi chuyên gia này ?',
+                          message: addComma(expert.monthlyPrice) + " 1 tháng hoặc " + addComma(expert.permPrice) + "  vĩnh viễn ?",
+                          leftBtnTitle: "Chọn gói tháng " + addComma(expert.monthlyPrice),
+                          leftBtnClick: handleMonthlySub,
+                          rightBtntitle: "Chọn gói vĩnh viễn " + expert.permPrice,
+                          rightBtnClick: handlePermSub
+                        })
+                      }}
 
-                  > Follow để xem </Button></div></>) :
+                    >
+                      Follow để xem
+                    </Button> 
+                    : 
+                    <><Button className="m-5 w-1/2"
+                    onClick={login}
+
+                  >
+                    Đăng ký để xem
+                  </Button> </>
+                  }
+                </div>
+              </>) :
               (<>
 
                 <div> Các khuyến nghị đang tiếp diễn </div>
@@ -226,6 +246,7 @@ export default function ExpertDetail({ expert }: { expert: Expert }) {
       </div>
       {expert ?
         (<>
+          {error}
           <ConfirmationModal
             isOpen={alertState?.isShown}
             onClose={() => {

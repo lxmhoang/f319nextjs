@@ -1,43 +1,19 @@
-'use client'
 
 import ExpertDetail from "@/app/ui/expert/expert-detail";
-import { useDocument } from "react-firebase-hooks/firestore";
-import { doc } from "firebase/firestore";
-import { db } from "@/app/lib/firebase/firebase";
-import { Divider } from "@nextui-org/react";
-import { getPivotDates } from "@/app/lib/statistic";
-import { expertConverter } from "@/app/model/expert";
+import { getExpert } from "@/app/lib/server";
 
-
-
-export default function Page({ params }: { params: { id: string } }) {
-  const ref = doc(db, 'expert', params.id).withConverter(expertConverter);
-  const [result, loadingExpert, error2] = useDocument(ref)
-  const expert = result?.data()
-  // const test = getPivotDates(new Date('2023-01-01'))
+export default async function Page({ params }: { params: { id: string } }) {
+  const expert = await getExpert(params.id)
   
   return (
-
-
     <div>
-      {/* {numOfPreds} */}
-      {/* <Breadcrumbs breadcrumbs={[
-        { label: 'Danh sach chuyen gia', href: '/' },
-        { label: 'Thông tin chuyên gia', href: `/expertdetails/${id}` },
-      ]} /> */}
-      {/* {JSON.stringify(test)} */}
       {expert ?
         (<div className="max-w-full">
-          <ExpertDetail expert={expert} />
+          <ExpertDetail expertData={JSON.stringify(expert)} />
         </div>
         ) :
-        (<>Loading</>)
+        (<>Chuyên gia không tồn tại</>)
       }
-
-      <Divider />
-      {/* {JSON.stringify(user?.following)} */}
-  
-
     </div>
 
   );

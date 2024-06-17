@@ -5,7 +5,7 @@ import getStockData, { getRealTimeStockData } from '../getStockData';
 
 // Custom hook for fetching data
 export function useFetchRealTimeStockPrice(stocks: string[]) {
-  const [data, setData] = useState<{[key: string] : number}>();
+  const [data, setData] = useState<{[key: string] : {high: number, low: number}}>();
   // const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 

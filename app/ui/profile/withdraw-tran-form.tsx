@@ -1,30 +1,27 @@
 'use client';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'
 import {
   CurrencyDollarIcon,
-  HeartIcon,
-  UserCircleIcon,
 } from '@heroicons/react/24/outline';
 
 import { Button } from '@/app/ui/button';
-import { SearchUseFormState, createNewTransaction, registerExpert, searchUserForPayment } from '@/app/lib/action';
 import { useFormState } from 'react-dom';
-import { Divider, Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button as ButtonReact, useDisclosure } from '@nextui-org/react';
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button as ButtonReact, useDisclosure } from '@nextui-org/react';
 import { User } from '@/app/model/user';
+import { TextInput } from 'flowbite-react';
+import { actionWithDraw } from '@/app/lib/actions/actionWithDraw';
 
 
 interface TransCreationProps {
   user: User,
-  transactionType: string
 }
 
-export default function TransCreationForm(Props: TransCreationProps) {
+export default function WithDrawTransCreationForm(Props: TransCreationProps) {
 
-  const { user, transactionType } = Props;
+  const { user } = Props;
 
   const initialFormState = { message: "", errors: {}, justDone: false };
-  const [addTransState, dispatchAddtran] = useFormState(createNewTransaction, initialFormState);
+  const [addTransState, dispatchAddtran] = useFormState(actionWithDraw, initialFormState);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
 
   if (addTransState.justDone == true) {
@@ -57,64 +54,40 @@ export default function TransCreationForm(Props: TransCreationProps) {
       </Modal>
       <div className='p-1'>
       </div>
-      {/* {user ? (
-        <ul>
-          <li>UID: {user.uid}</li>
-          <li>Display name: {user.displayName}</li>
-          <li>Amount: {user.amount}</li>
-          <li>Email: {user.email}</li>
-          <li>metadata: {JSON.stringify(user.metadata)}</li>
-          <li>phoneNumber: {user.phoneNumber}</li>
-          <li>disabled: {user.disabled ? "yes" : "no"}</li>
-        </ul>
-        
-      ) : (
-        <>
-        <Divider /></>
-      )} */}
 
       {/* <div>{ state.message.length == 0 ? "no error" : "cccc" + Object.keys(JSON.stringify(state.errors)).length}</div> */}
       <form action={dispatchAddtran}>
         <div className="rounded-md bg-black-50">
-          <input type="hidden" id="tranType" name="tranType" value={transactionType} />
-          {user ? (
-            <input type="hidden" id="uid" name={transactionType == "withDraw" ? "fromUid" : "toUid"} value={user.uid} />) : (
-            <></>
-          )}
           {/* Name */}
-          <div className="mb-4">
-            <label htmlFor="amount" className="mb-2 block text-sm font-medium">
-              Nhap so tien
+          <div className="">
+            <label htmlFor="amount" className="mb-2 block text-sm font-medium w-max-sm">
+              Nhập số tiền
             </label>
-            <div className="relative mt-2 rounded-md">
-              <div className="relative">
-                <input
-                  id="amount"
-                  name="amount"
-                  type="number"
-                  placeholder="999"
-                  className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
-                  required
-                />
-                <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
-              </div>
+
+            <div className="mb-4">
+              <TextInput
+                id="amount"
+                step={1000}
+                name="amount"
+                type="number"
+                min={100000}
+                max={user.amount}
+                placeholder='Số tiền muốn rút'
+                // defaultValue={selectedMonthLyPrice}
+                // defaultValue={Math.round(user?.amount/2)}
+                className="peer block max-w-sm rounded-md boreder border-gray-200 py-2 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
+                required
+              />
+              <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
             </div>
-            {/* <div id="customer-error" aria-live="polite" aria-atomic="true">
-              {
-              addTransState.errors?.amount &&
-                addTransState.errors?.amount?.map((error: string) => (
-                  <p className="mt-2 text-sm text-red-500" key={error}>
-                    {error}
-                  </p>
-                ))
-              }
-            </div> */}
+         
           </div>
           <div className="mb-4">
             <label htmlFor="notebankacc" className="mb-2 block text-sm font-medium">
-              Nhap thong tin chuyen khoan
+              Nhập thông tin chuyển khoản
             </label>
-            <div className="relative mt-2 rounded-md">
+            <TextInput id="notebankacc" name="notebankacc" type="text"  placeholder="Thông tin tài khoản ngân hàng" required className='max-w-sm' />
+            {/* <div className="relative mt-2 rounded-md">
               <div className="relative">
                 <input
                   id="notebankacc"
@@ -126,7 +99,7 @@ export default function TransCreationForm(Props: TransCreationProps) {
                 />
                 <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
               </div>
-            </div>
+            </div> */}
             {/* <div id="customer-error" aria-live="polite" aria-atomic="true">
               {addTransState.errors?.notebankacc &&
                 addTransState.errors.notebankacc.map((error: string) => (

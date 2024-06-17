@@ -35,7 +35,8 @@ export async function GET(request: Request) {
 
 
     console.log('minDat22e ==== : ' + minDate.toLocaleDateString('vi') + ' expert count ')
-    let experts = await serverQueryCollection('expert', [{ key: 'status', operator: '==', value: 'activated' }], expertAdminConverter)
+    let expertRank = await serverQueryCollection('expert', [{ key: 'expertType', operator: '==', value: 'rank' }], expertAdminConverter)
+    let experts = expertRank.filter((item) => { return item.status == 'activated'})
 
 
     // console.log('2222222 ==== : ' + minDate.toLocaleDateString('vi') + ' expert count ' + experts.length)

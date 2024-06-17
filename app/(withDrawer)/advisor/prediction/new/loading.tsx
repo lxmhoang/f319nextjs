@@ -1,4 +1,6 @@
+import { Spinner } from "flowbite-react";
+
 export default function Loading() {
-    return  <div>aaa...</div>;
+    return  <Spinner />;
     // return <DashboardSkeleton />;
   }

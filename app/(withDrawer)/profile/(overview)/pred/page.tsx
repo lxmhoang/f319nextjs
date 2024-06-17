@@ -15,8 +15,6 @@ export default  function Page({params} : {params: {id: string}} ) {
   useEffect(() => {
     const fetchData = async (list: string[]) => {
       const result = await getFollowExpertByIDList(list)
-
-      console.log('result ' + JSON.stringify(result))
       setExperts(result)
     }
     if (user) {
@@ -38,8 +36,8 @@ export default  function Page({params} : {params: {id: string}} ) {
         Danh sach chuyen gia dang theo doi
         </div>
         {experts.map((item) => {
-          return <div className="max-w-sm" key={item.id} >
-            <ExpertCard expert={item} />
+          return <div  key={item.id} >
+            <ExpertCard expertInfo={JSON.stringify(item)} />
           </div>
 
         })}

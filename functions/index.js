@@ -10,15 +10,14 @@ const {auth}  = require('firebase-functions');
 
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
-const {onDocumentCreated, onDocumentDeleted} = require("firebase-functions/v2/firestore");
+const {onDocumentCreated, onDocumentUpdated} = require("firebase-functions/v2/firestore");
 // const {onCreate} = require("firebase-functions/v2/auth");
 const {initializeApp} = require("firebase-admin/app");
 const {getFirestore, FieldValue} = require("firebase-admin/firestore");
+const { getAuth } = require('firebase-admin/auth');
 
 // The es6-promise-pool to limit the concurrency of promises.
-const PromisePool = require("es6-promise-pool").default;
 // Maximum concurrent account deletions.
-const MAX_CONCURRENT = 3;
 initializeApp();
 
 // Create and deploy your first functions
@@ -53,40 +52,101 @@ exports.createUserDoc = auth.user().onCreate((user) => {
     logger.log(user.displayName)
 });
 
-exports.createExpertHandler = onDocumentCreated({document: "/expert/{expertId}", region: 'asia-southeast1'}, (event) => {
-    getFirestore().doc('/user/' + event.params.expertId).update({isExpert: true})
-});
+// exports.modifyExpertHandler = onDocumentWritten({document: "/expert/{expertId}", region: 'asia-southeast1'}, (event) => {
+//     const expireTimeBefore = event.data.before.data().expertExpire
+//     const expireTimeAfter = event.data.after.data().expertExpire
+//     const expertType = event.data.after.data().expertType
+
+//     logger.log('expireTimeBefore ' + expireTimeBefore +' expireTimeAfter '+ expireTimeAfter)
+//     // getFirestore().doc('/user/' + event.params.expertId).update({isExpert: true})
+//     if (true) {
+//         getFirestore().doc('/user/' + event.params.expertId).update({expertExpire: expireTimeAfter, expertType: expertType})
+//         getAuth().setCustomUserClaims(event.params.expertId, {expertExpire: expireTimeAfter, expertType: expertType})
+//     }
+// });
 
 
-exports.deleteExpertHandler = onDocumentDeleted({document: "expert/{expertId}", region: 'asia-southeast1'}, (event) => {
-    getFirestore().doc('/user/' + event.params.expertId).update({isExpert: false})
+// exports.deleteExpertHandler = onDocumentDeleted({document: "expert/{expertId}", region: 'asia-southeast1'}, (event) => {
+//     getFirestore().doc('/user/' + event.params.expertId).update({isExpert: false})
+//     getAuth().setCustomUserClaims(event.params.expertId, {isExpert: false})
+// });
+
+
+const TranType = {
+    deposit: 0, 
+    withDraw: 1, 
+    registerSoloPerm: 2, 
+    registerSoloYearly: 3, 
+    followSolo: 4, 
+    registerRankPerm: 5, 
+    registerRankYearly: 6, 
+    followRank: 7,  
+    upgradeToSoloPerm: 8, 
+    upgradeToRankPerm: 9,
+    referReward: 10, // only from registerExpert, registerRank, followRank 
+    rankReward: 11,
+    unknown: 12
+  }
+
+  exports.updateTransaction = onDocumentUpdated({document: "transaction/{documentId}", region: 'asia-southeast1'}, (event) => {
+
+    const after = event.data.after.data();
+    const before = event.data.before.data();
+    logger.log("a transaction updated", event.params.documentId);
+    const toUid = after.toUid
+    const fromUid = after.fromUid
+    if (!(toUid && fromUid)) {
+
+         logger.log("khong co from hoac to UID", after);
+        return
+    }
+    
+    if (after.status == 'done' && before.status == 'pending') {
+
+        logger.log("update status from pending to done" + event.params.documentId);
+        getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).update({ 
+            status: after.status
+        })
+        getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).update({ 
+            status: after.status
+        })
+    }
 });
 
 exports.createTransaction = onDocumentCreated({document: "transaction/{documentId}", region: 'asia-southeast1'}, (event) => {
 
-    const data = event.data.data();
-    logger.log("new transaction created", event.params.documentId, data);
-    const depositTran = (data.status == "adminCreated" && data.tranType == "deposit") 
-    const withDrawTran = (data.status == "pending" && data.tranType == "withDraw") 
-    const subTran = data.tranType == "subTran"
-    const referallTran = data.tranType == "ReferralReward"
-    if (referallTran) {
-        logger.log("referallTran" + data.amount);
+        const data = event.data.data();
+        logger.log("new transaction created", event.params.documentId, data);
         const toUid = data.toUid
         if (toUid) {
             getFirestore().collection('user').doc(toUid).update({ 
                 amount: FieldValue.increment(data.amount)
             })
+            getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).set(data)
         }
-    }
-    if (depositTran) {
-        logger.log("depositTran" + data.amount);
+        const fromUid = data.fromUid
+        if (fromUid) {
+            getFirestore().collection('user').doc(fromUid).update({ 
+                amount: FieldValue.increment(-data.amount)
+            })
+            getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).set(data)
+        }
+
+    if (data.tranType in [
+        TranType.followRank,
+        TranType.followSolo,
+        TranType.registerRankPerm,
+        TranType.registerRankYearly,
+        TranType.registerSoloPerm,
+        TranType.registerSoloYearly,
+        TranType.upgradeToRankPerm,
+        TranType.upgradeToSoloPerm
+        ]) 
+    {
+        logger.log("revenue trans type " + data.tranType + ' amount : '  + data.amount);
         const toUid = data.toUid;
         if (toUid) {
             const userRef = getFirestore().collection('user').doc(toUid)
-            userRef.update({ 
-                amount: FieldValue.increment(data.amount)
-            })
             userRef.get().then((snapshotUser) => {
                 const refID = snapshotUser.data().refID
                 logger.info("Ref ID : " + refID)
@@ -103,13 +163,13 @@ exports.createTransaction = onDocumentCreated({document: "transaction/{documentI
                             date: Date.now(),
                             toUid: refUserDocID,
                             status: "Done",
-                            tranType: "ReferralReward",
+                            tranType: TranType.referReward,
                             fromTranId: event.params.documentId
                         })
 
                         }  else {
 
-                logger.error("result of search is not 1 " + snapshot.docs.length)
+                            logger.error("result of search is not 1 " + snapshot.docs.length)
                         }
                     })
     
@@ -119,76 +179,46 @@ exports.createTransaction = onDocumentCreated({document: "transaction/{documentI
            
         }
     }
-    if (withDrawTran) {
-        logger.log("withDrawTran" + data.amount);
-        const fromUid = data.fromUid
-        if (fromUid) {
-            getFirestore().collection('user').doc(fromUid).update({ 
-                amount: FieldValue.increment(-data.amount)
-            })
-        }
-    }
-
-    if (subTran) {
-        logger.log("subTran" + data.amount);
-        const fromUid = data.fromUid
-        const toUid = data.toUid
-        logger.info("adding subTran type transaction, to uid : " + toUid + ", from Uid :   "  + fromUid + " --- " + data.amount)
-        if (fromUid && toUid) {
-            logger.info("1111")
-            getFirestore().collection('user').doc(fromUid).update({ 
-                amount: FieldValue.increment(-data.amount)
-            })
-
-            logger.info("2222" + data.amount)
-            getFirestore().collection('user').doc(toUid).update({ 
-                    amount: FieldValue.increment(data.amount)
-            })
-
-            logger.info("3333")
-                
-
-        }
-
-    }
+   
+    
 }
 );
 
-exports.followerNum = onSchedule("25 * * * *", async (event) => {
+// exports.followerNum = onSchedule("25 * * * *", async () => {
 
-    logger.info("begin to set number of follower")
-    const expertsSnapshot = await getFirestore().collection('expert').get()
-    const toDay = new Date()
-    const expertIDs = expertsSnapshot.docs.map(doc => doc.id)
-    const subSnapshot = await getFirestore().collection('subscription').where('endDate','>=', toDay).get()
-    const subs = subSnapshot.docs.map((doc) => { 
-        return {
-        uid: doc.data().uid,
-        eid: doc.data().eid
-        }
-    })
+//     logger.info("begin to set number of follower")
+//     const expertsSnapshot = await getFirestore().collection('expert').get()
+//     const toDay = new Date()
+//     const expertIDs = expertsSnapshot.docs.map(doc => doc.id)
+//     const subSnapshot = await getFirestore().collection('subscription').where('endDate','>=', toDay).get()
+//     const subs = subSnapshot.docs.map((doc) => { 
+//         return {
+//         uid: doc.data().uid,
+//         eid: doc.data().eid
+//         }
+//     })
 
-    const result = expertIDs.map ((id) => {
-        return {
-            id : id,
-            num: subs.filter((sub) => { 
-                return sub.eid == id
-            }
-            ).length
-        }
-    })
+//     const result = expertIDs.map ((id) => {
+//         return {
+//             id : id,
+//             num: subs.filter((sub) => { 
+//                 return sub.eid == id
+//             }
+//             ).length
+//         }
+//     })
 
-    logger.info("result to update " + JSON.stringify(result))
+//     logger.info("result to update " + JSON.stringify(result))
 
-    try {
-        for (const e of result) {
-            logger.info("--- aaaa"+JSON.stringify(e))
-            await getFirestore().collection('expert').doc(e.id).update({followerNum:e.num})
-        }
-    } catch (err) {
-        throw err
-    }
-  });
+//     try {
+//         for (const e of result) {
+//             logger.info("--- aaaa"+JSON.stringify(e))
+//             await getFirestore().collection('expert').doc(e.id).update({followerNum:e.num})
+//         }
+//     } catch (err) {
+//         throw err
+//     }
+//   });
 
 
 
@@ -220,20 +250,9 @@ exports.createSubscription = onDocumentCreated({ document: "subscription/{docume
         getFirestore().doc('expert/' + eid).update({ 
             follower: FieldValue.arrayUnion(subInfo)
         })
-        // getFirestore().collection('user').doc(uid).collection('following').add({ 
-        //     eid: eid,
-        //     perm: data.perm,
-        //     startDate: data.startDate,
-        //     endDate: date,
-        //     amount: data.value
-        // })
-
-
+        getFirestore().collection('expert/' + eid + '/follower').add(subInfo)
 
     });
-    
-
-
 });
 
 

@@ -24,7 +24,6 @@
     "next": "^14.2.2",
     "react": "^18",
     "react-dom": "^18",
-    "react-firebase-hooks": "^5.1.1",
     "request": "^2.88.2",
     "server-only": "^0.0.1",
     "tls": "^0.0.1",

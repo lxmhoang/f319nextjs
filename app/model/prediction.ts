@@ -26,8 +26,9 @@ export const predAdminConverter: AdminFirestoreDataConverter<Prediction> = {
   toFirestore(pred: AdminWithFieldValue<Prediction>): AdminDocumentData {
     // const dateIntimeStamp = pred.dateIn as Timestamp
     // const dateIn = new Date(Number(dateIntimeStamp))
-    return {
+    return pred.dateRelease ?  {
       assetName: pred.assetName,
+      ownerId: pred.ownerId,
       dateIn: pred.dateIn,
       priceIn: pred.priceIn,
       priceOut: pred.priceOut,
@@ -36,11 +37,23 @@ export const predAdminConverter: AdminFirestoreDataConverter<Prediction> = {
       note: pred.note,
       status: pred.status,
       portion: pred.portion,
-      ownerId: pred.ownerId,
       long: pred.long ?? true,
       dateRelease: pred.dateRelease,
-      priceRelease: pred.priceRelease,
-    };
+      priceRelease: pred.priceRelease
+    } : 
+    {
+      assetName: pred.assetName,
+      ownerId: pred.ownerId,
+      dateIn: pred.dateIn,
+      priceIn: pred.priceIn,
+      priceOut: pred.priceOut,
+      cutLoss: pred.cutLoss,
+      deadLine: pred.deadLine,
+      note: pred.note,
+      status: pred.status,
+      portion: pred.portion,
+      long: pred.long ?? true,
+    }
   },
   fromFirestore(
     snapshot: AdminQueryDocumentSnapshot,
@@ -105,3 +118,44 @@ export const predConverter: FirestoreDataConverter<Prediction> = {
     };
   },
 };
+
+
+
+// let parserCompRTInfo = (array: { [key: string]: any }[]) => {
+//     if (array.length == 0)
+//         return null
+//     const data = array[0]
+//     const result: CompanyRTInfo = {
+//         code: data.a,
+//         thamChieu: data.b,
+//         maxPrice: data.c,
+//         minPrice: data.d,
+//         muagia3Price: data.e,
+//         muagia3Volume: data.f,
+//         muagia2Price: data.g,
+//         muagia2Volume: data.h,
+//         muagia1Price: data.i,
+//         muagia1Volume: data.j,
+//         khoplenhTangGiam: data.k,
+//         khoplenhPrice: data.l,
+//         khoplenhVolume: data.m,
+//         khoplenhTotalVolume: data.n,
+//         bangia1Price: data.o,
+//         bangia1Volume: data.p,
+//         bangia2Price: data.q,
+//         bangia2Volume: data.r,
+//         bangia3Price: data.s,
+//         bangia3Volume: data.t,
+//         u: data.u,
+//         khoplenhMax: data.v,
+//         khoplenhMin: data.w,
+//         nuocngoaiBuy: data.x,
+//         nuocngoaiSell: data.t,
+//         z: data.a,
+//         time: data.time,
+//         tb: data.tb,
+//         ts: data.ts
+//     }
+
+//     return result;
+// }

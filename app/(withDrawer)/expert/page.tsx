@@ -6,7 +6,7 @@ import { revalidatePath, unstable_cache } from "next/cache";
 
 export default async function Page() {
   
-    const experts = await unstable_cache(async () =>  serverQueryCollection('expert', [{key: "status", operator: "==", value: "activated"}], expertAdminConverter), ['getExpertsOnHomePage'], {revalidate: 1})()
+    const experts = await unstable_cache(async () =>  serverQueryCollection('expert', [{key: "status", operator: "==", value: "activated"}], expertAdminConverter), ['getExpertsOnHomePage'], {revalidate: 200})()
 
     return (
       <>

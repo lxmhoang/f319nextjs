@@ -2,7 +2,13 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { AppWrapper } from "./lib/context";
-import { Flowbite, ThemeModeScript } from "flowbite-react";
+import { Flowbite, ThemeModeScript } from "flowbite-react"; import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/react-query'
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,13 +26,13 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-      <link rel="shortcut icon" href="/images/favicon.ico" />
+        <link rel="shortcut icon" href="/images/favicon.ico" />
         <ThemeModeScript />
       </head>
       <body className="{inter.className} h-full" >
         <Flowbite>
           <AppWrapper>
-            {children}
+              {children}
           </AppWrapper>
         </Flowbite>
       </body>

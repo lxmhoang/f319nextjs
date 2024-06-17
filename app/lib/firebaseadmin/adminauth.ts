@@ -19,30 +19,97 @@ async function isUserAuthenticated(session: string | undefined = undefined) {
     if (!_session) return false;
 
     const auth = getAuth(adminApp)
-    console.log("3333")
-    console.log("session : " + _session)
 
     try {
         const isRevoked = !(await auth.verifySessionCookie(_session, false));
         return !isRevoked;
     } catch (error) {
-        console.log("zzz" + error);
+        console.log("error verifying session" + error);
         return false;
     }
 }
 
-export async function getCurrentUser() {
+export async function getthuquyUID() {
+    // if (process.env.THUQUY_UID) {
+    //     return process.env.THUQUY_UID
+    // }
+
+    const auth = getAuth(adminApp)
+    try {
+        const userRecord = await auth.getUserByEmail('lxmhoang@gmail.com')
+        return userRecord.uid
+    } catch (e) {
+        return undefined
+    }
+}
+
+export async function setClaim(uid: string, data: {}) {
+    const auth = getAuth(adminApp)
+
+    await auth.setCustomUserClaims(uid, data)
+}
+
+
+
+export async function getUserInfoFromSession(session: string | undefined = undefined) {
+    const _session = session ?? (await getSession());
+    if (!_session) return undefined
+    // console.log('current session ' + _session)
+    const auth = getAuth(adminApp)
+
+    try {
+        const decodedIdToken = await auth.verifySessionCookie(_session, true);
+        const expertPeriod = decodedIdToken["expertPeriod"]
+        const expertExpire = decodedIdToken["expertExpire"]
+
+        const isExpert = expertExpire ? 
+            new Date(Number(expertExpire)) > new Date()
+            : 
+            false
+        const data = {
+            authenticated: true,
+            uid: decodedIdToken.uid,
+            isAdmin: decodedIdToken.email == 'lxmhoang@gmail.com',
+            isExpert: isExpert,
+
+            expertType: decodedIdToken["expertType"],
+            expertPeriod: expertPeriod,
+            expertExpire: new Date(Number(expertExpire)),
+
+            avatarURL: decodedIdToken.picture
+        }
+
+        // console.log(' result of getUserInfoFromSession : ' + JSON.stringify(decodedIdToken))
+
+        return data;
+    } catch (error) {
+        console.log("e222rror verifying session" + error);
+        return undefined
+    }
+
+
+
+}
+
+export async function getCurrentUserId() {
     const session = await getSession();
     if (!(await isUserAuthenticated(session))) {
         return null;
     }
 
     const decodedIdToken = await getAuth(adminApp).verifySessionCookie(session!);
-    const currentUser = await getAuth(adminApp).getUser(decodedIdToken.uid);
+    return decodedIdToken.uid
+}
 
-    console.log("firebase admin cur User " + JSON.stringify(currentUser))
+export async function getCurrentUser() {
 
-    return currentUser;
+    const uid = await getCurrentUserId()
+    if (uid) {
+        const currentUser = await getAuth(adminApp).getUser(uid);
+        return currentUser
+    } else {
+        return null
+    }
 }
 
 export async function getUidFromIdToken(idtoken: string) {

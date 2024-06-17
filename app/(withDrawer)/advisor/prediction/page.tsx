@@ -1,5 +1,6 @@
 
 
+import ReviewPrediction from "@/app/ui/expert/reviewPrediction"
 import Link from "next/link"
 
 export default async function Page({ params }: { params: { id: string } }) {
@@ -9,11 +10,10 @@ export default async function Page({ params }: { params: { id: string } }) {
 
 
 
-      <div className="flex flex-col gap-2">
-
-    <Link href="/profile">profile</Link>
-    <Link href="/advisor">profile expert</Link>
-
+      <div className="flex mt-10 mr-4 flex-col gap-2 ">
+        <ReviewPrediction doneFetching={async () => {
+        'use server'
+      } } wip={false} />
       
       </div>
 
