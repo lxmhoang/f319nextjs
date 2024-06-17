@@ -4,17 +4,12 @@ import { useRouter } from 'next/navigation'
 import { useFormState } from 'react-dom';
 import { createRef, useEffect, useState } from 'react';
 import { Divider, useDisclosure, Autocomplete, AutocompleteItem, Slider, Button } from '@nextui-org/react';
-import { CompanyRTInfo } from '@/app/lib/definitions';
 import { ConfirmationModal } from '../confirm';
-import { useAppContext } from '../../lib/context';
 import { getLocalStockList, getRealTimeStockData } from '../../lib/getStockData';
 import { createNewPrediction } from '@/app/lib/action';
 // import { Button } from '../button';
-import { Prediction, predConverter } from '@/app/model/prediction';
-import { Datepicker, Label, Select, TextInput } from 'flowbite-react';
-import { clientSearchCollection } from '@/app/lib/firebase/firestore';
+import { Datepicker, Label, TextInput } from 'flowbite-react';
 import ReviewPrediction from './reviewPrediction';
-import { QueryClient, QueryClientProvider, useQuery, useQueryClient } from '@tanstack/react-query';
 
 
 let parser = (data: { [key: string]: any }) => {
