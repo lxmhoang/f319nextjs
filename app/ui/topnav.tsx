@@ -99,6 +99,8 @@ const guessBarMenuList =
             {
               avatarURL && <Image className="rounded-full"
               src={avatarURL}
+              priority={true}
+              style={{ width: '100%', height: 'auto' }}
               // style={styles.image}
               alt="Thumb"
 
@@ -124,6 +126,7 @@ const guessBarMenuList =
 
               <DropdownItem
                 key={item.key}
+                textValue={item.label}
                 // href={item.href}
                 color={item.key === "signout" ? "danger" : "default"}
                 className={item.key === "signout" ? "text-danger" : ""}
@@ -200,6 +203,10 @@ const guessBarMenuList =
       {/* <NavbarContent className="hidden sm:flex gap-5" justify="start">
         <NavLinks />
       </NavbarContent> */}
+
+      {(firebaseUser === undefined) ? (<>Loading</>) : 
+      // (firebaseUser === null) ? (<>Null</>) : 
+      (
       <NavbarContent className="hidden sm:flex gap-4" justify="start">
         {barInfo.map((item, index) => {
           if (item.key == 'signout') {
@@ -260,6 +267,8 @@ const guessBarMenuList =
           }
         </NavbarItem> */}
       </NavbarContent>
+    )
+      }
 
     </Navbar >
   );

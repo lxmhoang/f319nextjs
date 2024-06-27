@@ -20,6 +20,8 @@ import { Checkbox, Label, Radio, Spinner, TextInput } from 'flowbite-react';
 import { useAppContext } from '@/app/lib/context';
 import { postIdToken } from '@/app/lib/firebase/auth';
 import { redirect } from 'next/navigation';
+import { revalidatePath } from 'next/cache';
+import { User } from 'firebase/auth';
 
 // export function ExpertFormComponent({ expert }: { expert: Expert | undefined }) {
 
@@ -39,11 +41,15 @@ import { redirect } from 'next/navigation';
 // }
 
 
-export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undefined }) {
+
+export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undefined}) {
 
     const expert: Expert | undefined = expertInfo ? JSON.parse(expertInfo) : undefined
 
-    const userInfo = useAppContext()
+    const {  user, firebaseUser } = useAppContext()
+    const amount = user?.amount ?? 0
+    const defaultName = user?.displayName ?? ""
+
 
     const router = useRouter()
 
@@ -55,6 +61,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
     const [type, setType] = useState<"rank" | "solo" | undefined>()
     const [period, setPeriod] = useState<"perm" | "yearly" | undefined>()
     const [upgrade, setUpgrade] = useState<boolean>(false)
+
     var fee: number | undefined = undefined
 
     if (!expert && type && period) {
@@ -81,60 +88,111 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
     }
 
 
-    const amount = userInfo.user?.amount ?? 0
+    // const amount = userInfo.user?.amount ?? 0
 
     const [uploadAvatar, setUpload] = useState<File>()
     const [acceptTNC, setAcceptTNC] = useState<boolean>(false)
 
     const [compressing, setCompressing] = useState<boolean>(false)
     const [didChange, setDidChange] = useState<boolean>(false)
+    const [loading, setLoading] = useState<boolean>(false)
 
     const initialState = { message: undefined, errors: {}, justDone: false };
     const [fileInside, setFileInside] = useState<FormData>()
 
     const currentAvatarURL = expert ? expert.imageURL :
-        userInfo.firebaseUser?.photoURL
+        firebaseUser?.photoURL
 
 
     const [state, dispatch] = useFormState<RegisterExpertFormState, FormData>(editExpert.bind(null, fileInside, currentAvatarURL, expert == undefined), initialState);
 
     const [showModal, setShowModal] = useState(false);
     // console.log('form state ' + JSON.stringify(state) + showModal)
+
+    const refreshToken = async () => {
+        // if (!userInfo.firebaseUser) { return }
+        setLoading(true)
+        const newIdtoken = await firebaseUser!.getIdToken(true)
+        console.log(' ========= newIdtoken ' + newIdtoken)
+        const newResult = await firebaseUser!.getIdTokenResult()
+        console.log(' ========= newResult ' + JSON.stringify(newResult.claims))
+        var result: boolean
+        try {
+            result = await postIdToken(newIdtoken)
+
+            console.log('done updating token after creating expert')
+            setLoading(false)
+            setShowModal(true)
+        } catch (e) {
+            console.log('sth wrong with post new ID token')
+            result = false
+        }
+        if (result) {
+            console.log('aaaaa done post new ID token')
+        } else {
+            console.log('sth wrong with post new ID token')
+        }
+
+    }
+
+
     useEffect(() => {
-        const refreshToken = async () => {
-            if (!userInfo.firebaseUser) { return }
-            const newIdtoken = await userInfo.firebaseUser.getIdToken(true)
-            console.log(' ========= newIdtoken ' + newIdtoken)
-            const newResult = await userInfo.firebaseUser.getIdTokenResult()
-            console.log(' ========= newResult ' + JSON.stringify(newResult.claims))
-            var result: boolean
-            try {
-                result = await postIdToken(newIdtoken)
-            } catch (e) {
-                console.log('sth wrong with post new ID token')
-                result = false
-            }
-            if (result) {
-                console.log('aaaaa done post new ID token')
-                state.message = null
-            } else {
-                console.log('sth wrong with post new ID token')
-                state.message = null
-            }
 
+
+        console.log("state " + JSON.stringify(state) + showModal)
+
+        if (state.justDone == false && state.message && state.message.length > 0) {
+            // show popup
+            console.log('11111')
+            setShowModal(true)
+        } else {
+            if (state.justDone == true) {
+                if (!expert) {
+                    console.log('just create new expert. refresh token first then show popup in this function')
+                    refreshToken()
+                } else {
+                    console.log('just done editing expert')
+                    // just done editing expert
+                    // show popup
+                    setShowModal(true)
+                }
+            }
         }
 
-        if (state.justDone && userInfo.firebaseUser) {
-            if (!expert) {
-                refreshToken()
-            } else {
-                redirect('/advisor')
-                // router.replace
-            }
-        }
         setDidChange(false)
 
     }, [state])
+
+
+
+    const handleTapOkey = async () => {
+        if (!state.justDone) {
+            console.log('handleTapOkey not done yet 111')
+            setShowModal(false)
+        } else {
+            if (expert) {
+                console.log('handleTapOkey edit expert done 222')
+                // tap okey after edit expert info
+                // revalidatePath('/advisor')
+                router.replace('/advisor')
+                // done 
+            } else {
+                // tap okey after register expert and update token
+                // revalidatePath('/advisor')
+                console.log('handleTapOkey  createe expert done ')
+                router.replace('/advisor')
+
+            }
+        }
+        // handleNewPassword();
+        // go go go
+        if (state.justDone && !expert) {
+            setShowModal(false);
+            router.replace('/advisor')
+        } else {
+            setShowModal(false);
+        }
+    };
 
 
     const avatarURL = uploadAvatar ?
@@ -177,39 +235,22 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
         setDidChange(didChange)
     }
 
-
-    console.log("state " + JSON.stringify(state) + showModal)
-    if (state.message && state.message.length > 0 && showModal == false) {
-        setShowModal(true)
+    if (!user) {
+        redirect('/')
     }
-    const handleTapOkey = async () => {
-        // handleNewPassword();
-        // go go go
-        if (state.justDone && userInfo.firebaseUser && !expert) {
-
-            setShowModal(false);
-            router.replace('/advisor')
-        } else {
-            state.message = undefined
-            state.justDone = false
-            setShowModal(false);
-        }
-    };
-
-    const handleConfirmationCancel = () => {
-        setShowModal(false);
-    };
 
     return (
 
 
         <div className='p-1'>
+            {/* {JSON.stringify(state)} */}
+            {/* {userInfo.user?.expertType} */}
             <ConfirmationModal
                 isOpen={showModal}
-                onClose={handleConfirmationCancel}
+                onClose={() => { setShowModal(false) }}
                 onLeftButtonClick={handleTapOkey}
-                title={state.message ?? "No message"}
-                message={""}
+                title={""}
+                message={state.message ?? ""}
                 leftButtonText='Okey'
             />
             <div className='mb-1'>
@@ -236,7 +277,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                     name="name"
                                     type="text"
                                     placeholder="Tên sẽ được hiển thị "
-                                    defaultValue={expert ? expert.name : userInfo.firebaseUser?.displayName ?? ""}
+                                    defaultValue={expert ? expert.name :defaultName ?? ""}
                                     className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
                                     required
 
@@ -297,7 +338,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                             <Label className=''>{"Một năm " + convert(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_YEAR))}</Label>
                                         </div>
                                         <div className='ml-12'>
-                                        {period && <PlanSection expert={expert} state={state} />}
+                                            {period && <PlanSection expert={expert} state={state} />}
                                         </div>
 
                                     </>
@@ -392,7 +433,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                     name="shortIntro"
                                     type="text"
                                     placeholder="Viết giới thiệu ngắn "
-                                    defaultValue={expert ? expert.shortIntro : "Chuyên gia tư vấn " + userInfo.firebaseUser?.displayName}
+                                    defaultValue={expert ? expert.shortIntro : "Chuyên gia tư vấn " + defaultName}
                                     className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
                                     required
                                 />
@@ -419,8 +460,11 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                         <div className="m-4">
                             {!compressing && avatarURL ?
                                 (<div >
-                                    <Image className='rounded-full'
-                                        src={avatarURL}
+                                    <Image src={avatarURL} className='rounded-full'
+
+    style={{ width: '100%', height: 'auto' }}
+                                    priority={true}
+                                        
                                         alt="avatar of expert"
                                         width={100}
                                         height={100}
@@ -488,7 +532,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 }
 
 
-function PlanSection({expert, state} : {expert : Expert | undefined, state: RegisterExpertFormState}) {
+function PlanSection({ expert, state }: { expert: Expert | undefined, state: RegisterExpertFormState }) {
 
     return (
         <>
@@ -507,7 +551,7 @@ function PlanSection({expert, state} : {expert : Expert | undefined, state: Regi
                         max={10000000}
                         placeholder="Số tiền nhận mỗi tháng cho một user theo dõi theo tháng"
                         // defaultValue={selectedMonthLyPrice}
-                        defaultValue={expert?.monthlyPrice}
+                        defaultValue={expert?.monthlyPrice ?? 500000}
                         className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
                         required
                     // onChange={(e) => {
@@ -542,7 +586,7 @@ function PlanSection({expert, state} : {expert : Expert | undefined, state: Regi
                         max={50000000}
                         placeholder="Số tiền nhận 1 lần cho mỗi người theo dõi vĩnh viễn"
                         // defaultValue={selectedPermPrice}
-                        defaultValue={expert?.permPrice}
+                        defaultValue={expert?.permPrice ?? 2000000}
                         className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
                         required
 

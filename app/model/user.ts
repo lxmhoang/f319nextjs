@@ -11,6 +11,7 @@ export type User = {
     uid: string;
     accessId: string;
     displayName: string;
+    photoURL: string;
     amount: number;
     disabled: boolean;
     email?: string;
@@ -79,6 +80,7 @@ export const userConverter: FirestoreDataConverter<User> = {
             uid: snapshot.id,
             accessId: data.accessId,
             displayName: data.displayName,
+            photoURL: data.photoURL,
             amount: data.amount,
             disabled: data.disabled,
             email: data.email,
@@ -120,6 +122,7 @@ export const userAdminConverter: AdminFirestoreDataConverter<User> = {
             uid: snapshot.id,
             accessId: data.accessId,
             displayName: data.displayName,
+            photoURL: data.photoURL,
             amount: data.amount,
             disabled: data.disabled,
             email: data.email,

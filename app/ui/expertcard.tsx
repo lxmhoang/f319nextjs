@@ -1,5 +1,5 @@
 
-import { Card, CardBody, CardHeader, Divider, Image } from "@nextui-org/react";
+import { Card, CardBody, CardHeader, Divider } from "@nextui-org/react";
 import Link from 'next/link'
 import { storage } from "../lib/firebase/firebase";
 import { getDownloadURL, ref } from 'firebase/storage';
@@ -7,6 +7,7 @@ import { Label } from "flowbite-react";
 import { Expert } from "../model/expert";
 import { perfConver } from "../lib/utils";
 import { useEffect, useState } from "react";
+import Image from 'next/image'
 
 export default function ExpertCard({ expertInfo }: { expertInfo: string }) {
   const expert: Expert = JSON.parse(expertInfo)
@@ -18,7 +19,7 @@ export default function ExpertCard({ expertInfo }: { expertInfo: string }) {
         <div className="p-2 rounded-sm">
           <Card className="w-[180px] m-1 bg-gray-500">
             <CardHeader className=" gap-3 flex h-[50px]">
-              <Image src={expert.imageURL} width={50} height={50} className="rounded-full" />
+              {expert.imageURL && <Image priority={true} src={expert.imageURL} width={50} height={50} className="rounded-full w-50 h-auto" alt={""} />}
               <Label value={expert.name} />
             </CardHeader>
             <CardBody>

@@ -6,7 +6,7 @@ import { cookies } from "next/headers";
 import admin from "firebase-admin"
 import { getApps } from "firebase-admin/app";
 
-async function getSession() {
+export async function getSession() {
     try {
         return cookies().get("__session")?.value;
     } catch (error) {
@@ -83,7 +83,7 @@ export async function getUserInfoFromSession(session: string | undefined = undef
 
         return data;
     } catch (error) {
-        console.log("e222rror verifying session" + error);
+        console.log("error verifying session" + error);
         return undefined
     }
 

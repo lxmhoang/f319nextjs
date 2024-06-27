@@ -22,6 +22,22 @@ export type Prediction = {
     long?: boolean
   }
 
+
+export type PredictionReview = {
+  id: string | undefined,
+  assetName: string,
+  priceIn: string,
+  priceOut: string,
+  deadLine: string,
+  dateIn: string,
+  cutLoss: string,
+  curPrice: string,
+  status: string,
+  portion: string,
+  curStatus: string
+  disableClose: boolean
+}
+
 export const predAdminConverter: AdminFirestoreDataConverter<Prediction> = {
   toFirestore(pred: AdminWithFieldValue<Prediction>): AdminDocumentData {
     // const dateIntimeStamp = pred.dateIn as Timestamp

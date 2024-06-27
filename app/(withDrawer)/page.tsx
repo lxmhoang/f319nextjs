@@ -10,7 +10,7 @@ import { serverGetStat, serverQueryCollection } from "../lib/firebaseadmin/admin
 import { Expert, expertAdminConverter } from "../model/expert";
 import RankView from "../ui/rankView";
 
-const cacheTime = 60*60*2
+const cacheTime = 600
 
 export default async function Home() {
 

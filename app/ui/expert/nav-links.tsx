@@ -18,7 +18,7 @@ const links = (type: string) =>  [
   { name: 'Overview', href: '/advisor', icon: HomeIcon },
   { name: 'Edit info', href: '/advisor/edit', icon: UserIcon },
   {
-    name: 'Thêm khuyến nghị', href: '/advisor/prediction/new',
+    name: 'Thêm', href: '/advisor/prediction/new',
     icon: PlusIcon,
   },
   {

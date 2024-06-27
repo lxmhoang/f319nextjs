@@ -13,13 +13,13 @@ import { ArrowLeftEndOnRectangleIcon, ArrowsRightLeftIcon, ChartBarIcon, ChatBub
 // Depending on the size of the application, this would be stored in a database.
 const links = [
   { name: 'Overview', href: '/profile', icon: UserIcon },
-  { name: 'Theo dõi khuyến nghị', href: '/profile/pred', icon: ChartBarIcon},
+  { name: 'Khuyến nghị', href: '/profile/pred', icon: ChartBarIcon},
   {
-    name: 'Yêu cầu rút tiền', href: '/profile/requestwithdraw',
+    name: 'Rút tiền', href: '/profile/requestwithdraw',
     icon: ArrowLeftEndOnRectangleIcon,
   },
   {
-    name: 'Lịch sử giao dịch', href: '/profile/transactions',
+    name: 'Giao dịch', href: '/profile/transactions',
     icon: ArrowsRightLeftIcon,
   }
 ];
@@ -42,7 +42,7 @@ export default function NavLinks() {
             },)}
           >
             <LinkIcon className="w-6" title="aaa" />
-            <p className="hidden md:block">{link.name}</p>
+            <p className=" md:block">{link.name}</p>
           </Link>
         );
       })}

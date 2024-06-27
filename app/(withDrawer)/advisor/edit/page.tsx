@@ -13,6 +13,6 @@ export default async function Page() {
         redirect('/advisor/extend')
     }
     return (
-        <ExpertFormComponent expertInfo={JSON.stringify(expert)} />
+        <ExpertFormComponent expertInfo={JSON.stringify(expert)}  />
     )
 }

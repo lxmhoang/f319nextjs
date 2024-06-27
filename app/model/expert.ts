@@ -61,7 +61,7 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
         const month = data.curPerformance ? data.curPerformance.month : 1
         const quarter = data.curPerformance ? data.curPerformance.quarter : 1
         const year = data.curPerformance ? data.curPerformance.year : 1
-        // const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
+        const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
         return {
             id: snapshot.id,
             avatar: data.avatar,
@@ -81,7 +81,7 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
             monthPerform: month,
             quarterPerform: quarter,
             yearPerform: year,
-            joinDate: undefined
+            joinDate: joinDate
         };
     },
 };
@@ -124,7 +124,7 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
         const quarter = data.curPerformance ? data.curPerformance.quarter : 1
         const year = data.curPerformance ? data.curPerformance.year : 1
 
-        // const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
+        const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
         return {
             id: snapshot.id,
             avatar: data.avatar,
@@ -144,7 +144,7 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
             expertPeriod: data.expertPeriod,
             expertExpire: data.expertExpire,
             expertType: data.expertType,
-            joinDate: undefined
+            joinDate: joinDate
         };
     },
 };

@@ -5,14 +5,45 @@ import { Expert, expertAdminConverter } from "../model/expert";
 import { predAdminConverter } from "../model/prediction";
 import { serverGetModal, serverQueryCollection, serverUpdateDoc } from "./firebaseadmin/adminfirestore";
 
-import { getUserInfoFromSession } from "@/app/lib/firebaseadmin/adminauth";
+import { getCurrentUserId, getUserInfoFromSession } from "@/app/lib/firebaseadmin/adminauth";
 import { getRealTimeStockData } from "./getStockData";
 import { WhereFilterOp } from "firebase-admin/firestore";
 import { signInWithGoogle } from "./firebase/auth";
+import { userAdminConverter } from "../model/user";
+import { subscriptionAdminConverter } from "../model/subscription";
 
 export async function getExpert(eid: string) {
     // console.log('get expert with id ' + eid)
     return await serverGetModal<Expert>('expert/' + eid, expertAdminConverter)
+}
+
+export async function getUserDBInfo() {
+
+    const info = await getUserInfoFromSession()
+    console.log(JSON.stringify(info))
+    if (info) {
+        const result = await serverGetModal('user/' + info.uid, userAdminConverter)
+        return result
+    } else {
+        return undefined
+    }
+}
+
+export async function getMyFollowingExpertIDs() {
+    const uid = await getCurrentUserId()
+    if (!uid) {
+        return []
+    }
+
+    const toDay = new Date()
+
+    const result = await serverQueryCollection('subscription', [{key:'uid', operator:'==', value: uid},{key:'endDate', operator:'>=', value: toDay}], subscriptionAdminConverter)
+
+    const eids = result.map((sub) => {
+        return sub.eid
+    })
+
+    return eids
 }
 
 export async function getAdvisor() {
@@ -47,7 +78,7 @@ export async function getAllMypreds(filters:{key:string, operator: WhereFilterOp
 
     const info = await getUserInfoFromSession()
     if (!(info != undefined && info.isExpert)) {
-        throw new Error('bạn không phải chuyên gia')
+        throw new Error('bạn không phải chuyên gia' + JSON.stringify(info))
         return []
     }
     const result = await serverQueryCollection('expert/' + info.uid + '/preds', filters, predAdminConverter)

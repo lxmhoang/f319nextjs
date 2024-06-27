@@ -37,7 +37,14 @@ export type RegisterExpertFormState = {
 };
 
 export async function editExpert(fileWrapper: FormData | undefined, currentAvatarURL: string | null | undefined, createNewExpert: boolean, _prevState: RegisterExpertFormState, formData: FormData) {
-
+    // return {
+    //     errors: {},
+    //     message: 'expert Period is perm already or submiting period which is not perm  : ',
+    //     justDone: false
+    // };
+    
+ 
+    
     console.log('******************************************************')
     console.log('previous state ' + JSON.stringify(_prevState))
     const curUser = await getUserInfoFromSession()
@@ -49,7 +56,6 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             justDone: false
         };
     }
-
     if (!fileWrapper && !currentAvatarURL) {
         return {
             errors: {
@@ -88,6 +94,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             justDone: false
         };
     }
+    
     // permType
     // if (newName != curExpert.name || newshortIntro != curExpert.shortIntro || newmonthlyPrice != curExpert.monthPerform || newPermPrice || curExpert.permPrice) {
     if (createNewExpert) {
@@ -147,6 +154,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             status: "Done"
         }
 
+
         await serverAddNewModal<Transaction>('transaction', tran, tranAdminConverter) // tru tien
 
 
@@ -157,8 +165,10 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         const manyyearlater = new Date()
         manyyearlater.setFullYear(manyyearlater.getFullYear() + 20)
         const expertExpire = expertPeriod == 'perm' ? manyyearlater.getTime() : yearlate.getTime()
+        
 
         await setClaim(uid, { expertType: expertType, expertExpire: expertExpire, expertPeriod: expertPeriod }) // set claim tren auth
+        
         // await setExpert(uid, expertType,expertExpire )
         await serverUpdateDoc('user/' + uid, {
             expertType: expertType,
@@ -194,7 +204,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         }
         
 
-        revalidatePath('/advisor/register')
+        // revalidatePath('/advisor/register')
 
 
 
@@ -327,16 +337,16 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         // revalidatePath('/advisor/edit');
         // revalidatePath('/(withDrawer)/advisor');
 
-        createNewExpert ? revalidatePath('/advisor/register') : revalidatePath('/advisor/edit')
+        // createNewExpert ? revalidatePath('/advisor/register') : revalidatePath('/advisor/edit')
         return {
             errors: {},
-            message: "Done",
+            message: "Thành công đăng ký chuyên gia",
             justDone: true
         };
     } else if (createNewExpert) {
         if (currentAvatarURL) {
             await serverUpdateDoc('/expert/' + uid, { imageURL: currentAvatarURL })
-            revalidatePath('/advisor/edit')
+            // revalidatePath('/advisor')
             return {
                 errors: {},
                 message: "Done",
@@ -359,11 +369,11 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         // revalidatePath('/advisor/edit');
         // revalidatePath('/advisor');
 
-        revalidatePath('/advisor/edit')
+        // revalidatePath('/advisor')
         return {
             errors: {},
-            message: "",
-            justDone: false
+            message: "Thành công đăng ký chuyên gia",
+            justDone: true
         };
     }
 

@@ -122,6 +122,20 @@ export async function getFollowExpertByIDList(idList: string[]) {
     }
     return result
 }
+
+export async function getObservingPredsByExpertIDList(idList: string[]) {
+
+    const result = await serverQueryCollectionGroup<Prediction>('preds', [{key:'ownerId', operator:'in',value:idList}], predAdminConverter)
+
+    let preds = result.
+    // filter((doc) => {
+    //     return doc.data().dateRelease == undefined
+    // }).
+    map((doc) => { return doc.data() })
+  
+    return preds
+}
+
 async function getActivesubscriptionOf(uid: string, eid: string) {
     let today = new Date()
     let results = await adminDB.collection("subscription").where("eid", "==", eid).where("uid", "==", uid).where('endDate', '>=', today)
@@ -171,7 +185,7 @@ export async function serverQueryCollectionGroup<ModelType>(name: string, filter
     console.log('aa333a' + JSON.stringify(q))
     const snapshot = q ? await q?.withConverter(converter).get() : await colGroup.withConverter(converter).get()
     
-    console.log('dddd')
+    console.log('dddd' + JSON.stringify(snapshot))
     return snapshot.docs
     
 }

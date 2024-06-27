@@ -4,8 +4,8 @@ import { Divider, Table, TableBody, TableCell, TableColumn, TableHeader, TableRo
 import { useEffect, useState } from "react";
 // import { Button } from "../button";
 import { getRealTimeStockData } from "@/app/lib/getStockData";
-import { Prediction } from "@/app/model/prediction";
-import { Button, Label, Spinner } from "flowbite-react";
+import { Prediction, PredictionReview } from "@/app/model/prediction";
+import { Button, Label, Spinner, Toast } from "flowbite-react";
 import { closeWIPPreds, getAllMypreds, getMyWIPPreds } from "@/app/lib/server";
 import { perfConver } from "@/app/lib/utils";
 
@@ -24,7 +24,7 @@ export default function ReviewPrediction({ doneFetching, wip }: {
     try {
 
       await closeWIPPreds(predIds)
-      console.log('done closing PREDS')
+      console.log('done closing PREDS : ' + predIds)
       await fetchPred()
 
     } catch (e) {
@@ -41,28 +41,35 @@ export default function ReviewPrediction({ doneFetching, wip }: {
   }
   // const [closingPreds, setClosingPreds] = useState<boolean>(false)
   const [preds, setPreds] = useState<Prediction[]>()
-  const wipPreds = preds?.filter((item) => { 
+  const wipPreds = preds?.filter((item) => {
     return item.status == 'Inprogress'
   })
-  const closedPreds = preds?.filter((item) => { 
-    return  item.status !== 'Inprogress'}).map((pred) => {
-      return {
-        id: pred.id,
-        assetName: pred.assetName,
-        priceIn: pred.priceIn.toFixed(2),
-        priceRelease: pred.priceRelease?.toFixed(2),
-        perm: perfConver(pred.priceRelease! / pred.priceIn),
-        priceOut: pred.priceOut.toFixed(2),
-        deadLine: pred.deadLine.toLocaleDateString('vi'),
-        dateIn: pred.dateIn.toLocaleDateString('vi'),
-        cutLoss: pred.cutLoss.toFixed(2),
-        status: pred.status,
-        portion: pred.portion.toString() + '%'
-      }
-    })
+  // const under5DaysID = wipPreds?.filter((item) => {
+  //   item
+  // })
+  const closedPreds = preds?.filter((item) => {
+    return item.status !== 'Inprogress'
+  }).map((pred) => {
+    return {
+      id: pred.id,
+      assetName: pred.assetName,
+      priceIn: pred.priceIn.toFixed(2),
+      priceRelease: pred.priceRelease?.toFixed(2),
+      perm: perfConver(pred.priceRelease! / pred.priceIn),
+      priceOut: pred.priceOut.toFixed(2),
+      deadLine: pred.deadLine.toLocaleDateString('vi'),
+      dateIn: pred.dateIn.toLocaleDateString('vi'),
+      cutLoss: pred.cutLoss.toFixed(2),
+      status: pred.status,
+      portion: pred.portion.toString() + '%'
+    }
+  })
 
-  console.log('closed preds333 ' + JSON.stringify(closedPreds))
   const [wipdata, setWIPData] = useState<PredictionReview[]>();
+  const disabledKeys = wipdata?.filter((item) => { return item.disableClose }).map((item) => item.id ?? "") ?? []
+
+  const [showToast, setShowToast] = useState(false);
+  console.log('disabledKeys ' + JSON.stringify(disabledKeys))
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set([]));
 
   const innerWidth = typeof window == 'undefined' ? 400 : window.innerWidth
@@ -109,7 +116,8 @@ export default function ReviewPrediction({ doneFetching, wip }: {
         if (!curPrice) {
           throw new Error('can not get real time stock data of asset ' + pred.assetName)
         }
-        // console.log("vvvv : " + pred.deadLine)
+        const predAge = (new Date()).getTime() - pred.dateIn.getTime()
+        console.log("predAge : " + predAge)
         return {
           id: pred.id,
           assetName: pred.assetName,
@@ -121,13 +129,14 @@ export default function ReviewPrediction({ doneFetching, wip }: {
           status: pred.status,
           curPrice: curPrice.low.toFixed(2),
           curStatus: (curPrice.low * 100 / pred.priceIn - 100).toFixed(2) + "%",
-          portion: pred.portion.toString() + '%'
+          portion: pred.portion.toString() + '%',
+          disableClose: predAge < 1000 * 5 * 24 * 3600
         }
       })
       setWIPData(dataList)
     };
 
-    if (preds ) {
+    if (preds) {
       if (preds.length > 0) {
         const sum = preds.map((i) => i.portion).reduce((a, b) => a + b, 0)
         doneFetching(sum)
@@ -151,19 +160,30 @@ export default function ReviewPrediction({ doneFetching, wip }: {
           Chưa có khuyến nghị nào được tạo<Link href="/advisor/prediction/new" className="text-sky-400"> Tạo khuyến nghị </Link>
         </>
       )} */}
-      { preds && wipdata ? (<>
-      <Label value="Các khuyến nghị đang tiếp diễn" />
-        <Table removeWrapper className="overflow-x-auto mb-4 " color="primary" aria-label="Example table with dynamic content"
+      {(preds && preds.length == 0) && (<> Chưa tạo khuyến nghị nào </>)}
+      {preds && wipdata ? (<>
+        <Label value="Các khuyến nghị đang tiếp diễn" />
+
+        <div className="">
+        {true && (<Table removeWrapper className="overflow-x-auto mb-4 " color="primary" aria-label="Example table with dynamic content"
           selectionMode="multiple"
           selectedKeys={selectedKeys}
           // onSelectionChange={setSelectedKeys}>
           // selectedKeys={selectedKeys}
           onSelectionChange={(keys) => {
+
             if (keys == 'all') {
               console.log('aaaa')
               // setSelectedKeys(new Set(["aa","vvv"]))
             } else {
               const set = keys as Set<string>
+              for (const disableKey of disabledKeys) {
+                if (set.has(disableKey)) {
+                  setShowToast((state) => !state)
+                  set.delete(disableKey)
+                }
+              }
+              // set.delete
               setSelectedKeys(set)
             }
           }}>
@@ -186,7 +206,7 @@ export default function ReviewPrediction({ doneFetching, wip }: {
                     // }
 
                     return (
-                      <TableCell>{getKeyValue(item, columnKey) as string}</TableCell>
+                      <TableCell >{getKeyValue(item, columnKey) as string}</TableCell>
                     )
                   }
 
@@ -194,20 +214,32 @@ export default function ReviewPrediction({ doneFetching, wip }: {
               </TableRow>
             )}
           </TableBody>
-        </Table>
-        <Button className="max-w-sm" disabled={selectedKeys.size == 0}  onClick={() => {
+        </Table>)}
+        {showToast && (<Toast className="mx-auto">
+          {/* <div className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cyan-100 text-cyan-500 dark:bg-cyan-800 dark:text-cyan-200"> */}
+            {/* <HiFire className="h-5 w-5" /> */}
+          {/* </div> */}
+          <div className="ml-3 text-sm font-normal">Không thể chọn kết thúc khuyến nghị chưa quá 5 ngày</div>
+          <Toast.Toggle onDismiss={() => setShowToast(false)} />
+        </Toast>)
+        }
+        </div>
+
+        <Button className="max-w-sm" disabled={selectedKeys.size == 0} onClick={() => {
           // const array = Array.from(selectedKeys);
           closePreds(Array.from(selectedKeys.values()))
           // submit(Array.from(selectedKeys.values()))
         }}>
 
-          Kết thúc</Button></>) : preds ? (<></>):(<><Spinner /></>)
+          Kết thúc</Button>
+          
+          </>) : preds ? (<></>) : (<><Spinner /></>)
       }
 
       <Divider className="mt-8 mb-8" />
 
       {preds && closedPreds && closedPreds.length > 0 ? (<>
-      <Label value="Các khuyến nghị đã kết thúc" />
+        <Label value="Các khuyến nghị đã kết thúc" />
         <Table removeWrapper className="overflow-x-auto mb-4 " color="primary" aria-label="Example table with dynamic content">
           <TableHeader className="dark:bg-transparent bg-red-400" columns={masterClosedCols}>
             {(column) => <TableColumn className="dark:bg-slate-800 " key={column.key}>{column.label}</TableColumn>}
@@ -231,7 +263,7 @@ export default function ReviewPrediction({ doneFetching, wip }: {
             )}
           </TableBody>
         </Table>
-      </>) : preds ? (<></>) :  (<><Spinner /></>)}
+      </>) : preds ? (<></>) : (<><Spinner /></>)}
     </>
   )
 }
@@ -324,16 +356,3 @@ const masterCols = [
   //   label: "STATUS",
   // },
 ];
-
-type PredictionReview = {
-  id: string | undefined,
-  assetName: string,
-  priceIn: string,
-  priceOut: string,
-  deadLine: string,
-  dateIn: string,
-  cutLoss: string,
-  curPrice: string,
-  status: string,
-  portion: string
-}

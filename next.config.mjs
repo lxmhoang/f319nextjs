@@ -21,7 +21,7 @@ const nextConfig = {
           },
           {
             protocol: 'https',
-            hostname: 'firebasestorage.googleapis.com',
+            hostname: 'lh3.googleusercontent.com',
             port: '',
           },
         ],
