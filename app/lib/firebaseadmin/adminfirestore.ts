@@ -124,16 +124,21 @@ export async function getFollowExpertByIDList(idList: string[]) {
 }
 
 export async function getObservingPredsByExpertIDList(idList: string[]) {
+    var result : Prediction[] = []
 
-    const result = await serverQueryCollectionGroup<Prediction>('preds', [{key:'ownerId', operator:'in',value:idList}], predAdminConverter)
+    for (const eid of idList) {
+        const preds = await serverQueryCollection('expert/' + eid + '/preds', [], predAdminConverter)
+        result.push(...preds)
+    }
 
-    let preds = result.
-    // filter((doc) => {
-    //     return doc.data().dateRelease == undefined
-    // }).
-    map((doc) => { return doc.data() })
+    
+    // let preds = result.
+    // // filter((doc) => {
+    // //     return doc.data().dateRelease == undefined
+    // // }).
+    // map((doc) => { return doc.data() })
   
-    return preds
+    return result
 }
 
 async function getActivesubscriptionOf(uid: string, eid: string) {
