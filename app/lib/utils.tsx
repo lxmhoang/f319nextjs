@@ -39,7 +39,7 @@ export function perfConver(per: number) {
   const color = per > 1 ? "text-sky-400" : per == 1 ? "text-white" : "text-red-400"
   const distant = per > 1 ? per - 1 : 1 - per
   // console.log('number ' + per + '  color  ' + color)
-  const str = prefix + (distant*100).toFixed(2) + "%"
+  const str = prefix + (distant * 100).toFixed(2) + "%"
   return {
     color: color,
     info: str
@@ -47,8 +47,8 @@ export function perfConver(per: number) {
 }
 
 export async function getPerformanceSince(date: Date, data: Prediction[]) {
-  
- console.log('getPerformanceSince')
+
+  console.log('getPerformanceSince')
   let openPreds = data.filter((item) => {
     return item.status == "Inprogress" && item.dateIn >= date
   })
@@ -56,18 +56,18 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
   var perform = 1
   var message: string[] = []
 
-  message.push('start checking pred since  : ' + date.toLocaleDateString('vi') )
+  message.push('start checking pred since  : ' + date.toLocaleDateString('vi'))
 
   for (const pred of openPreds) {
 
-    message.push('pred id : ' + pred.id ?? "" )
+    message.push('pred id : ' + pred.id ?? "")
     const matchedPriceToday = await getTodayMatchedVolume(pred.assetName)
-    message.push(' asset ' + pred.assetName +  ' priceIn: ' + pred.priceIn + ' priceOut = ' + pred.priceOut + ' cutloss ' + pred.cutLoss + ' deadline ' + pred.deadLine.toLocaleString('vi') + ' portion ' + pred.portion +  '% . \n MatchedPriceToday :  ' + matchedPriceToday.toString() )
-         
+    message.push(' asset ' + pred.assetName + ' priceIn: ' + pred.priceIn + ' priceOut = ' + pred.priceOut + ' cutloss ' + pred.cutLoss + ' deadline ' + pred.deadLine.toLocaleString('vi') + ' portion ' + pred.portion + '% . \n MatchedPriceToday :  ' + matchedPriceToday.toString())
+
     const max = Math.max.apply(Math, matchedPriceToday)
     const min = Math.min.apply(Math, matchedPriceToday)
-    message.push('  max : ' + max + '  min:  ' + min +  '  date :  ' + (new Date()).toLocaleString('vi')  + '\n')
-  
+    message.push('  max : ' + max + '  min:  ' + min + '  date :  ' + (new Date()).toLocaleString('vi') + '\n')
+
     const toDayValue = true ? min : max
     const curPerform = true ? toDayValue / pred.priceIn : pred.priceIn / toDayValue
     const curProfit = (curPerform - 1) * pred.portion / 100 + 1
@@ -82,7 +82,7 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
       const ratio = pred.priceRelease / pred.priceIn
       const predPerform = true ? ratio : 1 / ratio
       const profit = (predPerform - 1) * pred.portion / 100 + 1
-      message.push(' \n  Perform of close Pred '+ pred.id+ ' datein : ' + pred.dateIn.toLocaleDateString('vi') +' ===== ' + predPerform + '  profit ' + profit + '\n')
+      message.push(' \n  Perform of close Pred ' + pred.id + ' datein : ' + pred.dateIn.toLocaleDateString('vi') + ' ===== ' + predPerform + '  profit ' + profit + '\n')
       perform = perform * profit
     }
   }
@@ -92,7 +92,7 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
     message: message
 
   }
-}    
+}
 
 import imageCompression from "browser-image-compression";
 const defaultOptions = {
@@ -107,17 +107,16 @@ export async function compressFile(imageFile: File, options = defaultOptions) {
   return newFile
 }
 
-export function sortByField<T, Key extends keyof T >(data: T[] ,field: Key) {
+export function sortByField<T, Key extends keyof T>(data: T[], field: Key) {
 
   return data.toSorted((n1, n2) => {
     if (n1[field] > n2[field]) {
       return 1;
     }
 
-    if (n1[field]< n2[field]) {
+    if (n1[field] < n2[field]) {
       return -1;
     }
     return 0;
   })
-
 }

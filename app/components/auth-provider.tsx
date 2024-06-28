@@ -1,133 +1,133 @@
-"use client";
+// "use client";
 
-import { GoogleAuthProvider, User, signInWithPopup } from "firebase/auth";
-import { createContext, useContext, useEffect, useState } from "react";
-import Cookies from "js-cookie";
-import { auth } from "@/app/lib/firebase/firebase";
+// import { GoogleAuthProvider, User, browserSessionPersistence, inMemoryPersistence, signInWithPopup } from "firebase/auth";
+// import { createContext, useContext, useEffect, useState } from "react";
+// import Cookies from "js-cookie";
+// import { auth } from "@/app/lib/firebase/firebase";
 
-export function getAuthToken(): string | undefined {
-    return Cookies.get("firebaseIdToken");
-}
+// export function getAuthToken(): string | undefined {
+//     return Cookies.get("firebaseIdToken");
+// }
 
-export function setAuthToken(token: string): string | undefined {
-    return Cookies.set("firebaseIdToken", token, { secure: true });
-}
+// export function setAuthToken(token: string): string | undefined {
+//     return Cookies.set("firebaseIdToken", token, { secure: true });
+// }
 
-export function removeAuthToken(): void {
-    return Cookies.remove("firebaseIdToken");
-}
+// export function removeAuthToken(): void {
+//     return Cookies.remove("firebaseIdToken");
+// }
 
-type AuthContextType = {
-    currentUser: User | null;
-    isAdmin: boolean;
-    isPro: boolean;
-    loginGoogle: () => Promise<void>;
-    logout: () => Promise<void>;
-};
+// type AuthContextType = {
+//     currentUser: User | null;
+//     isAdmin: boolean;
+//     isPro: boolean;
+//     loginGoogle: () => Promise<void>;
+//     logout: () => Promise<void>;
+// };
 
-const AuthContext = createContext<AuthContextType | null>(null);
+// const AuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider = ({ children }: { children: any }) => {
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-    const [isAdmin, setIsAdmin] = useState<boolean>(false);
-    const [isPro, setIsPro] = useState<boolean>(false);
+// export const AuthProvider = ({ children }: { children: any }) => {
+//     const [currentUser, setCurrentUser] = useState<User | null>(null);
+//     const [isAdmin, setIsAdmin] = useState<boolean>(false);
+//     const [isPro, setIsPro] = useState<boolean>(false);
 
-    // Triggers when App is started
-    useEffect(() => {
+//     // Triggers when App is started
+//     useEffect(() => {
 
-        console.log("useEffect ")
-        if (!auth) {
+//         console.log("useEffect ")
+//         if (!auth) {
 
-            console.log("empty auth ")
-            return;
-        }
+//             console.log("empty auth ")
+//             return;
+//         }
 
-        return auth.onAuthStateChanged(async (user) => {
-            console.log("onAuthStateChanged " + user)
-            // Triggers when user signs out
-            if (!user) {
-                setCurrentUser(null);
-                setIsAdmin(false);
-                setIsPro(false);
-                removeAuthToken();
-                return;
-            }
+//         return auth.onAuthStateChanged(async (user) => {
+//             console.log("onAuthStateChanged " + user)
+//             // Triggers when user signs out
+//             if (!user) {
+//                 setCurrentUser(null);
+//                 setIsAdmin(false);
+//                 setIsPro(false);
+//                 removeAuthToken();
+//                 return;
+//             }
 
-            const token = await user.getIdToken();
-            if (user) {
-                setCurrentUser(user);
-                setAuthToken(token);
+//             const token = await user.getIdToken();
+//             if (user) {
+//                 setCurrentUser(user);
+//                 setAuthToken(token);
 
-                // Check if is admin
-                const tokenValues = await user.getIdTokenResult();
-                console.log("tokenValues claim " + JSON.stringify(tokenValues.claims))
-                setIsAdmin(tokenValues.claims.role === "admin");
+//                 // Check if is admin
+//                 const tokenValues = await user.getIdTokenResult();
+//                 console.log("tokenValues claim " + JSON.stringify(tokenValues.claims))
+//                 setIsAdmin(tokenValues.claims.role === "admin");
 
-                // Check if is pro
-                // const userResponse = await fetch(`/api/users/${user.uid}`, {
-                //     headers: {
-                //         Authorization: `Bearer ${token}`,
-                //     },
-                // });
-                // if (userResponse.ok) {
-                //     const userJson = await userResponse.json();
-                //     if (userJson?.isPro) setIsPro(true);
-                // } else {
-                //     console.error("Could not get user info");
-                // }
-            }
-        });
-    }, []);
+//                 // Check if is pro
+//                 // const userResponse = await fetch(`/api/users/${user.uid}`, {
+//                 //     headers: {
+//                 //         Authorization: `Bearer ${token}`,
+//                 //     },
+//                 // });
+//                 // if (userResponse.ok) {
+//                 //     const userJson = await userResponse.json();
+//                 //     if (userJson?.isPro) setIsPro(true);
+//                 // } else {
+//                 //     console.error("Could not get user info");
+//                 // }
+//             }
+//         });
+//     }, []);
 
-    function loginGoogle(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (!auth) {
-                reject();
-                return;
-            }
-            signInWithPopup(auth, new GoogleAuthProvider())
-                .then((user) => {
-                    console.log("Signed in!");
-                    resolve();
-                })
-                .catch(() => {
-                    console.error("Something went wrong");
-                    reject();
-                });
-        });
-    }
+//     function loginGoogle(): Promise<void> {
+//         return new Promise((resolve, reject) => {
+//             if (!auth) {
+//                 reject();
+//                 return;
+//             }
+//             signInWithPopup(auth, new GoogleAuthProvider())
+//                 .then((user) => {
+//                     console.log("Signed in!");
+//                     resolve();
+//                 })
+//                 .catch(() => {
+//                     console.error("Something went wrong");
+//                     reject();
+//                 });
+//         });
+//     }
 
-    function logout(): Promise<void> {
-        return new Promise((resolve, reject) => {
-            if (!auth) {
-                reject();
-                return;
-            }
-            auth.signOut()
-                .then(() => {
-                    console.log("Signed out");
-                    resolve();
-                })
-                .catch(() => {
-                    console.error("Something went wrong");
-                    reject();
-                });
-        });
-    }
+//     function logout(): Promise<void> {
+//         return new Promise((resolve, reject) => {
+//             if (!auth) {
+//                 reject();
+//                 return;
+//             }
+//             auth.signOut()
+//                 .then(() => {
+//                     console.log("Signed out");
+//                     resolve();
+//                 })
+//                 .catch(() => {
+//                     console.error("Something went wrong");
+//                     reject();
+//                 });
+//         });
+//     }
 
-    return (
-        <AuthContext.Provider
-            value={{
-                currentUser,
-                isAdmin,
-                isPro,
-                loginGoogle,
-                logout,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
-    );
-};
+//     return (
+//         <AuthContext.Provider
+//             value={{
+//                 currentUser,
+//                 isAdmin,
+//                 isPro,
+//                 loginGoogle,
+//                 logout,
+//             }}
+//         >
+//             {children}
+//         </AuthContext.Provider>
+//     );
+// };
 
-export const useAuth = () => useContext(AuthContext);
+// export const useAuth = () => useContext(AuthContext);

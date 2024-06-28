@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/thongke",
-      "schedule": "30 /2 * * *"
+      "schedule": "30 */2 * * *"
     },
     {
       "path": "/api/updatePredStats",

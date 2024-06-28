@@ -42,15 +42,16 @@ initializeApp();
 //   });
 
 
-exports.createUserDoc = auth.user().onCreate((user) => {
-    const data = JSON.parse(JSON.stringify(user))
-    data.amount = 0
-    const accessId = Math.random().toString(36).substring(2,8)
-    data['accessId'] = accessId
-    getFirestore().collection('user').doc(user.uid).set(data)
+// exports.createUserDoc = auth.user().onCreate((user) => {
+//     const data = JSON.parse(JSON.stringify(user))
+    
+//     data.amount = 0
+//     const accessId = Math.random().toString(36).substring(2,8)
+//     data['accessId'] = accessId
+//     getFirestore().collection('user').doc(user.uid).set(data)
 
-    logger.log(user.displayName)
-});
+//     logger.log(user.displayName)
+// });
 
 // exports.modifyExpertHandler = onDocumentWritten({document: "/expert/{expertId}", region: 'asia-southeast1'}, (event) => {
 //     const expireTimeBefore = event.data.before.data().expertExpire

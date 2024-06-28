@@ -15,7 +15,7 @@ export default function MyProfileOverView({ host }: { host: string }) {
     }
 
     const ref = user.accessId
-    const url = 'https://' + host + '/' + ref
+    const url = 'https://' + host + '?ref=' + ref
     const amount = user.amount
     return (
         <div>

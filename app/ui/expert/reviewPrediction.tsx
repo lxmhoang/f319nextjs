@@ -104,7 +104,7 @@ export default function ReviewPrediction({ doneFetching, wip }: {
       if (wipPreds.length == 0) {
         setWIPData([])
       }
-      console.log('wip ' + JSON.stringify(wipPreds))
+      // console.log('wip ' + JSON.stringify(wipPreds))
 
       const stockList = wipPreds.map((e) => {
         return e.assetName
@@ -136,9 +136,9 @@ export default function ReviewPrediction({ doneFetching, wip }: {
       setWIPData(dataList)
     };
 
-    if (preds) {
-      if (preds.length > 0) {
-        const sum = preds.map((i) => i.portion).reduce((a, b) => a + b, 0)
+    if (wipPreds) {
+      if (wipPreds.length > 0) {
+        const sum = wipPreds.map((i) => i.portion).reduce((a, b) => a + b, 0)
         doneFetching(sum)
         fetchRealTimeStockData();
       } else {
@@ -161,7 +161,8 @@ export default function ReviewPrediction({ doneFetching, wip }: {
         </>
       )} */}
       {(preds && preds.length == 0) && (<> Chưa tạo khuyến nghị nào </>)}
-      {preds && wipdata ? (<>
+      {(!wipdata && wipPreds && wipPreds.length > 0) && (<><Spinner /></>)}
+      {wipdata ? (<>
         <Label value="Các khuyến nghị đang tiếp diễn" />
 
         <div className="">

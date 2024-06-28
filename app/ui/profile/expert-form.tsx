@@ -235,7 +235,8 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
         setDidChange(didChange)
     }
 
-    if (!user) {
+    if (firebaseUser == null && firebaseUser != undefined) {
+        console.log('not authen, redirect to home page')
         redirect('/')
     }
 

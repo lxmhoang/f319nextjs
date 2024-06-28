@@ -13,6 +13,7 @@ import {
 	FirestoreDataConverter,
 	getDocFromServer,
 	or,
+	setDoc,
 } from "firebase/firestore";
 
 import { db } from "./firebase";
@@ -54,6 +55,10 @@ export async function clientSearchCollection<ModelType>(name: string, filters = 
 	return result.docs.map(doc => {
 		return doc.data()
 	})
+}
+
+export async function clientSetDoc<ModelType>(path: string, data: ModelType,converter: FirestoreDataConverter<ModelType>) {
+	await setDoc( doc(db, path).withConverter(converter), data)
 }
 
 

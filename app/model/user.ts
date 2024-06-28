@@ -31,14 +31,15 @@ export type User = {
     phoneNumber?: string
     isAdmin?: boolean,
     isExpert?: boolean,
-    expertExpire?: number
-    expertType?: string
+    expertExpire?: number,
+    expertType?: string,
+    refID?: string
 }
 
 
 export const userConverter: FirestoreDataConverter<User> = {
     toFirestore(user: WithFieldValue<User>): DocumentData {
-        return {
+        const data =  {
             following: user.following,
             accessId: user.accessId,
             uid: user.uid,
@@ -48,8 +49,10 @@ export const userConverter: FirestoreDataConverter<User> = {
             email: user.email,
             customClaims: user.customClaims,
             metadata: user.metadata,
-            phoneNumber: user.phoneNumber
-        };
+            phoneNumber: user.phoneNumber,
+            refID: user.refID
+        }
+        return data
     },
     fromFirestore(
         snapshot: QueryDocumentSnapshot,
@@ -71,6 +74,7 @@ export const userConverter: FirestoreDataConverter<User> = {
                 endDate: item.endDate.toDate()
             }
         }) : []
+        // console.log('kkk ' + data.expertExpire)
         const isExpert = data.expertExpire ? 
         new Date(Number(data.expertExpire)) > new Date()
         : 
@@ -91,7 +95,8 @@ export const userConverter: FirestoreDataConverter<User> = {
             expertExpire: data.expertExpire,
             expertType: data.expertType,
             isExpert: isExpert,
-            following: following
+            following: following,
+            refID: data.refID
         };
     },
 };
@@ -99,16 +104,25 @@ export const userConverter: FirestoreDataConverter<User> = {
 
 export const userAdminConverter: AdminFirestoreDataConverter<User> = {
     toFirestore(user: AdminWithFieldValue<User>): AdminDocumentData {
-        return {
+       
+        const obj : any = {
             uid: user.uid,
+            accessId: user.accessId,
+            photoURL: user.photoURL,
             displayName: user.displayName,
             amount: user.amount,
-            disabled: user.disabled,
+            disabled: user.disabled ?? false,
             email: user.email,
             customClaims: user.customClaims,
-            metadata: user.metadata,
-            phoneNumber: user.phoneNumber
-        };
+            following: user.following,
+            metadata: user.metadata ?? {},
+            expertExpire: user.expertExpire,
+            expertType: user.expertType,
+            phoneNumber: user.phoneNumber,
+            refID: user.refID,
+        }
+        Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
+        return obj;
     },
     fromFirestore(
         snapshot: AdminQueryDocumentSnapshot

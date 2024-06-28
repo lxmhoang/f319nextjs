@@ -7,6 +7,7 @@ import { auth, db } from "../firebase/firebase";
 import { User as FireBaseUser, getAuth } from "firebase/auth";
 import { doc, onSnapshot } from "firebase/firestore";
 import { User, userConverter } from "@/app/model/user";
+import { decrypt , encrypt, persistUserInfo} from "../server";
 
 
 const AppContext = createContext<{ user: User | undefined, firebaseUser: FireBaseUser | null | undefined }>({ user: undefined, firebaseUser: null });
@@ -20,12 +21,13 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         console.log("useEffect ")
         const unsubscribe = auth.onAuthStateChanged((authUser) => {
-            console.log("onAuthStateChanged check again: " + authUser +'  email ' + getAuth().currentUser?.email)
+            console.log("onAuthStateChanged check again: " + authUser + '  email ' + getAuth().currentUser?.email)
             setFireBaseUser(authUser)
         });
 
         return unsubscribe;
     }, []);
+
 
     useEffect(() => {
 
@@ -33,18 +35,24 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
         // const token = firebaseUser?.getIdTokenResult()
         // var unsubscrible
         if (firebaseUser) {
-            var unsubscrible = 
-            onSnapshot(doc(db, "user", firebaseUser.uid).withConverter(userConverter), (doc) => {
-                console.log('onAuthStateChanged onSnapshot fetch user info' + JSON.stringify(doc.data()))
-                // if (token) {
+            var unsubscrible =
+                onSnapshot(doc(db, "user", firebaseUser.uid).withConverter(userConverter), (doc) => {
+                    console.log('onAuthStateChanged onSnapshot fetch user info' + JSON.stringify(doc.data()))
+                    // if (token) {
 
-                // }
+                    // }
 
-                // updateToken(firebaseUser)
-                setUser(doc.data())
-            })
+                    // updateToken(firebaseUser)
+                    const userInfo = doc.data()
+                    persistUserInfo(JSON.stringify(userInfo))
+                    setUser(doc.data())
+                })
             return unsubscrible
         } else {
+            if (firebaseUser == null && firebaseUser != undefined) {
+                persistUserInfo(undefined)
+            }
+            //
             setUser(undefined)
         }
     }, [firebaseUser])

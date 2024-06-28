@@ -3,14 +3,15 @@
 'use server'
 import { Expert, expertAdminConverter } from "../model/expert";
 import { predAdminConverter } from "../model/prediction";
-import { serverGetModal, serverQueryCollection, serverUpdateDoc } from "./firebaseadmin/adminfirestore";
+import { serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc, serverUpdateDoc } from "./firebaseadmin/adminfirestore";
 
 import { getCurrentUserId, getUserInfoFromSession } from "@/app/lib/firebaseadmin/adminauth";
 import { getRealTimeStockData } from "./getStockData";
 import { WhereFilterOp } from "firebase-admin/firestore";
 import { signInWithGoogle } from "./firebase/auth";
-import { userAdminConverter } from "../model/user";
+import { User, userAdminConverter } from "../model/user";
 import { subscriptionAdminConverter } from "../model/subscription";
+import { cookies } from "next/headers";
 
 export async function getExpert(eid: string) {
     // console.log('get expert with id ' + eid)
@@ -48,7 +49,7 @@ export async function getMyFollowingExpertIDs() {
 
 export async function getAdvisor() {
     const info = await getUserInfoFromSession()
-    // console.log('getAdvisor ' + JSON.stringify(info))
+    console.log('getUserInfoFromSession ' + JSON.stringify(info))
     if (info == undefined) {
         return {
             expert: undefined,
@@ -56,7 +57,7 @@ export async function getAdvisor() {
         }
     }
     const expert = await getExpert(info.uid)
-    // console.log('getAdvisor' + JSON.stringify(expert))
+    console.log('getAdvisor' + JSON.stringify(expert))
     // return expert
     if (!expert) {
         return {
@@ -95,6 +96,16 @@ export async function getMyWIPPreds() {
 
 
     return getAllMypreds([{ key: 'status', operator: '==', value: 'Inprogress' }])
+}
+
+export async function verifyAccessID(accessId: string) {
+    const result = await serverQueryCollection('user', [{key:'accessId', operator:'==', value: accessId}], userAdminConverter)
+    return result.length == 0
+}
+
+export async function addUser(payload: string) {
+    const user: User = JSON.parse(payload)
+    const result = await serverSetDoc('user/' + user.uid, userAdminConverter.toFirestore(user) )
 }
 
 export async function closeWIPPreds(ids: string[], rank: boolean = false) {
@@ -163,3 +174,77 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
     // }
 
 }
+
+export async function persistUserInfo(payload: string | undefined) {
+    if (!payload) {
+        cookies().delete('uInfo')
+    } else {
+        const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+        const userInfo: User = JSON.parse(payload)
+        const data = {isExpert: userInfo.isExpert ?? false}
+        const descr = await encrypt(JSON.stringify(data))
+        cookies().set('uInfo',descr, { maxAge: expiresIn, httpOnly: true, secure: true })
+
+    }
+
+}
+
+const key = "keyaaa"
+export async function encrypt(text: string) {
+
+    const keyUtf8 = new TextEncoder().encode(key)
+    const keyHash = await crypto.subtle.digest('SHA-256', keyUtf8)
+  
+  
+    const iv = crypto.getRandomValues(new Uint8Array(12))
+    const alg = { name: 'AES-GCM', iv: iv }
+  
+    const encrpytKey = await crypto.subtle.importKey('raw', keyHash, alg, false, [
+      'encrypt',
+    ])
+  
+    const textUtf8 = new TextEncoder().encode(text)
+    const encrypted = await crypto.subtle.encrypt(alg, encrpytKey, textUtf8)
+    // const encryptedText = new TextDecoder('utf-8').decode(encrypted)
+    const encryptedText = ab2str(encrypted)
+    const stringencrypted = encrypted.toString()
+    const b64 = btoa(encryptedText)
+    // console.log('hoang beo encrypt ' + encryptedText + ' base64 : ' + b64)
+    const ivHex = Array.from(iv).map(b => ('00' + b.toString(16)).slice(-2)).join('')
+    console.log('iv Hex ' + ivHex)
+    const payload = ivHex + b64
+    console.log('did encrypt userInfo ' + payload)
+    return payload
+  
+  }
+  
+  function ab2str(buf: ArrayBuffer) {
+  
+    const uintArr = new Uint8Array(buf);
+    return String.fromCharCode.apply(null,Array.from(uintArr));
+  }
+
+export async function decrypt(enText: string) {
+    // console.log('enText ' + enText)
+   
+    const iv = enText.slice(0,24)!.match(/.{2}/g)!.map(byte => parseInt(byte, 16))
+  
+    // console.log('vi extracted from payload ' + iv)
+    const alg = { name: 'AES-GCM', iv: new Uint8Array(iv) }
+    const keyUtf8 = new TextEncoder().encode(key)
+    const keyHash = await crypto.subtle.digest('SHA-256', keyUtf8)
+    const decryptKey = await crypto.subtle.importKey('raw', keyHash, alg, false, ['decrypt'])
+  
+    const bodycontent = atob(enText.slice(24))
+    // console.log('body content extracted from payload ' + bodycontent)
+    const bodyasArrayNumber = new Uint8Array(bodycontent.match(/[\s\S]/g)!.map(ch => ch.charCodeAt(0)))
+    // begin to decrupt
+  
+  
+    // const enTextUtf8 = new TextEncoder().encode(enText)
+    const textBuffer = await crypto.subtle.decrypt(alg, decryptKey, bodyasArrayNumber)
+    const decryptedText = new TextDecoder().decode(textBuffer)
+    console.log('did decrypt userInfo ' + decryptedText)
+    return decryptedText
+  
+  }

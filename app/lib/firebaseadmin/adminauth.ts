@@ -54,11 +54,10 @@ export async function setClaim(uid: string, data: {}) {
 export async function getUserInfoFromSession(session: string | undefined = undefined) {
     const _session = session ?? (await getSession());
     if (!_session) return undefined
-    // console.log('current session ' + _session)
-    const auth = getAuth(adminApp)
+    console.log('current session ' + _session)
 
     try {
-        const decodedIdToken = await auth.verifySessionCookie(_session, true);
+        const decodedIdToken = await getAuth(adminApp).verifySessionCookie(_session, true);
         const expertPeriod = decodedIdToken["expertPeriod"]
         const expertExpire = decodedIdToken["expertExpire"]
 
@@ -79,11 +78,11 @@ export async function getUserInfoFromSession(session: string | undefined = undef
             avatarURL: decodedIdToken.picture
         }
 
-        // console.log(' result of getUserInfoFromSession : ' + JSON.stringify(decodedIdToken))
+        console.log(' result of getUserInfoFromSession : ' + JSON.stringify(decodedIdToken))
 
         return data;
     } catch (error) {
-        console.log("error verifying session" + error);
+        console.log("222 error verifying session   " + error);
         return undefined
     }
 
@@ -111,13 +110,6 @@ export async function getCurrentUser() {
         return null
     }
 }
-
-export async function getUidFromIdToken(idtoken: string) {
-    const decodedIdToken = await adminAuth.verifyIdToken(idtoken)
-    const uid = decodedIdToken.uid
-    return uid
-}
-
 
 export async function createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions) {
     return getAuth(adminApp).createSessionCookie(idToken, sessionCookieOptions);

@@ -5,7 +5,7 @@ import NavLinks from './nav-links';
 export default function SideNav() {
 
   const userInfo = useAppContext()
-  const type = "solo"// userInfo.user?.expertType
+  const type = userInfo.user?.expertType
   if (!type) {
     return <>
     </>

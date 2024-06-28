@@ -3,8 +3,7 @@ import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 import { APIResponse } from "@/app/lib/definitions";
-import { createSessionCookie, getUserInfoFromSession } from "@/app/lib/firebaseadmin/adminauth";
-import { getAuth } from "firebase-admin/auth";
+import { createSessionCookie } from "@/app/lib/firebaseadmin/adminauth";
 
 export async function POST(request: NextRequest) {
   const reqBody = (await request.json()) as { idToken: string, csrfToken: string };
@@ -32,7 +31,7 @@ export async function POST(request: NextRequest) {
   
   // console.log('aaaaa newly created sessionCookie' + JSON.stringify(sessionCookie))
   
-  cookies().set("__session", sessionCookie, { maxAge: expiresIn, httpOnly: true, secure: false });
+  cookies().set("__session", sessionCookie, { maxAge: expiresIn, httpOnly: true, secure: true });
 
   return NextResponse.json<APIResponse<string>>({ success: true, data: "Signed in successfully." });
 }

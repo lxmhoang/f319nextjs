@@ -13,7 +13,7 @@ const datesAreOnSameDay = (first: Date, second: Date) =>
   first.getMonth() === second.getMonth() &&
   first.getDate() === second.getDate();
 
-// update performance of every activated expert, run at 5PM every day
+// ********* update performance of every activated expert, run at 5PM every day *********
 
 export async function GET(request: Request) {
   try {
