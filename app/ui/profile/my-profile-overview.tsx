@@ -22,7 +22,7 @@ export default function MyProfileOverView({ host }: { host: string }) {
             {/* {user.uid} */}
             <div>
                 <div>{user.displayName}</div>
-                {firebaseUser && firebaseUser.photoURL && <div><Image src={firebaseUser.photoURL} priority={true} alt={""}
+                {firebaseUser && firebaseUser.photoURL && <div><Image width={100} height={100} src={firebaseUser.photoURL} priority={true} alt={""}
                     style={{ width: '100%', height: 'auto' }} /></div>}
                 <div className="mb-4">Tài khoản: {addComma(amount)}</div>
                 {user.isExpert && user.expertType == 'solo' && (<p className="mb-4">Chuyên gia solo</p>)}
