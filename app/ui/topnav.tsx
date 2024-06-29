@@ -278,7 +278,7 @@ export default function TopNav() {
             <div className="profile">
               <MenuButton title={menuLabel} menuInfo={dropDownInfo} avatarURL={firebaseUser?.photoURL} />
             </div>
-            <DarkThemeToggle className="hidden" />
+            <DarkThemeToggle className="hidden sm:block" />
 
             {/* <NavbarItem className="flex">
           {user ? (
