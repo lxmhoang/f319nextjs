@@ -4,6 +4,7 @@ import Link from 'next/link';
 // import { HeartIcon, PowerIcon } from '@heroicons/react/24/outline';
 import NavLinks from './nav-links';
 import { PowerIcon } from '@heroicons/react/16/solid';
+import { Divider } from '@nextui-org/react';
 
 export default function SideNav() {
   return (
@@ -16,7 +17,7 @@ export default function SideNav() {
           <HeartIcon />
         </div>
       </Link> */}
-      <div className="flex grow flex-row justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
+      <div className="flex grow flex-wrap  justify-between space-x-2 md:flex-col md:space-x-0 md:space-y-2">
         <NavLinks />
         <div className=" h-auto w-full grow rounded-md md:block"></div>
         {/* <form>
@@ -26,6 +27,7 @@ export default function SideNav() {
           </button>
         </form> */}
       </div>
+      <Divider className='sm:hidden' />
     </div>
   );
 }

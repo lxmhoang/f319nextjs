@@ -16,7 +16,7 @@ import React from 'react';
 
 import { Expert } from '@/app/model/expert';
 import { compressFile, convert } from '@/app/lib/utils';
-import { Checkbox, Label, Radio, Spinner, TextInput } from 'flowbite-react';
+import { Blockquote, Checkbox, Label, Radio, Spinner, TextInput } from 'flowbite-react';
 import { useAppContext } from '@/app/lib/context';
 import { postIdToken } from '@/app/lib/firebase/auth';
 import { redirect } from 'next/navigation';
@@ -243,7 +243,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
     return (
 
 
-        <div className='p-1'>
+        <div className='p-1 mx-auto'>
             {/* {JSON.stringify(state)} */}
             {/* {userInfo.user?.expertType} */}
             <ConfirmationModal
@@ -254,8 +254,10 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                 message={state.message ?? ""}
                 leftButtonText='Okey'
             />
-            <div className='mb-1'>
-                {expert ? "Edit expert info" : "Create new expert"}
+            <div className='mb-8'>
+                <Blockquote>
+                {expert ? "Cập nhật thông tin chuyên gia" : "Đăng ký chuyên gia"}
+                </Blockquote>
             </div>
             <Divider />
             <form action={dispatch} className='mt-5' onChange={(e) => {
@@ -463,7 +465,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                 (<div >
                                     <Image src={avatarURL} className='rounded-full'
 
-    style={{ width: '100%', height: 'auto' }}
+    // style={{ width: '100%', height: 'auto' }}
                                     priority={true}
                                         
                                         alt="avatar of expert"

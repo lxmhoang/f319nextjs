@@ -71,10 +71,10 @@ export async function clientFetchObject<ModelType>(path: string, converter: Fire
 
 
 
-export async function updateRefID(userDocID: string, refID: string) {
-	let docRef = doc(db, 'user/' + userDocID)
-	return updateDoc(docRef, { refID: refID })
-}
+// export async function updateRefID(userDocID: string, refID: string) {
+// 	let docRef = doc(db, 'user/' + userDocID)
+// 	return updateDoc(docRef, { refID: refID })
+// }
 
 export async function getMyTransHistory(uid: string) {
 	// const user = await getCurrentUser()

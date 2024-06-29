@@ -22,25 +22,18 @@ export default function BottomNav() {
                 actived: !(pathname.includes('/wallet') || pathname.includes('/profile') || pathname.includes('/advisor') || pathname.includes('/expert'))
             },
             {
-                title: "Expert",
+                title: "DS Chuyên gia",
                 key: "Expert",
                 icon: ChartBarIcon,
                 path: "/expert",
                 actived: pathname.startsWith('/expert')
             },
             {
-                title: "Wallet",
-                key: "Wallet",
-                icon: WalletIcon,
-                path: "/wallet",
-                actived: pathname.includes('/wallet')
-            },
-            {
-                title: "Corner",
-                key: "Corner",
+                title: "Tôi Chuyên gia",
+                key: "Advisor",
                 icon: WalletIcon,
                 path: "/advisor",
-                actived: pathname.startsWith('/advisor')
+                actived: pathname.includes('/advisor')
             },
             {
                 title: "Profile",
@@ -57,21 +50,21 @@ export default function BottomNav() {
                 key: "Home2",
                 icon: HomeIcon,
                 path: "/",
-                actived: !(pathname.includes('/wallet') || pathname.includes('/profile') || pathname.includes('/advisor') || pathname.includes('/expert'))
+                actived: !(pathname.includes('/register') || pathname.includes('/profile') || pathname.includes('/advisor') || pathname.includes('/expert'))
             },
             {
-                title: "Expert",
-                key: "Expert2",
+                title: "DS Chuyên gia",
+                key: "Expert",
                 icon: ChartBarIcon,
                 path: "/expert",
                 actived: pathname.startsWith('/expert')
             },
             {
-                title: "Wallet",
-                key: "Wallet2",
+                title: "Làm chuyên gia",
+                key: "Advisor",
                 icon: WalletIcon,
-                path: "/wallet",
-                actived: pathname.startsWith('/wallet')
+                path: "/register",
+                actived: pathname.startsWith('/register')
             },
             {
                 title: "Profile",
@@ -92,18 +85,18 @@ export default function BottomNav() {
                 {tabInfo.map((tab) => {
                     return (
                         <div key={tab.key} className={clsx("inline-flex flex-col items-center justify-center border-gray-200  group dark:border-gray-600 ", {
-                            "dark:bg-blue-800 dark:text-gray-200 bg-gray-100 text-gray-600": tab.actived,
-                            "dark:bg-blue-600 dark:text-blue-300 bg-gray-300 text-gray-800": !tab.actived,
+                            "dark:bg-slate-600 dark:text-gray-200 bg-gray-100 text-gray-600": tab.actived,
+                            "dark:bg-slate-800 dark:text-blue-300 bg-gray-300 text-gray-800": !tab.actived,
                         })} >
                             <Link href={tab.path} type="button" className="">
-                                <div className="px-2">
+                                <div className="">
                                     {/* {tab.actived ? "a" : "n"} */}
-                                    <tab.icon className={clsx('w-5 h-5', {
+                                    <tab.icon className={clsx('mx-auto w-5 h-5', {
                                         // "dark:text-blue-500": tab.actived,
                                         // "dark:text-blue-600": !tab.actived,
                                     })} fill="currentColor" />
                                 </div>
-                                <div><span className={clsx("text-sm ", {
+                                <div><span className={clsx("text-xs ", {
 
                                     // "dark:text-red-500": tab.actived,
                                     // "dark:text-blue-600": !tab.actived,

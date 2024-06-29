@@ -15,6 +15,10 @@ const links = [
   { name: 'Overview', href: '/profile', icon: UserIcon },
   { name: 'Khuyến nghị', href: '/profile/pred', icon: ChartBarIcon},
   {
+    name: 'Ứng tiền', href: '/profile/deposit',
+    icon: ArrowLeftEndOnRectangleIcon,
+  },
+  {
     name: 'Rút tiền', href: '/profile/requestwithdraw',
     icon: ArrowLeftEndOnRectangleIcon,
   },

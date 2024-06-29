@@ -57,7 +57,7 @@ export default function TopNav() {
     { key: "home", href: "/", label: "Home", activated: true },
     { key: "expert", href: "/expert", label: "Chuyên gia", activated: true },
     { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: true },
-    { key: "myexpert", href: "/register", label: "Hồ sơ chuyên gia của tôi2", activated: true },
+    { key: "myexpert", href: "/register", label: "Đăng ký chuyên gia", activated: true },
   ]
 
   const guessBarMenuList =
@@ -111,12 +111,12 @@ export default function TopNav() {
               avatarURL && <Image className="rounded-full"
                 src={avatarURL}
                 priority={true}
-                style={{ width: '100%', height: 'auto' }}
+                // style={{ width: '100%', height: 'auto' }}
                 // style={styles.image}
                 alt="Thumb"
 
-                height={40}
-                width={40}
+                height={30}
+                width={30}
               />
             }
 
@@ -230,13 +230,13 @@ export default function TopNav() {
       {(firebaseUser === undefined) ? (<>Loading</>) :
         // (firebaseUser === null) ? (<>Null</>) : 
         (
-          <NavbarContent className="hidden sm:flex gap-4" justify="start">
+          <NavbarContent className=" sm:flex gap-4" justify="start">
             {barInfo.map((item, index) => {
               if (item.key == 'signout') {
                 return (<></>)
               }
               return (
-                <NavbarItem key={`${item}-${index}`} onClick={(e) => {
+                <NavbarItem className="hidden sm:flex" key={`${item}-${index}`} onClick={(e) => {
                   // console.log('eeee')
                   e.preventDefault()
                   if (item.activated) {
@@ -278,7 +278,7 @@ export default function TopNav() {
             <div className="profile">
               <MenuButton title={menuLabel} menuInfo={dropDownInfo} avatarURL={firebaseUser?.photoURL} />
             </div>
-            <DarkThemeToggle />
+            <DarkThemeToggle className="hidden" />
 
             {/* <NavbarItem className="flex">
           {user ? (

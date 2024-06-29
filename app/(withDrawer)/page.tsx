@@ -4,7 +4,7 @@ import LeaderBoard, { BoardProps } from "../ui/rank";
 import StatsCard from "../ui/statsCard";
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { convert, perfConver, sortByField } from "../lib/utils";
+import { addComma, convert, perfConver, sortByField } from "../lib/utils";
 import { Carousel } from "flowbite-react";
 import { serverGetStat, serverQueryCollection } from "../lib/firebaseadmin/adminfirestore";
 import { Expert, expertAdminConverter } from "../model/expert";
@@ -56,12 +56,16 @@ export default async function Home() {
   const monthTo = pivots[5].toLocaleDateString('vi', { day: 'numeric', month: 'numeric' })
   const quarterTo = pivots[6].toLocaleDateString('vi', { day: 'numeric', month: 'numeric' })
   const yearTo = pivots[7].toLocaleDateString('vi')
+  const totalWeeklyReward = Number(process.env.NEXT_PUBLIC_TOTAL_WEEK_REWARD)
+  const totalMonthlyReward = Number(process.env.NEXT_PUBLIC_TOTAL_MONTH_REWARD)
+  const totalQuarterlyReward = Number(process.env.NEXT_PUBLIC_TOTAL_QUARTER_REWARD)
+  const totalYearlyReward = Number(process.env.NEXT_PUBLIC_TOTAL_YEAR_REWARD)
 
   const rankData : BoardProps[] = [
-    {title: 'Tuan', since:weekDate, to: weekTo, total:"4.500.000", rewards:[], data: weekly},
-    {title: 'Thang', since:monthDate, to: monthTo, total:"", rewards:[], data: monthly},
-    {title: 'Quy', since:quarterDate, to: quarterTo, total:"", rewards:[], data: quarter},
-    {title: 'Nam', since:yearDate, to: yearTo, total:"", rewards:[], data: yearly}
+    {title: 'Tuan', since:weekDate, to: weekTo, total: addComma(totalWeeklyReward), rewards:[], data: weekly},
+    {title: 'Thang', since:monthDate, to: monthTo, total: addComma(totalMonthlyReward), rewards:[], data: monthly},
+    {title: 'Quy', since:quarterDate, to: quarterTo, total: addComma(totalQuarterlyReward), rewards:[], data: quarter},
+    {title: 'Nam', since:yearDate, to: yearTo, total: addComma(totalYearlyReward), rewards:[], data: yearly}
   ]
 
   return (
