@@ -62,13 +62,17 @@ export async function GET(request: Request) {
       message.push('start checking performance of this expert ; ' + expert.name)
       // var perform = 1.0
       const eid = expert.id
-      let allPreds = await serverQueryCollection<Prediction>('expert/' + eid + '/preds', 
+      let wipPreds = await serverQueryCollection<Prediction>('expert/' + eid + '/preds', 
       [
-        { key: 'dateIn', operator: '>=', value: minDate },
+        // { key: 'dateIn', operator: '>=', value: minDate },
         { key: 'status', operator: '!=', value: 'Inprogress' }
 
       ],
        predAdminConverter)
+
+       let allPreds = wipPreds.filter((item) => {
+        return item.dateIn >= minDate
+       })
 
       // let openPreds = allPreds.filter((item) => {
       //   return item.status == "Inprogress"
