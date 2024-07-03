@@ -1,8 +1,12 @@
 {
   "crons": [
     {
+      "path": "/api/reward",
+      "schedule": "0 23 31,30,29 * 5"
+    },
+    {
       "path": "/api/thongke",
-      "schedule": "30 */2 * * *"
+      "schedule": "0 17 * * *"
     },
     {
       "path": "/api/updatePredStats",

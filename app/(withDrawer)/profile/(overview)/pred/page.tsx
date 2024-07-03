@@ -11,30 +11,10 @@ export default async function Page() {
   const expertIDs = await getMyFollowingExpertIDs()
   console.log('expertIDs ' + JSON.stringify(expertIDs))
   const experts = await getFollowExpertByIDList(expertIDs)
-  const preds = expertIDs.length > 0 ? await getObservingPredsByExpertIDList(expertIDs) : []
-  console.log('result ' + JSON.stringify(preds))
-
-  // const {user} = useAppContext()
-  // const [experts, setExperts] = useState<Expert[]>([])
-
-
-  // useEffect(() => {
-  //   const fetchData = async (list: string[]) => {
-  //     const result = await getFollowExpertByIDList(list)
-  //     setExperts(result)
-  //   }
-  //   if (user) {
-
-  //     const list =  Object.keys(user.following) 
-  //     console.log('aaaaa ' + JSON.stringify(user.following))
-  //     fetchData(list)
-  //   }
-
-
-  // }, [user])
-
-
-
+  // const preds = expertIDs.length > 0 ? await getObservingPredsByExpertIDList(expertIDs) : []
+  // console.log('result ' + JSON.stringify(preds))
+  
+  
   return (
 
 
@@ -43,24 +23,26 @@ export default async function Page() {
         {experts.length > 0 ?
           (<>
             Danh sach chuyen gia dang theo doi
-
+            <div className="mb-4 flex flex-wrap">
             {experts.map((item) => {
               return <div key={item.id} >
                 <ExpertCard expertInfo={JSON.stringify(item)} />
               </div>
 
             })}
-            {
+            </div>
+            {/* {
               preds.length > 0 ? (
                 <>
                   <Divider />
                   <div>
-                    <PredsUserView preds={preds} />
+                    <PredsUserView preds={preds} onlyOnTrack={true} />
                   </div></>
               ) : (<>Chưa có khuyến nghị nào </>)
-            }
+            } */}
           </>) : (<>Chưa theo dõi chuyên gia nào</>)
         }
+        {}
       </div>
     </div>
   )

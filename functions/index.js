@@ -168,9 +168,11 @@ exports.createTransaction = onDocumentCreated({document: "transaction/{documentI
                             fromTranId: event.params.documentId
                         })
 
-                        }  else {
+                        }  else  if (snapshot.docs.length > 1) {
 
-                            logger.error("result of search is not 1 " + snapshot.docs.length)
+                            logger.error("result of search is > 1 " + snapshot.docs.length)
+                        } else {
+                            logger.info(' not found ref user with accessID ' + refID)
                         }
                     })
     
@@ -223,36 +225,66 @@ exports.createTransaction = onDocumentCreated({document: "transaction/{documentI
 
 
 
-exports.createSubscription = onDocumentCreated({ document: "subscription/{documentId}", region: 'asia-southeast1'}, (event) => {
+exports.createSubscription = onDocumentCreated({ document: "subscription/{documentId}", region: 'asia-southeast1'}, async (event) => {
 
     const data = event.data.data();
     const date = new Date()
     const uid = data.uid
     const eid = data.eid
     const perm = data.perm
+    const type = data.type
+    const value = data.value
 
-    date.setMonth(date.getMonth() + data.perm ? 1000 : 1)
+    const addMonth = data.perm == true ? 1200 : 1
+    
+
+    date.setMonth(date.getMonth() + addMonth)
+
     event.data.ref.update({"endDate":date}).then(() => {
-        console.log('Write succeeded! with uid' + uid + "  eid " + eid);
 
         const subInfo = {
             eid: eid,
             uid: uid,
             perm: perm,
+            startDate: new Date(),
             endDate: date,
-            subcriptionDocId: event.data.id
+            value: value,
+            subDocID: event.data.id,
+            type: type
         }
+        console.log('Write succeeded! with data' + JSON.stringify(subInfo));
         // const fieldPath = new FieldPath(['following', eid.toString()])
         // const str = 'following.'+eid
         // getFirestore().collection('user').doc(uid).update(str, subInfo)
         getFirestore().doc('user/' + uid).update({
             following: FieldValue.arrayUnion(subInfo)
         })
-        getFirestore().doc('expert/' + eid).update({ 
-            follower: FieldValue.arrayUnion(subInfo)
-        })
-        getFirestore().collection('expert/' + eid + '/follower').add(subInfo)
+        getFirestore().doc('user/' + uid + '/subHistory/' + event.data.id).set(subInfo)
 
+        const notiForUser = {
+            dateTime : (new Date()).getTime(),
+            title: 'Theo dõi thành công',
+            content: 'Chúc quý nhà đầu tư có thê các khuyến nghị lợi nhuận cao',
+            urlPath: '/expert/details/' + eid
+        }
+        getFirestore().doc('user/' + uid).update({ 
+            notifies: FieldValue.arrayUnion(notiForUser)
+        })
+
+        if (type == 'solo') {
+            getFirestore().doc('expert/' + eid + '/subHistory/' + event.data.id).set(subInfo)
+            getFirestore().doc('expert/' + eid).update({ 
+                follower: FieldValue.arrayUnion(subInfo)
+            })
+            const notiForExpert = {
+                dateTime : (new Date()).getTime(),
+                title: 'Follower mới',
+                content: 'Xin chúc mừng, 1 nhà đầu tư vừa mới theo dõi bạn'
+            }
+            getFirestore().doc('user/' + eid).update({ 
+                notifies: FieldValue.arrayUnion(notiForExpert)
+            })
+        }    
     });
 });
 

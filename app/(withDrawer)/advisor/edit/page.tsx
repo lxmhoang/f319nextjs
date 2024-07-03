@@ -8,8 +8,7 @@ export default async function Page() {
     const { expert , expired} = await getAdvisor()
     if (!expert) {
         redirect('/advisor/register')
-    }
-    if (expired) {
+    } else if (expired) {
         redirect('/advisor/extend')
     }
     return (

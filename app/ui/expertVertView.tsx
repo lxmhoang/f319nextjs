@@ -31,7 +31,22 @@ export default function ExpertVertView({ expertInfo }: { expertInfo: string }) {
                   {expert.expertType == 'solo' && (<><p className="mb-5"> Loại chuyên gia: Solo</p> <p className="mb-5">{expert.follower.length} follower</p></>)}
                   {expert.expertType == 'rank' && <p className="mb-5">Loại chuyên gia: Rank</p>}
                   <div className="mb-5">
-                    <p className={perfConver(expert.yearPerform).color}>Kết quả khuyến nghị: {perfConver(expert.yearPerform).info}</p>
+                  {expert.yearPerform && (<>
+                      <p>Hiệu quả năm nay</p>
+                      <p className={perfConver(expert.yearPerform).color}> {perfConver(expert.yearPerform).info}</p>
+                    </>)}
+                    {expert.quarterPerform && (<>
+                      <p>Hiệu quả quý</p>
+                      <p className={perfConver(expert.quarterPerform).color}> {perfConver(expert.quarterPerform).info}</p>
+                    </>)}
+                    {expert.monthPerform && (<>
+                      <p>Hiệu quả tháng</p>
+                      <p className={perfConver(expert.monthPerform).color}> {perfConver(expert.monthPerform).info}</p>
+                    </>)}
+                    {expert.weekPerform && (<>
+                      <p>Hiệu quả tuần</p>
+                      <p className={perfConver(expert.weekPerform).color}> {perfConver(expert.weekPerform).info}</p>
+                    </>)}
                   </div>
                 </div>
               </div>

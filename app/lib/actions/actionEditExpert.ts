@@ -8,6 +8,8 @@ import { serverAddNewModal, serverGetModal, serverSetDoc, serverUpdateDoc } from
 import { TranType, Transaction, tranAdminConverter } from '@/app/model/transaction';
 import { storage } from '../firebase/firebase';
 import { revalidatePath } from 'next/cache';
+import { addComma } from '../utils';
+import { Expert, ExpertStatus, expertAdminConverter } from '@/app/model/expert';
 
 
 const ExpertFormSchema = z.object({
@@ -37,14 +39,7 @@ export type RegisterExpertFormState = {
 };
 
 export async function editExpert(fileWrapper: FormData | undefined, currentAvatarURL: string | null | undefined, createNewExpert: boolean, _prevState: RegisterExpertFormState, formData: FormData) {
-    // return {
-    //     errors: {},
-    //     message: 'expert Period is perm already or submiting period which is not perm  : ',
-    //     justDone: false
-    // };
-    
- 
-    
+
     console.log('******************************************************')
     console.log('previous state ' + JSON.stringify(_prevState))
     const curUser = await getUserInfoFromSession()
@@ -77,6 +72,13 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
     const newPermPrice = Number(formData.get('permPrice'))
 
     console.log(' ================ editExpert formData ' + uid + newName + expertType + expertPeriod + newshortIntro + newmonthlyPrice + newPermPrice)
+    // return {
+    //     errors: {
+    //         'expertType': 'chưa chọn loại tài khoản chuyên gia'
+    //     },
+    //     message: "chưa chọn loại tài khoản chuyên gia",
+    //     justDone: false
+    // };
 
     const validatedFields = RegisterExpert.safeParse({
         name: formData.get('name'),
@@ -162,8 +164,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         const yearlate = new Date()
         yearlate.setFullYear(yearlate.getFullYear() + 1)
 
-        const manyyearlater = new Date()
-        manyyearlater.setFullYear(manyyearlater.getFullYear() + 20)
+        const manyyearlater = new Date('2050-01-01')
         const expertExpire = expertPeriod == 'perm' ? manyyearlater.getTime() : yearlate.getTime()
         
 
@@ -176,31 +177,42 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             expertPeriod: expertPeriod
         }) // update user record
         if (expertType == 'solo') {
-            await serverSetDoc('expert/' + uid, {
-                name: newName,
-                shortIntro: newshortIntro,
+            const expert: Expert = {
+                id: '',
+                name: newName as string,
+                shortIntro: newshortIntro as string,
+
                 monthlyPrice: newmonthlyPrice,
                 permPrice: newPermPrice,
-    
+
+                follower: [],
                 expertPeriod: expertPeriod,
                 expertType: expertType,
                 expertExpire: expertExpire,
-    
-                status: "activated",
-                visible: true
-            }) // create expert record
+                joinDate: new Date(),       
+                status: ExpertStatus.activated,
+                visible: true,
+                imageURL: '',
+                isExpired: false
+            }
+            await serverSetDoc('expert/' + uid, expertAdminConverter.toFirestore(expert)) // create expert record
         } else {
-            await serverSetDoc('expert/' + uid, {
-                name: newName,
-                shortIntro: newshortIntro,
-    
+            const expert: Expert = {
+                id: '',
+                name: newName as string,
+                shortIntro: newshortIntro as string,
+
+                follower: [],
                 expertPeriod: expertPeriod,
                 expertType: expertType,
                 expertExpire: expertExpire,
-                joinDate: new Date(),    
-                status: "activated",
-                visible: true
-            }) // create expert record
+                joinDate: new Date(),
+                status: ExpertStatus.activated,
+                visible: true,
+                imageURL: '',
+                isExpired: false
+            }
+            await serverSetDoc('expert/' + uid, expertAdminConverter.toFirestore(expert)) // create expert record
         }
         
 
@@ -210,13 +222,22 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
 
     } else {
         // edit expert
-        if (!curUser.isExpert || expertType) {
+        if (!curUser.isExpert ) {
             // conflict data
             return {
                 errors: {},
-                message: 'conflict data, this user is not expert currently on system or cannot change expert type',
+                message: 'Data sai, bạn đang không phải chuyên gia nên không thể edit thông tin ',
                 justDone: false
             };
+        }
+
+        if (expertType) {
+            return {
+                errors: {},
+                message: 'Data sai, bạn không thể đổi loại chuyên gia sang ' + expertType,
+                justDone: false
+            };
+
         }
 
         //  did update expert period
@@ -242,12 +263,22 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             const userData = await serverGetModal<User>('user/' + uid, userAdminConverter)
 
             console.log('expert Type to register ' + expertType + " and fee " + fee)
-            if (!(userData && userData.amount >= fee)) {
+            if (!userData) {
                 return {
                     errors: {
                         // generic: ["khong du tien"]
                     },
-                    message: 'khong du tien, so tien cua ban chi co ' + userData?.amount + ' trong khi phi  dang ky la ' + fee,
+                    message: 'khong tim thay user record',
+                    justDone: false
+                };
+
+            }
+            if ((userData && userData.amount < fee)) {
+                return {
+                    errors: {
+                        // generic: ["khong du tien"]
+                    },
+                    message: 'khong du tien, so tien cua ban chi co ' + addComma(userData.amount) + ' trong khi phi  dang ky la ' + addComma(fee),
                     justDone: false
                 };
                 // ok
@@ -258,7 +289,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             if (!toUid) {
                 return {
                     errors: {},
-                    message: 'Thu quy not found',
+                    message: 'Không tìm thấy thủ quỹ ',
                     justDone: false
                 };
             }
@@ -277,8 +308,9 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             await serverAddNewModal<Transaction>('transaction', tran, tranAdminConverter) // tru tien
 
 
-            const manyyearlater = new Date()
-            manyyearlater.setFullYear(manyyearlater.getFullYear() + 20)
+            // const manyyearlater = new Date()
+            // manyyearlater.setFullYear(manyyearlater.getFullYear() + 20)
+            const manyyearlater = new Date('2050-01-01')
             const expertExpire = manyyearlater.getTime()
 
             await setClaim(uid, { expertType: curUser.expertType, expertExpire: expertExpire, expertPeriod: expertPeriod }) // set claim tren 

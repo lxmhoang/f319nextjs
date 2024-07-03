@@ -25,20 +25,20 @@ import { Button } from "./button";
     leftButtonText,
   }) => {
     const handleLeftButtonClick = () => {
-      onLeftButtonClick();
       onClose();
+      onLeftButtonClick();
     };
     const handleRightButtonClick = () => {
-      onRightButtonClick &&  onRightButtonClick();
       onClose();
+      onRightButtonClick &&  onRightButtonClick();
     };
   
     return (
       <Modal isOpen={isOpen} onClose={onClose} isDismissable={false} isKeyboardDismissDisabled={true}>
         <ModalContent>
-          <ModalHeader>{title}</ModalHeader>
+          <ModalHeader className="mx-auto">{title}</ModalHeader>
           <ModalBody>{message}</ModalBody>
-          <ModalFooter className="justify-center flex">
+          <ModalFooter className="justify-evenly flex mb-4">
             <Button onClick={handleLeftButtonClick}>
               {leftButtonText}
             </Button>

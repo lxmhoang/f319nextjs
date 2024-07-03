@@ -6,56 +6,89 @@ import {
 } from "firebase-admin/firestore";
 import { DocumentData, FirestoreDataConverter, QueryDocumentSnapshot, SnapshotOptions, WithFieldValue } from "firebase/firestore";
 
-
+type Follower = {
+    uid: string,
+    endDate: Date,
+    startDate: Date,
+    perm: boolean,
+    subDocID: string,
+}
 
 export type Expert = {
     id: string;
-    avatar: string;
     imageURL: string;
     name: string;
-    followerNum: number;
-
-    follower: {
-        eid: string,
-        uid: string,
-        endDate: Date,
-        perm: boolean,
-        subcriptionDocId: string,
-    }[];
-    permPrice: number;
-    monthlyPrice: number;
-    selfIntro: string;
+    follower: Follower[];
+    permPrice?: number;
+    monthlyPrice?: number;
     shortIntro: string;
     status: ExpertStatus;
-    monthPerform: number;
-    weekPerform: number;
-    yearPerform: number;
-    quarterPerform: number;
+
+    monthPerform?: number;
+    weekPerform?: number;
+    yearPerform?: number;
+    quarterPerform?: number;
+
     expertExpire: number;
     expertType: string;
+    isExpired: boolean;
     expertPeriod: string;
+    visible: boolean;
+
     joinDate?: Date
 }
+
+export const expertRawConverter : AdminFirestoreDataConverter<any> = {
+    toFirestore(expert: AdminWithFieldValue<Expert>): AdminDocumentData {
+        return expert
+    },
+    fromFirestore(
+        snapshot: AdminQueryDocumentSnapshot
+    ): {} {
+        const data = snapshot.data();
+        data.id = snapshot.id
+        return data
+    },
+};
 
 
 export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
     toFirestore(expert: AdminWithFieldValue<Expert>): AdminDocumentData {
         return {
-            avatar: expert.avatar,
             imageURL: expert.imageURL,
             name: expert.name,
-            shortIntro: expert.shortIntro,
-            selfIntro: expert.selfIntro,
-            follower: expert.follower,
-            status: expert.status,
+            follower: expert.follower ?? [],
             permPrice: expert.permPrice,
             monthlyPrice: expert.monthlyPrice,
+            shortIntro: expert.shortIntro,
+            expertExpire: expert.expertExpire,
+            expertType: expert.expertType,
+            expertPeriod: expert.expertPeriod,
+            status: expert.status,
+            visible: expert.visible,
         };
     },
     fromFirestore(
         snapshot: AdminQueryDocumentSnapshot
     ): Expert {
         const data = snapshot.data();
+        const follower = data.follower ? (data.follower as {
+            eid: string;
+            uid: string;
+            startDate: FirebaseFirestore.Timestamp;
+            endDate: FirebaseFirestore.Timestamp;
+            perm: boolean;
+            subDocID: string;
+        }[]).map((item) => {
+            const follower: Follower = {
+                uid: item.uid,
+                endDate: new Date((item.endDate as FirebaseFirestore.Timestamp).toDate()),
+                startDate: new Date((item.startDate as FirebaseFirestore.Timestamp).toDate()),
+                perm: item.perm,
+                subDocID: item.subDocID
+            }
+            return follower
+        }) : []
 
         const week = data.curPerformance ? data.curPerformance.week : 1
         const month = data.curPerformance ? data.curPerformance.month : 1
@@ -64,15 +97,12 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
         const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
         return {
             id: snapshot.id,
-            avatar: data.avatar,
             imageURL: data.imageURL,
             name: data.name,
-            follower: data.follower ?? [],
-            followerNum: data.followerNum ?? 0,
+            follower: follower,
             permPrice: data.permPrice,
             monthlyPrice: data.monthlyPrice,
             shortIntro: data.shortIntro,
-            selfIntro: data.selfIntro,
             status: data.status,
             expertPeriod: data.expertPeriod,
             expertType: data.expertType,
@@ -81,7 +111,9 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
             monthPerform: month,
             quarterPerform: quarter,
             yearPerform: year,
-            joinDate: joinDate
+            joinDate: joinDate,
+            visible: data.visible,
+            isExpired: new Date(data.expertExpire) < new Date()
         };
     },
 };
@@ -89,15 +121,17 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
 export const expertConverter: FirestoreDataConverter<Expert> = {
     toFirestore(expert: WithFieldValue<Expert>): DocumentData {
         return {
-            avatar: expert.avatar,
             imageURL: expert.imageURL,
             name: expert.name,
-            shortIntro: expert.shortIntro,
-            selfIntro: expert.selfIntro,
-            follower: expert.follower,
-            status: expert.status,
+            follower: expert.follower ?? [],
             permPrice: expert.permPrice,
-            monthlyPrice: expert.monthlyPrice
+            monthlyPrice: expert.monthlyPrice,
+            shortIntro: expert.shortIntro,
+            expertExpire: expert.expertExpire,
+            expertType: expert.expertType,
+            expertPeriod: expert.expertPeriod,
+            status: expert.status,
+            visible: expert.visible,
         };
     },
     fromFirestore(
@@ -107,17 +141,19 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
         const follower = data.follower ? (data.follower as {
             eid: string;
             uid: string;
+            startDate: FirebaseFirestore.Timestamp;
             endDate: FirebaseFirestore.Timestamp;
             perm: boolean;
-            subcriptionDocId: string;
+            subDocID: string;
         }[]).map((item) => {
-            return {
-                eid: item.eid,
+            const follower: Follower = {
                 uid: item.uid,
+                endDate: new Date((item.endDate as FirebaseFirestore.Timestamp).toDate()),
+                startDate: new Date((item.startDate as FirebaseFirestore.Timestamp).toDate()),
                 perm: item.perm,
-                subcriptionDocId: item.subcriptionDocId,
-                endDate: item.endDate.toDate()
+                subDocID: item.subDocID
             }
+            return follower
         }) : []
         const week = data.curPerformance ? data.curPerformance.week : 1
         const month = data.curPerformance ? data.curPerformance.month : 1
@@ -127,16 +163,14 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
         const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
         return {
             id: snapshot.id,
-            avatar: data.avatar,
             imageURL: data.imageURL,
             name: data.name,
             follower: follower,
-            followerNum: data.followerNum ?? 0,
             permPrice: data.permPrice,
             monthlyPrice: data.monthlyPrice,
             shortIntro: data.shortIntro,
-            selfIntro: data.selfIntro,
             status: ExpertStatus.activated,
+            visible: data.visible,
             weekPerform: week,
             monthPerform: month,
             quarterPerform: quarter,
@@ -144,7 +178,8 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
             expertPeriod: data.expertPeriod,
             expertExpire: data.expertExpire,
             expertType: data.expertType,
-            joinDate: joinDate
+            joinDate: joinDate,
+            isExpired: new Date(data.expertExpire) < new Date()
         };
     },
 };
@@ -153,6 +188,7 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
 export enum ExpertStatus {
     paymentPending = 'paymentPending',
     activated = 'activated',
+    expired = 'expired',
     suspended = 'suspended',
     banned = 'banned',
     unknown = 'unknown'

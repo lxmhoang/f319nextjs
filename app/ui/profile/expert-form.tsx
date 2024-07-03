@@ -5,6 +5,8 @@ import {
     UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import Image from 'next/image'
+
+import clsx from 'clsx';
 import { useRouter } from 'next/navigation'
 import { useFormState } from 'react-dom';
 import { Button, Divider } from "@nextui-org/react";
@@ -15,13 +17,14 @@ import { RegisterExpertFormState, editExpert } from '../../lib/actions/actionEdi
 import React from 'react';
 
 import { Expert } from '@/app/model/expert';
-import { compressFile, convert } from '@/app/lib/utils';
+import { addComma, compressFile, convert } from '@/app/lib/utils';
 import { Blockquote, Checkbox, Label, Radio, Spinner, TextInput } from 'flowbite-react';
 import { useAppContext } from '@/app/lib/context';
 import { postIdToken } from '@/app/lib/firebase/auth';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { User } from 'firebase/auth';
+import { refreshToken } from '@/app/lib/client';
 
 // export function ExpertFormComponent({ expert }: { expert: Expert | undefined }) {
 
@@ -42,11 +45,11 @@ import { User } from 'firebase/auth';
 
 
 
-export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undefined}) {
+export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undefined }) {
 
     const expert: Expert | undefined = expertInfo ? JSON.parse(expertInfo) : undefined
 
-    const {  user, firebaseUser } = useAppContext()
+    const { user, firebaseUser } = useAppContext()
     const amount = user?.amount ?? 0
     const defaultName = user?.displayName ?? ""
 
@@ -95,7 +98,6 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 
     const [compressing, setCompressing] = useState<boolean>(false)
     const [didChange, setDidChange] = useState<boolean>(false)
-    const [loading, setLoading] = useState<boolean>(false)
 
     const initialState = { message: undefined, errors: {}, justDone: false };
     const [fileInside, setFileInside] = useState<FormData>()
@@ -109,31 +111,28 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
     const [showModal, setShowModal] = useState(false);
     // console.log('form state ' + JSON.stringify(state) + showModal)
 
-    const refreshToken = async () => {
-        // if (!userInfo.firebaseUser) { return }
-        setLoading(true)
-        const newIdtoken = await firebaseUser!.getIdToken(true)
-        console.log(' ========= newIdtoken ' + newIdtoken)
-        const newResult = await firebaseUser!.getIdTokenResult()
-        console.log(' ========= newResult ' + JSON.stringify(newResult.claims))
-        var result: boolean
-        try {
-            result = await postIdToken(newIdtoken)
+    // const refreshToken = async (firebaseUser: User) => {
+    //     const newIdtoken = await firebaseUser.getIdToken(true)
+    //     console.log(' ========= newIdtoken ' + newIdtoken)
+    //     const newResult = await firebaseUser.getIdTokenResult()
+    //     console.log(' ========= newResult ' + JSON.stringify(newResult.claims))
+    //     var result: boolean
+    //     try {
+    //         result = await postIdToken(newIdtoken)
 
-            console.log('done updating token after creating expert')
-            setLoading(false)
-            setShowModal(true)
-        } catch (e) {
-            console.log('sth wrong with post new ID token')
-            result = false
-        }
-        if (result) {
-            console.log('aaaaa done post new ID token')
-        } else {
-            console.log('sth wrong with post new ID token')
-        }
+    //         console.log('done updating token after creating expert')
+    //         setShowModal(true)
+    //     } catch (e) {
+    //         console.log('sth wrong with post new ID token')
+    //         result = false
+    //     }
+    //     if (result) {
+    //         console.log('aaaaa done post new ID token')
+    //     } else {
+    //         console.log('sth wrong with post new ID token')
+    //     }
 
-    }
+    // }
 
 
     useEffect(() => {
@@ -149,7 +148,17 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
             if (state.justDone == true) {
                 if (!expert) {
                     console.log('just create new expert. refresh token first then show popup in this function')
-                    refreshToken()
+                    if (firebaseUser) {
+                        refreshToken(firebaseUser).then((result) => {
+                            if (result.success) {
+                                setShowModal(true)
+                            } else {
+
+                                setShowModal(true) // =))))
+                            }
+                        }
+                        )
+                    }
                 } else {
                     console.log('just done editing expert')
                     // just done editing expert
@@ -256,7 +265,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
             />
             <div className='mb-8'>
                 <Blockquote>
-                {expert ? "Cập nhật thông tin chuyên gia" : "Đăng ký chuyên gia"}
+                    {expert ? "Cập nhật thông tin chuyên gia" : "Đăng ký chuyên gia"}
                 </Blockquote>
             </div>
             <Divider />
@@ -280,7 +289,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                     name="name"
                                     type="text"
                                     placeholder="Tên sẽ được hiển thị "
-                                    defaultValue={expert ? expert.name :defaultName ?? ""}
+                                    defaultValue={expert ? expert.name : defaultName ?? ""}
                                     className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
                                     required
 
@@ -301,13 +310,13 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                     </div>
                     {
                         (expert && expert.expertType == 'solo') && (
-                            <PlanSection expert={expert} state={state} />
+                            <PlanSection period={period} expert={expert} state={state} />
                         )
                     }
 
 
                     {!expert && (
-                        <div className="mb-4 max-w-sm">
+                        <div className="mb-4 mt-8 max-w-sm">
                             {/* <Label className='text-lg' value={"Chi phí mở tài khoản " + process.env.NEXT_PUBLIC_EXPERT_REG_FEE} /> */}
                             <fieldset className="flex max-w-md flex-col gap-4">
                                 <legend className="mb-4">Chọn loại tài khoản </legend>
@@ -318,30 +327,31 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                             setPeriod(undefined)
                                         }
                                     }} />
-                                    <Label className=''>{"Solo, thu nhập từ tập follower riêng "}</Label>
+                                    <Label className=''>{"Solo, thu nhập từ follower riêng với các gói theo dõi "}</Label>
                                 </div>
                                 {
                                     type == "solo" &&
                                     <>
-                                        <div className='ml-12'>
+                                        <p className='text-sm ml-6'>Chọn chu kỳ chuyên gia</p>
+                                        <div className='ml-6'>
                                             <Radio id="expertPeriod" name="expertPeriod" defaultChecked={period == "perm"} value="perm" onChange={(e) => {
                                                 if (e.target.checked) {
                                                     setPeriod("perm")
                                                 }
                                             }} />
-                                            <Label className=''>{"Trọn đời " + convert(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_PERM))}</Label>
+                                            <Label className='text-sm'>{"Trọn đời " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_PERM))}</Label>
                                         </div>
 
-                                        <div className='ml-12'>
+                                        <div className='ml-6'>
                                             <Radio id="expertPeriod" name="expertPeriod" defaultChecked={period == "yearly"} value="yearly" onChange={(e) => {
                                                 if (e.target.checked) {
                                                     setPeriod("yearly")
                                                 }
                                             }} />
-                                            <Label className=''>{"Một năm " + convert(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_YEAR))}</Label>
+                                            <Label className='text-sm'>{"Một năm " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_YEAR))}</Label>
                                         </div>
                                         <div className='ml-12'>
-                                            {period && <PlanSection expert={expert} state={state} />}
+                                            {period && <PlanSection period={period} expert={expert} state={state} />}
                                         </div>
 
                                     </>
@@ -357,7 +367,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                             setPeriod(undefined)
                                         }
                                     }} />
-                                    <Label className=''>{"Rank, thu nhập từ đoạt top performance từng kỳ "}
+                                    <Label className=''>{"Rank, thu nhập từ đoạt top performance theo tuần, tháng, quý năm "}
 
                                     </Label>
 
@@ -371,7 +381,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                                     setPeriod("perm")
                                                 }
                                             }} />
-                                            <Label className=''>{"Trọn đời " + convert(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_PERM))}</Label>
+                                            <Label className='ml-2'>{"Trọn đời " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_PERM))}</Label>
                                         </div>
 
                                         <div className='ml-12'>
@@ -380,12 +390,12 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                                     setPeriod("yearly")
                                                 }
                                             }} />
-                                            <Label className=''>{"Một năm " + convert(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_YEAR))}</Label>
+                                            <Label className='ml-2'>{"Một năm " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_YEAR))}</Label>
                                         </div></>
                                 }
                             </fieldset>
 
-                            {(!type || !period) && <span className='text-rose-300 text-sm'>Hãy chọn loại tư vấn và thời hạn tư vấn</span>}
+                            {(!type || !period) && <span className='text-amber-300 text-xs'>Hãy chọn loại tư vấn và thời hạn tư vấn</span>}
                         </div>)}
 
                     {
@@ -424,7 +434,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 
 
                     {/* Short intro */}
-                    <div className="mb-4 max-w-sm">
+                    <div className="mb-4 mt-8 max-w-sm">
                         <label htmlFor="name" className="mb-2 block text-sm font-medium">
                             Giới thiệu ngắn
                         </label>
@@ -456,7 +466,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                     {/* {expert?.avatar} */}
 
                     {/* {avatarURL} */}
-                    <div className='mb-4 max-w-sm'>
+                    <div className='mb-4 max-w-sm mt-8'>
                         <label htmlFor="avatarInfo" className="mb-2 block text-sm font-medium">
                             Ảnh đại diện
                         </label>
@@ -465,9 +475,9 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                 (<div >
                                     <Image src={avatarURL} className='rounded-full'
 
-    // style={{ width: '100%', height: 'auto' }}
-                                    priority={true}
-                                        
+                                        // style={{ width: '100%', height: 'auto' }}
+                                        priority={true}
+
                                         alt="avatar of expert"
                                         width={100}
                                         height={100}
@@ -479,7 +489,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                         <Spinner />
                                     </div>
                                     :
-                                    <> <span className='text-rose-300 text-sm'>Hãy upload ảnh đại diện</span></>
+                                    <> <span className='text-amber-300 text-xs'>Bạn cần upload ảnh đại diện</span></>
                             }
                         </div>
 
@@ -502,7 +512,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                     </div>
                 </div>
                 {expert == undefined &&
-                    (<div className="flex justify-start gap-4 mt-4">
+                    (<div className=" justify-start gap-4 mt-12">
                         <div className="flex items-center gap-2">
                             <Checkbox id="accept" checked={acceptTNC} onChange={(e) => {
                                 setAcceptTNC(e.target.checked)
@@ -515,8 +525,15 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                 </a>
                             </Label>
                         </div>
+                        {!acceptTNC && <> <span className='text-amber-300 text-xs'>Bạn cần đồng ý với điều khoản sử dụng</span></>}
                     </div>)}
-                {(fee != undefined && fee > amount) && <span className='text-rose-400 text-sm'>Phí đăng ký là {fee} trong khi số tiền của bạn là {amount}, vui lòng nạp thêm</span>}
+                {(fee != undefined && fee > amount) && <span className='text-rose-400 text-sm'>Phí đăng ký là {addComma(fee)} trong khi số tiền của bạn là {addComma(amount)}, vui lòng nạp thêm <Link
+                        href="/profile/deposit"
+                        className="px-1 text-sm font-medium text-cyan-600 dark:text-cyan-500"
+                    >
+                        ở đây
+                    </Link> </span>}
+                
 
                 <div className="flex justify-start gap-4 mt-12">
                     <Link
@@ -526,7 +543,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                         Cancel
                     </Link>
                     <Button type="submit" color='primary' isDisabled={(fee == undefined || fee > amount) || (!acceptTNC && !expert) || compressing || !avatarURL || (expert != undefined && !didChange && !fileInside)}>{expert ? "Update thông tin " +
-                        ((fee && fee > 0) ? convert(fee ?? 0) : "") : "Đăng ký" + convert(fee ?? 0)}</Button>
+                        ((fee && fee > 0) ? convert(fee ?? 0) : "") : "Đăng ký với chi phí: " + addComma(fee ?? 0)}</Button>
                 </div>
             </form>
 
@@ -535,12 +552,13 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 }
 
 
-function PlanSection({ expert, state }: { expert: Expert | undefined, state: RegisterExpertFormState }) {
+function PlanSection({ period, expert, state }: { period: "perm" | "yearly" | undefined, expert: Expert | undefined, state: RegisterExpertFormState }) {
 
     return (
         <>
+            <p className='text-sm'>Chọn các gói theo dõi, đây sẽ là thu nhập của bạn</p>
             {/* monthly  price */}
-            <div className="mb-4 max-w-sm">
+            <div className="mb-4 max-w-sm mt-4">
                 <label htmlFor="customer" className="mb-2 block text-sm font-medium">
                     Ra giá gói theo dõi theo tháng
                 </label>
@@ -574,41 +592,49 @@ function PlanSection({ expert, state }: { expert: Expert | undefined, state: Reg
                         ))}
                 </div>
             </div>
-            {/* Perm price */}
-            <div className="mb-4 max-w-sm">
-                <label htmlFor="permPrice" className="mb-2 block text-sm font-medium">
-                    Ra giá cho gói theo dõi vĩnh viễn
-                </label>
-                <div className="relative">
-                    <TextInput
-                        // id="permPrice"
-                        name="permPrice"
-                        type="number"
-                        step={10000}
-                        min={500000}
-                        max={50000000}
-                        placeholder="Số tiền nhận 1 lần cho mỗi người theo dõi vĩnh viễn"
-                        // defaultValue={selectedPermPrice}
-                        defaultValue={expert?.permPrice ?? 2000000}
-                        className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
-                        required
 
-                    // onChange={(e) => {
-                    //     const newValue = Number(e.target.value)
-                    //     setselectedPermPrice(newValue)
-                    // }}
-                    />
-                    <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
-                </div>
-                <div id="customer-error" aria-live="polite" aria-atomic="true">
-                    {state.errors?.permPrice &&
-                        state.errors.permPrice.map((error: string) => (
-                            <p className="mt-2 text-sm text-red-500" key={error}>
-                                {error}
-                            </p>
-                        ))}
-                </div>
-            </div>
+            {/* Perm price */}
+            {(
+                <div className="mb-4 max-w-sm">
+                    {period == 'yearly' && (<p className='mb-2 text-xs text-amber-500'>Chuyên gia chu kỳ 1 năm không thể cung cấp gói theo dõi vĩnh viễn, chọn chu kỳ trọn đời để kích hoạt gói này </p>)}
+                    <label htmlFor="permPrice" className={clsx("mb-2 block text-sm font-medium text-zinc-500", {
+                        'text-zinc-500': period == 'yearly',
+                        'text-zinc-200': period == 'perm'
+
+                    })}>
+                        Ra giá cho gói theo dõi vĩnh viễn
+                    </label>
+                    <div className="relative">
+                        <TextInput
+                            // id="permPrice"
+                            disabled={period != "perm"}
+                            name="permPrice"
+                            type="number"
+                            step={10000}
+                            min={500000}
+                            max={50000000}
+                            placeholder="Số tiền nhận 1 lần cho mỗi người theo dõi vĩnh viễn"
+                            // defaultValue={selectedPermPrice}
+                            defaultValue={expert?.permPrice ?? 2000000}
+                            className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
+                            required={period == "perm"}
+
+                        // onChange={(e) => {
+                        //     const newValue = Number(e.target.value)
+                        //     setselectedPermPrice(newValue)
+                        // }}
+                        />
+                        <CurrencyDollarIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500" />
+                    </div>
+                    <div id="customer-error" aria-live="polite" aria-atomic="true">
+                        {state.errors?.permPrice &&
+                            state.errors.permPrice.map((error: string) => (
+                                <p className="mt-2 text-sm text-red-500" key={error}>
+                                    {error}
+                                </p>
+                            ))}
+                    </div>
+                </div>)}
         </>
     )
 

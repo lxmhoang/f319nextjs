@@ -13,7 +13,7 @@ import { ArrowLeftEndOnRectangleIcon, ArrowsRightLeftIcon, ChartBarIcon, ChatBub
 // Depending on the size of the application, this would be stored in a database.
 const links = [
   { name: 'Overview', href: '/profile', icon: UserIcon },
-  { name: 'Khuyến nghị', href: '/profile/pred', icon: ChartBarIcon},
+  { name: 'Đang theo dõi', href: '/profile/pred', icon: ChartBarIcon},
   {
     name: 'Ứng tiền', href: '/profile/deposit',
     icon: ArrowLeftEndOnRectangleIcon,
@@ -24,6 +24,10 @@ const links = [
   },
   {
     name: 'Giao dịch', href: '/profile/transactions',
+    icon: ArrowsRightLeftIcon,
+  },
+  {
+    name: 'Hoạt động', href: '/profile/activities',
     icon: ArrowsRightLeftIcon,
   }
 ];

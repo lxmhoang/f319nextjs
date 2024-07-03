@@ -2,14 +2,16 @@
 "use server"
 // khong dung firebase client o day vi nhu the request.auth se bi null
 import { z } from 'zod';
-import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { addANewTransaction, serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc, serverUpdateDoc } from './firebaseadmin/adminfirestore';
-import { storage } from './firebase/firebase';
-import { getUserInfoFromSession, getthuquyUID, setClaim } from './firebaseadmin/adminauth';
+import { serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc, serverUpdateDoc } from './firebaseadmin/adminfirestore';
+import { getUserInfoFromSession } from './firebaseadmin/adminauth';
 import { User, userAdminConverter } from '../model/user';
-import { tranAdminConverter, Transaction, TranType } from '../model/transaction';
 import { Prediction, predAdminConverter } from '../model/prediction';
-import { revalidatePath } from 'next/cache';
+import { UserNoti } from '../model/noti';
+import { Expert, expertAdminConverter } from '../model/expert';
+import { arrayUnion } from 'firebase/firestore';
+import firebase from 'firebase/compat/app';
+import { FieldValue } from 'firebase-admin/firestore';
+import { sendNotificationToUser } from './server';
 
 
 
@@ -277,6 +279,17 @@ export async function createNewPrediction(selectedStockPrice : number | undefine
       justDone: false
     }
   }
+
+  const expertInfo = await serverGetModal<Expert>('expert/' + userInfo.uid, expertAdminConverter)
+  if (!expertInfo) {
+    return {
+      errors: {
+        logic: ['Expert not found']
+      },
+      justDone: false
+    }
+
+  }
   const assetName = formData.get('assetName') as string
   const dateIn = new Date()
   const deadLine = new Date(formData.get('deadLine') as string)
@@ -317,6 +330,33 @@ export async function createNewPrediction(selectedStockPrice : number | undefine
       const resultForRank = await serverSetDoc('rankPred/' + result.id , predAdminConverter.toFirestore(pred))
       console.log("prediction from Rank Expert has been added : " + JSON.stringify(resultForRank))
     }
+    // notify follower
+const toDay = new Date()
+    const noti: UserNoti = {
+      dateTime: toDay.getTime(), 
+      title: pred.assetName,
+      content: "Chuyên gia " + expertInfo.name + " đã tạo khuyến nghị cổ phiếu " + pred.assetName,
+      urlPath: '/expert/details/' + expertInfo.id + "#" + result.id
+  }
+  
+
+
+  let notifiedUsersIds: string[] = []
+
+  if (expertInfo.expertType == 'rank') {
+      notifiedUsersIds = (await serverQueryCollection<User>('user', [{ key: 'rankExpire', operator: '>=', value: toDay }], userAdminConverter)).map((item) => item.uid)
+  } else {
+
+    notifiedUsersIds = expertInfo.follower.filter((item) => {return (item.endDate > toDay)}).map((item) => item.uid)
+  // console.log('follower ' + JSON.stringify(expertInfo.follower))
+  // console.log('notified User Ids ' + notifiedUsersIds)
+  }
+
+
+  for (const userID of notifiedUsersIds) {
+    await sendNotificationToUser(userID, noti)
+  }
+    
     // redirect("/admin")
     return {
       errors: {},

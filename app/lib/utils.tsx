@@ -20,7 +20,15 @@ export function didFollow(user: User, expert: Expert) {
     return false
   }
 
-  const followInfo = user.following.find((item) => item.eid == expert.id)
+  if (expert.expertType == 'rank') {
+    return user.joinRank
+
+  }
+
+  const followInfo = user.following.find((item) => {
+    return (
+      item.eid == expert.id) && (item.endDate >= new Date() || item.perm == true)
+  })
   console.log('follow Info ' + JSON.stringify(followInfo))
   if (!followInfo) {
     return false
@@ -28,8 +36,6 @@ export function didFollow(user: User, expert: Expert) {
   const today = new Date()
   const endDate = followInfo.endDate
   return (followInfo.perm == true || followInfo.endDate >= new Date())
-
-  // return user && user.following && Object.keys(user.following).includes(expert.id) && ( user.following[expert.id].perm == true ||  user.following[expert.id].endDate >= new Date())
 
 
 }
@@ -52,11 +58,15 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
   let openPreds = data.filter((item) => {
     return item.status == "Inprogress" && item.dateIn >= date
   })
+  let closedPreds = data.filter((item) => {
+    return item.status != "Inprogress" && item.dateIn >= date
+  })
 
   var perform = 1
   var message: string[] = []
 
-  message.push('start checking pred since  : ' + date.toLocaleDateString('vi'))
+  message.push('start checking pred since  : ' + date.toLocaleString('vi'))
+  message.push('  Check Open Preds  .. ')
 
   for (const pred of openPreds) {
 
@@ -71,18 +81,18 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
     const toDayValue = true ? min : max
     const curPerform = true ? toDayValue / pred.priceIn : pred.priceIn / toDayValue
     const curProfit = (curPerform - 1) * pred.portion / 100 + 1
-    message.push('incremental ratio of this pred ===== ' + ((curPerform - 1) * 100).toFixed(2) + '%  profit ' + + ((curProfit - 1) * 100).toFixed(2) + '% \n\n\n\n')
+    message.push('incremental ratio of this pred ===== ' + ((curPerform - 1) * 100).toFixed(2) + '%  profit ' + + ((curProfit - 1) * 100).toFixed(2) + '% \n\n')
     perform = perform * curProfit
   }
-  let closePreds = data.filter((item) => {
-    return item.status != "Inprogress" && item.dateIn >= date
-  })
-  for (const pred of closePreds) {
+
+
+  message.push(' Checking Closed Preds  ... ')
+  for (const pred of closedPreds) {
     if (pred.priceRelease) {
       const ratio = pred.priceRelease / pred.priceIn
       const predPerform = true ? ratio : 1 / ratio
       const profit = (predPerform - 1) * pred.portion / 100 + 1
-      message.push(' \n  Perform of close Pred ' + pred.id + ' datein : ' + pred.dateIn.toLocaleDateString('vi') + ' ===== ' + predPerform + '  profit ' + profit + '\n')
+      message.push('  Perform of close Pred ' + pred.id + ' datein : ' + pred.dateIn.toLocaleDateString('vi') + ' ===== ' + predPerform + '  profit ' + profit + '\n')
       perform = perform * profit
     }
   }
@@ -119,4 +129,13 @@ export function sortByField<T, Key extends keyof T>(data: T[], field: Key) {
     }
     return 0;
   })
+}
+
+export function contentOf(arrayStr: string[]) {
+  return arrayStr.reduce((a, b) => { return a + '\n \n' + b })
+}
+
+export const datesGreaterThan = (first: Date, second: Date) => {
+  first.setUTCHours(0, 0, 0, 0) > second.setUTCHours(0, 0, 0, 0)
+  return first > second
 }

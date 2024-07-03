@@ -16,6 +16,7 @@ export async function GET() {
 
   await revokeAllSessions(sessionCookie);
   cookies().delete("__session");
+  cookies().delete("uInfo");
 
   return NextResponse.json<APIResponse<string>>({ success: true, data: "Signed out successfully." });
 }

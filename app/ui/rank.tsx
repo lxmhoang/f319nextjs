@@ -15,9 +15,9 @@ export type BoardProps = {
 export default function LeaderBoard(props: BoardProps) {
     const range = props.since + ' - ' + props.to
     return (
-        <div className="m-4 w-[300px] h-[300px] border-gray-400 border-2 rounded-md   ">
-            <div className="flex justify-center  h-[30px]">
-                <Label className="m-2 text-lg " value={props.total} />
+        <div className="m-4 w-[300px] h-[300px] mx-auto border-gray-400 border-2 rounded-md   ">
+            <div className="flex justify-center  h-[30px] mb-2">
+                <Label className="m-2 text-md " value={props.total + " / người"} />
             </div>
             <div className="flex justify-center  h-[30px]">
                 <Label className="m-2" value={range} />

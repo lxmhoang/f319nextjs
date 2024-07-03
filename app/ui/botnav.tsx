@@ -6,6 +6,7 @@ import clsx from 'clsx';
 import { usePathname } from "next/navigation";
 import { HomeIcon } from "@heroicons/react/16/solid";
 import { ChartBarIcon, UserCircleIcon, WalletIcon } from "@heroicons/react/16/solid";
+import { login } from "../lib/client";
 
 export default function BottomNav() {
     const { user } = useAppContext()
@@ -22,7 +23,7 @@ export default function BottomNav() {
                 actived: !(pathname.includes('/wallet') || pathname.includes('/profile') || pathname.includes('/advisor') || pathname.includes('/expert'))
             },
             {
-                title: "DS Chuyên gia",
+                title: "Các chuyên gia",
                 key: "Expert",
                 icon: ChartBarIcon,
                 path: "/expert",
@@ -53,22 +54,22 @@ export default function BottomNav() {
                 actived: !(pathname.includes('/register') || pathname.includes('/profile') || pathname.includes('/advisor') || pathname.includes('/expert'))
             },
             {
-                title: "DS Chuyên gia",
+                title: "Các chuyên gia",
                 key: "Expert",
                 icon: ChartBarIcon,
                 path: "/expert",
                 actived: pathname.startsWith('/expert')
             },
             {
-                title: "Làm chuyên gia",
+                title: "Đky chuyên gia",
                 key: "Advisor",
                 icon: WalletIcon,
                 path: "/register",
                 actived: pathname.startsWith('/register')
             },
             {
-                title: "Profile",
-                key: "Profile2",
+                title: "Hồ sơ",
+                key: "Profile",
                 icon: UserCircleIcon,
                 path: "/profile",
                 actived: pathname.startsWith('/profile')
@@ -88,7 +89,11 @@ export default function BottomNav() {
                             "dark:bg-slate-600 dark:text-gray-200 bg-gray-100 text-gray-600": tab.actived,
                             "dark:bg-slate-800 dark:text-blue-300 bg-gray-300 text-gray-800": !tab.actived,
                         })} >
-                            <Link href={tab.path} type="button" className="">
+                            <Link href={tab.path} type="button" className="" onClick={() => {
+                                if (tab.key == 'Profile' && !user) {
+                                    login()
+                                }
+                        }}>
                                 <div className="">
                                     {/* {tab.actived ? "a" : "n"} */}
                                     <tab.icon className={clsx('mx-auto w-5 h-5', {

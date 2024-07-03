@@ -1,10 +1,10 @@
 'use server'
 import { FirestoreDataConverter, WhereFilterOp, getFirestore } from "firebase-admin/firestore"
-import { getCurrentUser } from "./adminauth"
+import { getCurrentUser, getUserInfoFromSession, getthuquyUID, setClaim } from "./adminauth"
 // import { getas adminDB } from "./firebaseadmin"
 import { didFollow } from "../utils"
 
-import admin from "firebase-admin"
+import admin, { auth } from "firebase-admin"
 import { getApps } from "firebase-admin/app"
 import { Expert, ExpertStatus, expertAdminConverter } from "@/app/model/expert"
 import { User, userAdminConverter } from "@/app/model/user"
@@ -12,6 +12,95 @@ import { TranType, Transaction } from "@/app/model/transaction"
 import { Subscription, subscriptionAdminConverter } from "@/app/model/subscription"
 import { Prediction, predAdminConverter } from "@/app/model/prediction"
 
+
+export async function joinRankUser(perm: boolean) {
+    
+    const userInfo = await getUserInfoFromSession() 
+
+    if (userInfo == null) {
+        return Promise.resolve({
+            success: false,
+            error: "not authorized"
+        })
+    }
+
+    const user = await serverGetModal<User>('user/' + userInfo.uid, userAdminConverter)
+    if (user == undefined) {
+        return Promise.resolve({
+            success: false,
+            error: "khong ton tai user"
+        })
+    }
+
+    const fee = perm ? Number(process.env.NEXT_PUBLIC_RANK_SPONSOR_PERM) : Number(process.env.NEXT_PUBLIC_RANK_SPONSOR_MONTH)
+    if (user.amount < fee) {
+        return Promise.resolve({
+            success: false,
+            error: "khong du tien , chi co " + user.amount + " , can : " + fee
+        })
+    }
+
+    const thuquyid = await getthuquyUID()
+    if (!thuquyid) {
+        return Promise.resolve({
+            success: false,
+            error: "khong tim duoc thu quy"
+        })
+    }
+
+    const tran: Transaction = {
+        tranType: TranType.followRank,
+        toUid: thuquyid,
+        fromUid: user.uid,
+        amount: fee,
+        status: "Done",
+        notebankacc: "",
+        date: new Date()
+    }
+    console.log(' trans ' + JSON.stringify(tran))
+    const result = await addANewTransaction(tran)
+    if (result.success == false) {
+        return Promise.resolve({
+            success: false,
+            error: result.message
+        })
+    }
+
+    const subRank : Subscription = {
+        uid: userInfo.uid,
+        eid: thuquyid,
+        startDate: new Date(),
+        perm: perm,
+        value: fee,
+        type: "rank"
+    }
+    console.log(' subRank ' + JSON.stringify(subRank))
+
+    await serverAddNewModal<Subscription>('subscription', subRank, subscriptionAdminConverter)
+
+    const expireDate = new Date()
+    const monthToAdd = perm ? 1200 : 1
+    expireDate.setMonth(expireDate.getMonth() + monthToAdd)
+
+    const cusClaim = {
+        expertType: userInfo.expertType,
+        expertPeriod: userInfo.expertPeriod,
+        expertExpire: userInfo.expertExpire,
+        rankExpire:  expireDate.getTime()
+    }
+
+    await setClaim(userInfo.uid, cusClaim) 
+
+    await serverUpdateDoc('user/' + userInfo.uid, {rankExpire: expireDate})
+
+
+    return {
+        success: true,
+        error: ""
+    }
+
+
+}
 
 export async function subcribleToAnExpert(eid: string, perm: boolean) {
 
@@ -49,7 +138,21 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
 
     }
 
+    if (perm == true && (expertToSub.expertType != 'perm') ) {
+        return Promise.resolve({
+            success: false,
+            error: "Chỉ có thể follow vĩnh viễn một chuyên gia trọn đời"
+        })
+    }
+
     const fee = perm ? expertToSub.permPrice : expertToSub.monthlyPrice
+
+    if (!fee) {
+        return Promise.resolve({
+            success: false,
+            error: "Không xác định được giá "
+        })
+    }
 
     if (user.amount < fee) {
         return Promise.resolve({
@@ -69,7 +172,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
     }
 
     const tran: Transaction = {
-        tranType: TranType.followRank,
+        tranType: TranType.followSolo,
         toUid: expertToSub.id,
         fromUid: user.uid,
         amount: Number(fee),
@@ -93,7 +196,8 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
             eid: eid,
             startDate: new Date(),
             perm: perm,
-            value: fee
+            value: fee,
+            type: "solo"
         }
         console.log('adding new sub' + JSON.stringify(newSub))
         await serverAddNewModal<Subscription>('subscription/', newSub, subscriptionAdminConverter)// subCollection.add(newSub)
@@ -195,13 +299,20 @@ export async function serverQueryCollectionGroup<ModelType>(name: string, filter
     
 }
 
-export async function serverQueryCollection<ModelType>(path: string, filters: { key: string, operator: WhereFilterOp, value: any }[], converter: FirestoreDataConverter<ModelType>) {
+export async function serverQueryCollection<ModelType>(path: string, filters: { key: string, operator: WhereFilterOp, value: any }[], converter: FirestoreDataConverter<ModelType>, limit?: number) {
     let ref = adminDB.collection(path)// query(collection(db, name));
     // console.log(filters)
     var q = undefined
     console.log('serverQueryCollection : ' + path)
     for (const { key, operator, value } of filters) {
         q = q ? q.where(key, operator, value) : ref.where(key, operator, value)
+    }
+    if (limit) {
+        if (q) {
+            q = q.limit(limit)
+        } else {
+            q = ref.limit(limit)
+        }
     }
     const snapshot = q ? await q?.withConverter(converter).get() : await ref.withConverter(converter).get()
     // console.log('====serverQueryCollection result =====' + JSON.stringify(snapshot.docs))
@@ -214,8 +325,8 @@ export async function serverQueryCollection<ModelType>(path: string, filters: { 
 export async function serverUpdateDoc(path: string, data: {}) {
     return adminDB.doc(path).update(data)
 }
-export async function serverSetDoc(path: string, data: {}) {
-    return adminDB.doc(path).set(data)
+export async function serverSetDoc(path: string, data: {}, merge = false) {
+    return adminDB.doc(path).set(data, {merge: merge})
 }
 
 export async function serverApprovePendingTrans(tranIDs: string[]) {
@@ -275,27 +386,8 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
     }
     const getDonePredOnly = !(user && didFollow(user, expert) || (user && user.uid == expert.id)) 
     console.log('getDonePredOnly ' + getDonePredOnly + '  user ' + user)
-    // const hideInprogressOnes = !user || (user.following[expert.id] == null && user.uid != expert.id)
-    // console.log(hideInprogressOnes ? 'hide them ' : 'show them sub')
     let response = await serverQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
-    // console.log('res ' + JSON.stringify(response))
     let allPreds: Prediction[] = response// JSON.parse(response)
-    // console.log('allPreds ' + JSON.stringify(allPreds))
-    // let data = result.docs
-
-
-
-    // console.log('query' )
-    // let q = query(collection(db, 'expert', expert.id, 'preds').withConverter(predConverter))
-    // // q = getDonePredOnly ? 
-    // // 		query(q, where('status',  '!=' , 'Inprogress')) 
-    // // 		: 
-    // // 		q
-
-    // console.log('22222' )
-    // const querySnapshot = await getDocsFromServer(q);
-    // // console.log('que3333ry' )
-    // const allPreds = querySnapshot.docs.map((doc) => doc.data())
     const inProgressPreds = allPreds.filter((item) => { return item.status == 'Inprogress' })
     const donePreds = allPreds.filter((item) => { return item.status != 'Inprogress' }).sort((a, b) => { return (b.dateIn.getTime() - a.dateIn.getTime()) })
     const result = {

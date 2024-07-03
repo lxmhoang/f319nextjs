@@ -13,7 +13,7 @@ export default function MyProfileOverView({ host }: { host: string }) {
             <> Loading profile ... </>
         )
     }
-
+    
     const ref = user.accessId
     const url = 'https://' + host + '?ref=' + ref
     const amount = user.amount
@@ -25,6 +25,7 @@ export default function MyProfileOverView({ host }: { host: string }) {
                 {firebaseUser && firebaseUser.photoURL && <div><Image className="rounded-full w-[160px] h-[160px] mt-4 mb-4" width={100} height={100} src={firebaseUser.photoURL} priority={true} alt={""}
                     /></div>}
                 <div className="mb-4">Tài khoản: {addComma(amount)}</div>
+                {(user.joinRank && user.rankExpire) && (<p className="mb-4"> Theo dõi rank đến {user.rankExpire.toLocaleDateString('vi')} </p>)}
                 {user.isExpert && user.expertType == 'solo' && (<p className="mb-4">Chuyên gia solo</p>)}
                 {user.isExpert && user.expertType == 'rank' && (<p className="mb-4">Chuyên gia rank</p>)}
                 Chia sẻ đường link này để nhận được 20% doanh thu mỗi khi người mà bạn giới thiệu :

@@ -5,7 +5,7 @@ import Cookies from "js-cookie";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { auth, db } from "../firebase/firebase";
 import { User as FireBaseUser, getAuth } from "firebase/auth";
-import { doc, onSnapshot } from "firebase/firestore";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { User, userConverter } from "@/app/model/user";
 import { decrypt , encrypt, persistUserInfo} from "../server";
 
@@ -19,7 +19,7 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
     const [user, setUser] = useState<User>()
 
     useEffect(() => {
-        console.log("useEffect ")
+        // console.log("useEffect ")
         const unsubscribe = auth.onAuthStateChanged((authUser) => {
             console.log("onAuthStateChanged check again: " + authUser + '  email ' + getAuth().currentUser?.email)
             setFireBaseUser(authUser)
@@ -43,9 +43,18 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
                     // }
 
                     // updateToken(firebaseUser)
+                    
                     const userInfo = doc.data()
+                    if (userInfo?.notifies) {
+                        
+                        userInfo.notifies.sort((a,b) => { 
+                            return b.dateTime - a.dateTime})
+                    }
+                    // if (userInfo) {
+                    //     userInfo.amount = 400000
+                    // }
                     persistUserInfo(JSON.stringify(userInfo))
-                    setUser(doc.data())
+                    setUser(userInfo)
                 })
             return unsubscrible
         } else {

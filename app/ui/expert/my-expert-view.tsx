@@ -1,11 +1,6 @@
+
 import { Expert } from "@/app/model/expert";
-import ExpertCard from "../expertcard";
-import { collection, or, query, where } from "firebase/firestore";
-import { db } from "@/app/lib/firebase/firebase";
 import ReviewPrediction from "./reviewPrediction";
-import { useEffect, useState } from "react";
-import { getRealTimeStockData } from "@/app/lib/getStockData";
-import { predConverter } from "@/app/model/prediction";
 import ExpertHorView from "../expertHorView";
 
 

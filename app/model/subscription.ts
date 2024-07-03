@@ -15,6 +15,7 @@ export type Subscription = {
     endDate?: Date;
     perm: boolean;
     value: number;
+    type: "solo" | "rank"
   }
   
   
@@ -26,6 +27,7 @@ export type Subscription = {
         startDate: sub.startDate,
         value: sub.value,
         perm: sub.perm,
+        type: sub.type
       };
     },
     fromFirestore(
@@ -41,6 +43,7 @@ export type Subscription = {
         perm: data.perm,
         value: data.value,
         endDate: data.endDate ?? undefined,
+        type: data.type == 'solo' ? "solo" : "rank"
       };
     },
   };
@@ -55,7 +58,8 @@ export type Subscription = {
         eid: sub.eid,
         startDate: sub.startDate,
         value: Number(sub.value),
-        perm: sub.perm
+        perm: sub.perm,
+        type: sub.type
       } 
     },
     fromFirestore(
@@ -70,6 +74,7 @@ export type Subscription = {
         perm: data.perm,
         value: data.value,
         endDate: data.endDate ? (data.endDate as FirebaseFirestore.Timestamp).toDate() : undefined,
+        type: data.type == 'solo' ? 'solo' : 'rank'
       };
     },
   };

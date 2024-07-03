@@ -7,11 +7,16 @@ import { serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc,
 
 import { getCurrentUserId, getUserInfoFromSession } from "@/app/lib/firebaseadmin/adminauth";
 import { getRealTimeStockData } from "./getStockData";
-import { WhereFilterOp } from "firebase-admin/firestore";
+import { FieldValue, WhereFilterOp } from "firebase-admin/firestore";
 import { signInWithGoogle } from "./firebase/auth";
 import { User, userAdminConverter } from "../model/user";
 import { subscriptionAdminConverter } from "../model/subscription";
 import { cookies } from "next/headers";
+import { perfConver, sortByField } from "./utils";
+import { auth } from "firebase-admin";
+import { getAuth } from "firebase-admin/auth";
+import { UserNoti, notiAdminConverter } from "../model/noti";
+import { arrayUnion } from "firebase/firestore";
 
 export async function getExpert(eid: string) {
     // console.log('get expert with id ' + eid)
@@ -31,18 +36,31 @@ export async function getUserDBInfo() {
 }
 
 export async function getMyFollowingExpertIDs() {
-    const uid = await getCurrentUserId()
-    if (!uid) {
+    const userInfo = await getUserInfoFromSession()
+    if (!userInfo) {
         return []
     }
+    const uid = userInfo.uid
 
     const toDay = new Date()
 
-    const result = await serverQueryCollection('subscription', [{key:'uid', operator:'==', value: uid},{key:'endDate', operator:'>=', value: toDay}], subscriptionAdminConverter)
+    console.log('aaaa')
+    const result = await serverQueryCollection('subscription', [{ key: 'uid', operator: '==', value: uid }, { key: 'endDate', operator: '>=', value: toDay }], subscriptionAdminConverter, 5)
 
-    const eids = result.map((sub) => {
+    console.log('aaaa')
+
+    let eids = result.map((sub) => {
         return sub.eid
     })
+
+    if (userInfo.isRank) {
+        const rankExpert = await serverQueryCollection('expert', [{ key: 'expertType', operator: '==', value: 'rank' }], expertAdminConverter)
+        const rankIds = rankExpert.map((item) => {
+            return item.id
+        })
+
+        eids.push(...rankIds)
+    }
 
     return eids
 }
@@ -75,7 +93,7 @@ export async function getAdvisor() {
 
 }
 
-export async function getAllMypreds(filters:{key:string, operator: WhereFilterOp, value:any}[] = []) {
+export async function getAllMypreds(filters: { key: string, operator: WhereFilterOp, value: any }[] = []) {
 
     const info = await getUserInfoFromSession()
     if (!(info != undefined && info.isExpert)) {
@@ -99,7 +117,7 @@ export async function getMyWIPPreds() {
 }
 
 export async function verifyAccessID(accessId: string) {
-    const result = await serverQueryCollection('user', [{key:'accessId', operator:'==', value: accessId}], userAdminConverter)
+    const result = await serverQueryCollection('user', [{ key: 'accessId', operator: '==', value: accessId }], userAdminConverter)
     return result.length == 0
 }
 
@@ -110,11 +128,22 @@ export async function addUser(payload: string) {
 
 export async function closeWIPPreds(ids: string[], rank: boolean = false) {
 
+    const toDay = new Date()
+
     const userInfo = await getUserInfoFromSession()
     if (!userInfo) {
         throw new Error('user not signed in')
     }
-    const expertType = userInfo.expertType
+    if (userInfo.isExpert == false) {
+        throw new Error('user is not an expert')
+    }
+
+    const expertInfo = await serverGetModal('expert/' + userInfo.uid, expertAdminConverter)
+
+
+    if (!expertInfo) {
+        throw new Error('user is not an expert')
+    }
 
 
     const preds = await getMyWIPPreds()
@@ -140,18 +169,47 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
     if (!listCodes.every(val => Object.keys(prices).includes(val))) {
         throw new Error('khong lấy được giá hiện tại của cổ phiếu ')
     }
-    
+
 
     for (const pred of predsToBeClosed) {
         if (pred.id) {
             const currentLowPrice = prices[pred.assetName].low
             console.log('begin to closindg pred with assest : ' + pred.assetName + ' price ' + currentLowPrice)
-            let data = {priceRelease : currentLowPrice, dateRelease: new Date(), status:"Closed"}
-            await serverUpdateDoc('expert/' + pred.ownerId +'/preds/' + pred.id, data)
-            if (expertType == 'rank') {
-                await serverUpdateDoc('rankPred/' + pred.id, {priceRelease : currentLowPrice, dateRelease: new Date(), status:"Closed"})
 
+            const payload = {
+                priceRelease: currentLowPrice,
+                dateRelease: toDay,
+                status: "OWNER_CLOSED"
             }
+
+            await serverUpdateDoc('expert/' + pred.ownerId + '/preds/' + pred.id, payload)
+            if (expertInfo.expertType == 'rank') {
+                await serverUpdateDoc('rankPred/' + pred.id, payload)
+                // await serverQueryCollection(path:'user', {key:'rank'})
+            }
+
+            // notify  user 
+
+            const noti: UserNoti = {
+                dateTime: toDay.getTime(),
+                title: pred.assetName,
+                content: "Chuyên gia " + expertInfo.name + " đã khuyên kết thúc khuyến nghị cổ phiếu " + pred.assetName + " trước thời hạn, với giá hiện tại " + currentLowPrice,
+                urlPath: '/expert/details/' + pred.ownerId + "#" + pred.id
+            }
+
+            let notifiedUsersIds: string[] = []
+
+            if (expertInfo.expertType == 'rank') {
+                notifiedUsersIds = (await serverQueryCollection<User>('user', [{ key: 'rankExpire', operator: '>=', value: toDay }], userAdminConverter)).map((item) => item.uid)
+            } else {
+                notifiedUsersIds = expertInfo.follower.filter((item) => {item.endDate < toDay}).map((item) => item.uid)
+            }
+
+            for (const userID of notifiedUsersIds) {
+                await sendNotificationToUser(userID, noti)
+            }
+
+
         }
     }
 
@@ -175,15 +233,16 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
 
 }
 
+
 export async function persistUserInfo(payload: string | undefined) {
     if (!payload) {
         cookies().delete('uInfo')
     } else {
         const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
         const userInfo: User = JSON.parse(payload)
-        const data = {isExpert: userInfo.isExpert ?? false}
-        const descr = await encrypt(JSON.stringify(data))
-        cookies().set('uInfo',descr, { maxAge: expiresIn, httpOnly: true, secure: true })
+        const data = { isExpert: userInfo.isExpert ?? false }
+        // const descr = await encrypt(JSON.stringify(data))
+        cookies().set('uInfo', JSON.stringify(data), { maxAge: expiresIn, httpOnly: true, secure: false })
 
     }
 
@@ -194,15 +253,15 @@ export async function encrypt(text: string) {
 
     const keyUtf8 = new TextEncoder().encode(key)
     const keyHash = await crypto.subtle.digest('SHA-256', keyUtf8)
-  
-  
+
+
     const iv = crypto.getRandomValues(new Uint8Array(12))
     const alg = { name: 'AES-GCM', iv: iv }
-  
+
     const encrpytKey = await crypto.subtle.importKey('raw', keyHash, alg, false, [
-      'encrypt',
+        'encrypt',
     ])
-  
+
     const textUtf8 = new TextEncoder().encode(text)
     const encrypted = await crypto.subtle.encrypt(alg, encrpytKey, textUtf8)
     // const encryptedText = new TextDecoder('utf-8').decode(encrypted)
@@ -215,41 +274,95 @@ export async function encrypt(text: string) {
     const payload = ivHex + b64
     console.log('did encrypt userInfo ' + payload)
     return payload
-  
-  }
-  
-  function ab2str(buf: ArrayBuffer) {
-  
+
+}
+
+function ab2str(buf: ArrayBuffer) {
+
     const uintArr = new Uint8Array(buf);
-    return String.fromCharCode.apply(null,Array.from(uintArr));
-  }
+    return String.fromCharCode.apply(null, Array.from(uintArr));
+}
 
 export async function decrypt(enText: string) {
     // console.log('enText ' + enText)
-   
-    const iv = enText.slice(0,24)!.match(/.{2}/g)!.map(byte => parseInt(byte, 16))
-  
+
+    const iv = enText.slice(0, 24)!.match(/.{2}/g)!.map(byte => parseInt(byte, 16))
+
     // console.log('vi extracted from payload ' + iv)
     const alg = { name: 'AES-GCM', iv: new Uint8Array(iv) }
     const keyUtf8 = new TextEncoder().encode(key)
     const keyHash = await crypto.subtle.digest('SHA-256', keyUtf8)
     const decryptKey = await crypto.subtle.importKey('raw', keyHash, alg, false, ['decrypt'])
-  
+
     const bodycontent = atob(enText.slice(24))
     // console.log('body content extracted from payload ' + bodycontent)
     const bodyasArrayNumber = new Uint8Array(bodycontent.match(/[\s\S]/g)!.map(ch => ch.charCodeAt(0)))
     // begin to decrupt
-  
-  
+
+
     // const enTextUtf8 = new TextEncoder().encode(enText)
     const textBuffer = await crypto.subtle.decrypt(alg, decryptKey, bodyasArrayNumber)
     const decryptedText = new TextDecoder().decode(textBuffer)
     console.log('did decrypt userInfo ' + decryptedText)
     return decryptedText
-  
-  }
+
+}
+
+export async function sendNotificationToUser(userID: string, noti: UserNoti) {
+    await serverAddNewModal('user/' + userID + '/notiHistory', noti, notiAdminConverter)
+    await serverUpdateDoc('user/' + userID, {notifies: FieldValue.arrayUnion(noti)})    
+}
+
+export async function getRankingInfo() {
+    const numOfWinner = Number(process.env.NEXT_PUBLIC_NUM_WINNER) ?? undefined
+    if (!numOfWinner) {
+        throw new Error('Khong tim duoc numbOfWinner')
+    }
+    const experts = await serverQueryCollection('expert', 
+    [{ key: "expertType", operator: "==", value: "rank" },
+     { key: "status", operator: "==", value: "activated" }    
+
+    ], expertAdminConverter,
+    numOfWinner
+    )
+    // let experts = rankExpert.filter((item) => { return item.status == 'activated' })
+
+    const monthly = sortByField(experts, "monthPerform").map((item) => {
+        return {
+            name: item.name,
+            id: item.id,
+            perf: perfConver(item.monthPerform ?? 0)
+        }
+    })
+
+    const yearly = sortByField(experts, "yearPerform").map((item) => {
+        return {
+            name: item.name,
+            id: item.id,
+            perf: perfConver(item.yearPerform ?? 0)
+        }
+    })
+
+    const quarter = sortByField(experts, "quarterPerform").map((item) => {
+        return {
+            name: item.name,
+            id: item.id,
+            perf: perfConver(item.quarterPerform ?? 0)
+        }
+    })
+
+    const weekly = sortByField(experts, "weekPerform").map((item) => {
+        return {
+            name: item.name,
+            id: item.id,
+            perf: perfConver(item.weekPerform ?? 0)
+        }
+    })
+
+    return { weekly, monthly, quarter, yearly }
+}
 
 //   export async function getMyTransHistory() {
-    // wip.....
+// wip.....
 //     const myInfo = await getUserInfoFromSession()
 //   }

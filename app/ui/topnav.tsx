@@ -22,11 +22,19 @@ import { signInWithGoogle, signOut } from "../lib/firebase/auth";
 import { useAppContext } from "../lib/context";
 import { useState } from "react";
 import { convert } from "../lib/utils";
-import { DarkThemeToggle } from "flowbite-react";
+import { Badge } from "@nextui-org/badge";
+import { DarkThemeToggle, Label } from "flowbite-react";
 import { redirect, usePathname, useSearchParams } from "next/navigation";
-import { login } from "../lib/client";
+import { didTapNotificationWithKey, getTapNotificationKeys, login } from "../lib/client";
 
-
+type MenuDropDownItem = {
+  key: string,
+  href?: string,
+  type: string,
+  //  pathName: string,
+  title: string, description?: string, activated: boolean,
+  // hash?: string
+}
 
 
 export default function TopNav() {
@@ -77,15 +85,40 @@ export default function TopNav() {
       :
       user ? userBarMenuList : guessBarMenuList
 
-  const dropDownInfo =
-    user && user.isExpert ?
+  const userNotifies: MenuDropDownItem[] = user?.notifies ? user.notifies.map((item, index) => {
+    console.log('urlpath ' + item.urlPath)
+    // const pathName = item.urlPath?.split('#')[0] ?? ""
+    // const hash = item.urlPath?.split('#')[1]
+    return {
+      // pathName: pathName,
+      type: 'notification',
+      title: item.title,
+      href: item.urlPath ?? "",
+      description: item.content,
+      key: item.dateTime.toString(),
+      activated: true,
+      // hash: hash
+
+    }
+  }) : []
+
+  const readKeys = getTapNotificationKeys()
+  const badgeNum = userNotifies.map((item) => item.key).filter((el) => {
+    return !readKeys.includes(el)
+  }).length
+
+  const dropDownInfo: MenuDropDownItem[] =
+    user ?
       [
+
+        ...userNotifies,
         // { key: "home", href: "/", label: "Home", activated: true },
         // { key: "expert", href: "/expert", label: "Chuyên gia", activated: true },
         // { key: "divider", href: "#", label: "", activated: true },
         // { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: true },
         // { key: "myexpert", href: "/advisor", label: "Hồ sơ chuyên gia của tôi", activated: true },
-        { key: "signout", href: "", label: "Sign out", activated: true }
+        { key: "morenoti", href: "/profile/activities", title: "Xem tất cả thông báo ", activated: true, type: 'notification' },
+        { key: "signout", href: "", title: "Sign out", activated: true, type: 'signout' }
       ]
       :
       [
@@ -94,57 +127,63 @@ export default function TopNav() {
         // { key: "divider", href: "#", label: "", activated: true },
         // { key: "myexpert", href: "/advisor", label: "Hồ sơ chuyên gia của tôi", activated: false },
         // { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: user != undefined },
-        user ? { key: "signout", href: "", label: "Sign out", activated: true } :
-          { key: "signin", href: "", label: "Sign in", activated: true }
+          { key: "signin", href: "", title: "Sign in", activated: true, type: 'signin' }
       ]
   const MenuButton = ({ title, menuInfo, avatarURL }: { title: string, menuInfo: { key: string }[], avatarURL: string | null | undefined }) => {
     return (
 
       <Dropdown>
-        <DropdownTrigger>
-          <Button
-            // color={color}
-            variant="bordered"
-            className="capitalize flex"
-          >
-            {
-              avatarURL && <Image className="rounded-full"
-                src={avatarURL}
-                priority={true}
-                // style={{ width: '100%', height: 'auto' }}
-                // style={styles.image}
-                alt="Thumb"
-
-                height={30}
-                width={30}
-              />
-            }
-
-            {/* <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="gold" className="w-6 h-6">
-              <path d="M10.464 8.746c.227-.18.497-.311.786-.394v2.795a2.252 2.252 0 0 1-.786-.393c-.394-.313-.546-.681-.546-1.004 0-.323.152-.691.546-1.004ZM12.75 15.662v-2.824c.347.085.664.228.921.421.427.32.579.686.579.991 0 .305-.152.671-.579.991a2.534 2.534 0 0 1-.921.42Z" />
-              <path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v.816a3.836 3.836 0 0 0-1.72.756c-.712.566-1.112 1.35-1.112 2.178 0 .829.4 1.612 1.113 2.178.502.4 1.102.647 1.719.756v2.978a2.536 2.536 0 0 1-.921-.421l-.879-.66a.75.75 0 0 0-.9 1.2l.879.66c.533.4 1.169.645 1.821.75V18a.75.75 0 0 0 1.5 0v-.81a4.124 4.124 0 0 0 1.821-.749c.745-.559 1.179-1.344 1.179-2.191 0-.847-.434-1.632-1.179-2.191a4.122 4.122 0 0 0-1.821-.75V8.354c.29.082.559.213.786.393l.415.33a.75.75 0 0 0 .933-1.175l-.415-.33a3.836 3.836 0 0 0-1.719-.755V6Z" clipRule="evenodd" />
-            </svg> */}
-
-            {title}
-          </Button>
-        </DropdownTrigger>
+        <Badge content={badgeNum} color="secondary" className={badgeNum == 0 ? "invisible" : "visible"}>
+          <DropdownTrigger>
+            <Button variant="flat" className="capitalize flex" >
+              {avatarURL && 
+              <Image className="rounded-full" src={avatarURL} priority={true} alt="Thumb" height={30} width={30} />
+              }
+              {title}
+            </Button>
+          </DropdownTrigger>
+        </Badge>
         <DropdownMenu
           aria-label="Dropdown Variants" items={dropDownInfo}
+          onAction = {(key) => {
+            console.log(key)
+            if (!['morenoti','signout','signin'].includes(key as string)) {
+              didTapNotificationWithKey(key as string)
+            }
+          }
+          }
         >
           {
             (item) => (
               // <DropdownItem key={item.key} href={item.href}>{item.label}</DropdownItem>
 
               <DropdownItem
+              // onClick={(e) => {
+              //   console.log('zzzz')
+              // }}
                 key={item.key}
-                textValue={item.label}
-                // href={item.href}
-                color={item.key === "signout" ? "danger" : "default"}
-                className={item.key === "signout" ? "text-danger" : ""}
+                title={item.title}
+                description={item.description}
+                href={item.href}
+                color={item.type === "signout" ? "danger" : "default"}
+                className={clsx('max-w-sm', 
+                { 
+                  "text-danger " : item.type === "signout",
+                  // "bg-sky-500 text-black" : item.type === 'notification'
+                }
+              )}
+
                 onClick={
                   item.key === "signout" ? () => { signOut() } : item.key === 'signin' ? () => { login() } : () => { }}
               >
-                <Link href={{ pathname: item.href }}>{item.label}</Link>
+                <div>
+                  {/* <Link href={{ pathname: item.pathName, hash: item.hash }}> */}
+                  {/* <p className="break-word">{item.label}</p>
+                      <p className="break-word">{item.label}</p> */}
+                  {/* {item.label} */}
+                  {/* <Label value={item.label} /> */}
+                  {/* </Link> */}
+                </div>
 
               </DropdownItem>
             )
@@ -207,13 +246,13 @@ export default function TopNav() {
             }} >
               <Link
                 className="w-full"
-                href={item.activated ? { pathname: item.href } : ""}
+                href={item.activated ? item.href ?? "" : ""}
               >
                 <p className={clsx({
                   "text-white-600": item.activated == true,
                   "text-gray-600": item.activated == false
                 })}>
-                  {item.label}
+                  {item.title}
                 </p>
               </Link>
             </NavbarMenuItem>
@@ -257,8 +296,8 @@ export default function TopNav() {
                 }} >
                   <Link
                     className="w-full"
-                    // href={item.activated ? { pathname: item.href } : ""}
-                    href={{ pathname: item.href }}
+                    href={item.activated ? { pathname: item.href } : ""}
+                  // href={{ pathname: item.href }}
                   >
                     <p className={clsx("p-2 rounded-md", {
                       "dark:bg-slate-50 bg-slate-600": item.key == 'home' ? pathname === '/' : pathname.startsWith(item.href),
@@ -276,6 +315,7 @@ export default function TopNav() {
             })}
 
             <div className="profile">
+              {/* {getTapNotificationKeys()} */}
               <MenuButton title={menuLabel} menuInfo={dropDownInfo} avatarURL={firebaseUser?.photoURL} />
             </div>
             <DarkThemeToggle className="hidden sm:block" />

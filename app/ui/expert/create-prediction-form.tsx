@@ -31,12 +31,13 @@ const marks = Array.from(Array(11).keys()).map((num) => {
         label: (num * 10).toString() + "%"
     }
 })
-  export function PredictCreationForm() {
+
+export function PredictCreationForm() {
 
     const [remainPortion, setRemainPortion] = useState<number>()
-    const [selectedStock, setSelectedStock] = useState<{code: string, name: string}>()
+    const [selectedStock, setSelectedStock] = useState<{ code: string, name: string }>()
     const [selectedStockPrice, setSelectedStockPrice] = useState<{ high: number, low: number }>()
-    const [stocksData, setStocksData] = useState<{code:string, name:string}[]>([])
+    const [stocksData, setStocksData] = useState<{ code: string, name: string }[]>([])
     const stockCodes = stocksData.map((item) => item.code)
     const [portion, setPortion] = useState<number>(0)
     const minTakeProfitPrice = selectedStockPrice ? Math.round(selectedStockPrice.high * 1.2 * 100) / 100 : undefined
@@ -67,7 +68,7 @@ const marks = Array.from(Array(11).keys()).map((num) => {
     useEffect(() => {
         console.log(' getting local stock list')
         const fetchData = async () => {
-            const result = await getLocalStockList() as {code: string, name: string}[]
+            const result = await getLocalStockList() as { code: string, name: string }[]
 
             // console.log('fetched local stock list' + result)
             setStocksData(result)
@@ -98,23 +99,23 @@ const marks = Array.from(Array(11).keys()).map((num) => {
 
     return (
         <>
-        <>
-        {/* <div>selected  : {selectedStock.code ?? "undefined"}</div>
+            <>
+                {/* <div>selected  : {selectedStock.code ?? "undefined"}</div>
          price : {queryPrice.error ? "Error" : queryPrice.isLoading ? 'Loading ' : queryPrice.data ? JSON.stringify(queryPrice.data)  : "No data" } 
         {} */}
-        </>
+            </>
 
             <Divider />
             <form ref={ref} action={dispatchAddtran} className='p-4'  >
                 {/* <Label value="Hãy chọn 1 cổ phiếu" /> */}
-                <div className="relative mb-2"> {!selectedStock ? 
+                <div className="relative mb-2"> {!selectedStock ?
                     (<> Hãy chọn 1 cổ phiếu</>) :
-                        selectedStockPrice ? 
+                    selectedStockPrice ?
 
-                        (<>{selectedStock.name}</>) : 
+                        (<>{selectedStock.name}</>) :
                         <>Fetching stock price</>
 
-                  }</div>
+                }</div>
                 {/* <input type="hidden" name="priceIn" value={selectedStockPrice ?? 0}></input> */}
                 {/* <input type="hidden" name="uid" value={getAuth().currentUser?.uid ?? ""}></input> */}
                 <div className="relative mb-8">
@@ -125,7 +126,7 @@ const marks = Array.from(Array(11).keys()).map((num) => {
                                 allowsEmptyCollection={false}
                                 // defaultSelectedKey={selectedStock.code}
                                 // onClose={() => {}}
-                            onClear={() => { setSelectedStock(undefined)}}
+                                onClear={() => { setSelectedStock(undefined) }}
                                 aria-label='assetNamePicker'
                                 name="assetName"
                                 // onKeyDown={(e) => e.co()}
@@ -139,7 +140,7 @@ const marks = Array.from(Array(11).keys()).map((num) => {
                                         const index = key as number
                                         setSelectedStock(stocksData[index])
                                     } else {
-                                         setSelectedStock(undefined)
+                                        setSelectedStock(undefined)
                                     }
                                     // setSelectedCompComp(comps[index as number])
                                 }}
@@ -162,11 +163,12 @@ const marks = Array.from(Array(11).keys()).map((num) => {
                     selectedStock && selectedStockPrice && maxCutLossPrice && minTakeProfitPrice && (
                         <><div className="mb-2 mr-4 block max-w-screen-sm">
                             Giá mua vào hiện tại {selectedStockPrice?.high}
-                            </div>
-                        {/* <></> */}
+                        </div>
+                            {/* <></> */}
                             <div className="mb-2 mr-4 block max-w-screen-sm">
                                 <Label value={"Chọn giá chốt lãi (120-200%): " + minTakeProfitPrice + "-" + (selectedStockPrice.high * 2).toFixed(1) + ""} />
-                                <TextInput className='w-1/2' step={0.01} type="number" name="takeProfitPrice" min={minTakeProfitPrice} max={selectedStockPrice?.high * 2} defaultValue={minTakeProfitPrice} placeholder={"Chọn trong khoảng " + minTakeProfitPrice.toString() + "-" + (selectedStockPrice.high * 2)} required disabled={selectedStockPrice == undefined} onChange={(e) => {
+                                <TextInput className='w-1/2' step={0.1} type="number" name="takeProfitPrice" 
+                                 defaultValue={minTakeProfitPrice} placeholder={"Chọn trong khoảng " + minTakeProfitPrice.toString() + "-" + (selectedStockPrice.high * 2)} required disabled={selectedStockPrice == undefined} onChange={(e) => {
                                     // console.log('aaaa ' + e.target.value)
                                     //       const value = Number(e.target.value)
                                     //       if (value < minTakeProfitPrice) {
@@ -193,7 +195,7 @@ const marks = Array.from(Array(11).keys()).map((num) => {
                             <div className="mb-8 max-w max-w-screen-sm">
                                 <Label value={"Chọn giá cắt lỗ (50-80%): " + (selectedStockPrice.high / 2).toString() + "-" + maxCutLossPrice} />
                                 =={maxCutLossPrice}=={selectedStockPrice.high}****
-                                <TextInput className='w-1/2' step={0.01} type="number" name="cutLossPrice" max={maxCutLossPrice} min={selectedStockPrice.high / 2} placeholder={"Chọn trong khoảng " + (selectedStockPrice.high / 2).toString() + "-" + maxCutLossPrice} defaultValue={maxCutLossPrice} required disabled={maxCutLossPrice == undefined} onBlur={(e) => {
+                                <TextInput className='w-1/2' step={0.01} type="number" name="cutLossPrice" placeholder={"Chọn trong khoảng " + (selectedStockPrice.high / 2).toString() + "-" + maxCutLossPrice} defaultValue={maxCutLossPrice} required disabled={maxCutLossPrice == undefined} onBlur={(e) => {
                                     // console.log('aaaa ' + e.target.value)
                                     const value = Number(e.target.value)
                                     if (value > maxCutLossPrice) {
@@ -219,7 +221,7 @@ const marks = Array.from(Array(11).keys()).map((num) => {
                                 {/* <div>
                                     <p>Các khuyến nghị đang tiếp diễn </p>
                                 </div> */}
-                                
+
                                 <Slider
                                     name='portion'
                                     label={"Đã chọn " + portion + "%"}
@@ -246,11 +248,11 @@ const marks = Array.from(Array(11).keys()).map((num) => {
                                 />
                             </div>)}
                             <div className='mb-4 mr-4 max-w-full'>
-                                {(remainPortion != undefined && remainPortion < 100 ) && (<div className='mb-4 mt-4 '> <p>{100- remainPortion}% vốn đang ngâm trong các khuyến nghị đang tiếp diễn, kết thúc một vài cái để tăng tỷ lệ cho khuyến nghị đang tạo</p> </div>)}
+                                {(remainPortion != undefined && remainPortion < 100) && (<div className='mb-4 mt-4 '> <p>{100 - remainPortion}% vốn đang ngâm trong các khuyến nghị đang tiếp diễn, kết thúc một vài cái để tăng tỷ lệ cho khuyến nghị đang tạo</p> </div>)}
                                 <div className="">
                                     <ReviewPrediction doneFetching={(total) => {
                                         setRemainPortion(100 - total);
-                                    } } wip={true}/>
+                                    }} wip={true} />
                                 </div>
                             </div>
                             <Button type="submit" color='primary' isDisabled={portion == 0}>Tạo khuyến nghị </Button>

@@ -54,15 +54,19 @@ export async function setClaim(uid: string, data: {}) {
 export async function getUserInfoFromSession(session: string | undefined = undefined) {
     const _session = session ?? (await getSession());
     if (!_session) return undefined
-    console.log('current session ' + _session)
 
     try {
         const decodedIdToken = await getAuth(adminApp).verifySessionCookie(_session, true);
         const expertPeriod = decodedIdToken["expertPeriod"]
         const expertExpire = decodedIdToken["expertExpire"]
-
+        const rankExpire = decodedIdToken["rankExpire"]
+        console.log(' ==== rank expire ==== ' + rankExpire)
         const isExpert = expertExpire ? 
             new Date(Number(expertExpire)) > new Date()
+            : 
+            false
+        const isRank = rankExpire ? 
+         rankExpire > new Date()
             : 
             false
         const data = {
@@ -70,6 +74,7 @@ export async function getUserInfoFromSession(session: string | undefined = undef
             uid: decodedIdToken.uid,
             isAdmin: decodedIdToken.email == 'lxmhoang@gmail.com',
             isExpert: isExpert,
+            isRank: isRank,
 
             expertType: decodedIdToken["expertType"],
             expertPeriod: expertPeriod,
@@ -78,7 +83,7 @@ export async function getUserInfoFromSession(session: string | undefined = undef
             avatarURL: decodedIdToken.picture
         }
 
-        console.log(' result of getUserInfoFromSession : ' + JSON.stringify(decodedIdToken))
+        console.log(' result of getUserInfoFromSession : ' + JSON.stringify(data))
 
         return data;
     } catch (error) {

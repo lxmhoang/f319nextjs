@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import { useFetchRealTimeStockPrice } from "../lib/hooks/useFetchRealTimeStockPrice";
 import { getRealTimeStockData } from "../lib/getStockData";
 
-export default function PredsUserView({ preds }: { preds: Prediction[] }) {
+export default function PredsUserView({ preds, onlyOnTrack }: { preds: Prediction[], onlyOnTrack: boolean }) {
     const onTrackPreds = preds.filter((item) => { return item.dateRelease == undefined })
     const stocks = onTrackPreds.map((item) => item.assetName)
     const donePreds = preds.filter((item) => { return item.dateRelease != undefined })
@@ -99,7 +99,7 @@ export default function PredsUserView({ preds }: { preds: Prediction[] }) {
 
                 )}
             </Accordion>
-
+            { !onlyOnTrack && (<>
             <div> Các khuyến nghị đã kết thúc</div>
             <Accordion >
                 {donePreds.map((item, index) => {
@@ -147,6 +147,8 @@ export default function PredsUserView({ preds }: { preds: Prediction[] }) {
 
                 )}
             </Accordion>
+            </>
+            )}
         </>
     )
 
