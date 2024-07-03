@@ -77,6 +77,7 @@ export function PredictCreationForm() {
 
     }, [])
 
+    const ref = createRef<HTMLFormElement>();
     useEffect(() => {
         const fetchData = async () => {
             console.log('aaaa --- selected stock : ' + selectedStock)
@@ -95,7 +96,6 @@ export function PredictCreationForm() {
     }, [selectedStock])
 
 
-    const ref = createRef<HTMLFormElement>();
 
     return (
         <>

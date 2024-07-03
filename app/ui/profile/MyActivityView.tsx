@@ -34,7 +34,7 @@ export default function MyActivityView() {
             <>
                 {notifies.map((item) => {   
                     return (
-                        <div className="gap-4 block">
+                        <div className="gap-4 block" key={item.dateTime}>
                             <Link href={item.urlPath ?? ""}>
                                 {item.content}
                             </Link>

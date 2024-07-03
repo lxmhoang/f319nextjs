@@ -52,7 +52,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
     if (expert) {
       exc()
     }
-  }, [user]
+  }, [user, expert]
   )
   const defaultOpen = (typeof window !== 'undefined') ? window.location.hash.slice(1) : "";
   console.log(' default open ' + defaultOpen)
