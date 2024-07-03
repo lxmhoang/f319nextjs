@@ -1,10 +1,4 @@
-'use client'
-
-import { doc } from "firebase/firestore";
-import { Divider } from "@nextui-org/react";
-import { db } from "@/app/lib/firebase/firebase";
 import ExpertDetail from "@/app/ui/expert/expert-detail";
-import { expertConverter } from "@/app/model/expert";
 import { getExpert } from "@/app/lib/server";
 import { redirect } from "next/navigation";
 
