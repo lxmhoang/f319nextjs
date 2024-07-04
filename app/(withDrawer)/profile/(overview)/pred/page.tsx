@@ -23,15 +23,6 @@ export default async function Page() {
 
             })}
             </div>
-            {/* {
-              preds.length > 0 ? (
-                <>
-                  <Divider />
-                  <div>
-                    <PredsUserView preds={preds} onlyOnTrack={true} />
-                  </div></>
-              ) : (<>Chưa có khuyến nghị nào </>)
-            } */}
           </>) : (<>Chưa theo dõi chuyên gia nào</>)
         }
         {}
