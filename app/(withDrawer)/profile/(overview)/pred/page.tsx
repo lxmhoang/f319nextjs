@@ -1,11 +1,6 @@
-import { useAppContext } from "@/app/lib/context";
-import { getFollowExpertByIDList, getObservingPredsByExpertIDList } from "@/app/lib/firebaseadmin/adminfirestore";
+import { getFollowExpertByIDList } from "@/app/lib/firebaseadmin/adminfirestore";
 import { getMyFollowingExpertIDs } from "@/app/lib/server";
-import { Expert } from "@/app/model/expert";
 import ExpertCard from "@/app/ui/expertcard";
-import PredsUserView from "@/app/ui/predsUserView";
-import { Divider } from "@nextui-org/react";
-import { useEffect, useState } from "react";
 
 export default async function Page() {
   const expertIDs = await getMyFollowingExpertIDs()
