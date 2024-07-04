@@ -1,15 +1,15 @@
-// 'use client'
 import MyProfileOverView from '@/app/ui/profile/my-profile-overview';
 import { headers } from 'next/headers';
 export default async function Page() {
 
   const headersList = headers();
   const host = headersList.get('host') ?? ""; // to get domain
-  const url = headersList.get('next-url'); // to get url
+  const schema = headersList.get('x-forwarded-proto') ?? ""
+  const domain = schema + '://' + host // to get url
 
   return (
     <>
-      <MyProfileOverView host={host} />
+      <MyProfileOverView domain={domain} />
     </>
   )
 }

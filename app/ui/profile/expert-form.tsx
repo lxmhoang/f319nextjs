@@ -252,7 +252,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
     return (
 
 
-        <div className='p-1 mx-auto'>
+        <div className='pl-10 pr-10 mx-auto'>
             {/* {JSON.stringify(state)} */}
             {/* {userInfo.user?.expertType} */}
             <ConfirmationModal
@@ -332,8 +332,8 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                 {
                                     type == "solo" &&
                                     <>
-                                        <p className='text-sm ml-6'>Chọn chu kỳ chuyên gia</p>
-                                        <div className='ml-6'>
+                                        <p className='text-sm ml-12'>Chọn chu kỳ chuyên gia SOLO</p>
+                                        <div className='ml-12'>
                                             <Radio id="expertPeriod" name="expertPeriod" defaultChecked={period == "perm"} value="perm" onChange={(e) => {
                                                 if (e.target.checked) {
                                                     setPeriod("perm")
@@ -342,7 +342,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                             <Label className='text-sm'>{"Trọn đời " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_PERM))}</Label>
                                         </div>
 
-                                        <div className='ml-6'>
+                                        <div className='ml-12'>
                                             <Radio id="expertPeriod" name="expertPeriod" defaultChecked={period == "yearly"} value="yearly" onChange={(e) => {
                                                 if (e.target.checked) {
                                                     setPeriod("yearly")
@@ -356,10 +356,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 
                                     </>
                                 }
-
-                                {/* <span className="mb-2 text-xs font-normal">
-                                *Có thể chọn đua rank dự thưởng
-                            </span> */}
+                                <Divider className='mb-4 mt-4' />
                                 <div className="flex items-center gap-2">
                                     <Radio id="expertRankType" name="expertType" defaultChecked={type == "rank"} value="rank" onChange={(e) => {
                                         if (e.target.checked) {
@@ -375,6 +372,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                 {
                                     type == "rank" &&
                                     <>
+                                         <p className='text-sm ml-12'>Chọn chu kỳ chuyên gia RANK</p>
                                         <div className='ml-12'>
                                             <Radio id="expertPeriod" name="expertPeriod" value="perm" defaultChecked={period == "perm"} onChange={(e) => {
                                                 if (e.target.checked) {

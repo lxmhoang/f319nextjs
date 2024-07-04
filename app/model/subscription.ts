@@ -12,7 +12,7 @@ export type Subscription = {
     uid: string;
     eid: string;
     startDate: Date;
-    endDate?: Date;
+    endDate: Date;
     perm: boolean;
     value: number;
     type: "solo" | "rank"
@@ -42,7 +42,7 @@ export type Subscription = {
         startDate: (data.startDate  as FirebaseFirestore.Timestamp).toDate() ,
         perm: data.perm,
         value: data.value,
-        endDate: data.endDate ?? undefined,
+        endDate: data.endDate,
         type: data.type == 'solo' ? "solo" : "rank"
       };
     },
@@ -73,7 +73,7 @@ export type Subscription = {
         startDate: (data.startDate  as FirebaseFirestore.Timestamp).toDate() ,
         perm: data.perm,
         value: data.value,
-        endDate: data.endDate ? (data.endDate as FirebaseFirestore.Timestamp).toDate() : undefined,
+        endDate: (data.endDate as FirebaseFirestore.Timestamp).toDate(),
         type: data.type == 'solo' ? 'solo' : 'rank'
       };
     },

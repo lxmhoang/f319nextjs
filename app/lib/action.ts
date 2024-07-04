@@ -11,7 +11,7 @@ import { Expert, expertAdminConverter } from '../model/expert';
 import { arrayUnion } from 'firebase/firestore';
 import firebase from 'firebase/compat/app';
 import { FieldValue } from 'firebase-admin/firestore';
-import { sendNotificationToUser } from './server';
+import { sendNotificationToBoard, sendNotificationToUser } from './server';
 
 
 
@@ -230,7 +230,7 @@ const PredictionFormSchema = z.object({
 })
 
 
-export async function createNewPrediction(selectedStockPrice : number | undefined,prevState: PredictionFormState, formData: FormData) {
+export async function createNewPrediction(selectedStockPrice: number | undefined, prevState: PredictionFormState, formData: FormData) {
   console.log("Prediction to be added : ")
   const validatedFields = PredictionFormSchema.safeParse({
     assetName: formData.get('assetName') as string,
@@ -293,7 +293,7 @@ export async function createNewPrediction(selectedStockPrice : number | undefine
   const assetName = formData.get('assetName') as string
   const dateIn = new Date()
   const deadLine = new Date(formData.get('deadLine') as string)
-  const priceIn = formData.get('priceIn') ? Number(formData.get('priceIn')) :  selectedStockPrice
+  const priceIn = formData.get('priceIn') ? Number(formData.get('priceIn')) : selectedStockPrice
   const priceOut = Number(formData.get('takeProfitPrice'))
   const cutLoss = Number(formData.get('cutLossPrice'))
   const portion = Number(formData.get('portion'))
@@ -327,36 +327,42 @@ export async function createNewPrediction(selectedStockPrice : number | undefine
   if (result) {
     console.log("prediction has been added : " + JSON.stringify(result))
     if (userInfo.expertType == 'rank') {
-      const resultForRank = await serverSetDoc('rankPred/' + result.id , predAdminConverter.toFirestore(pred))
+      const resultForRank = await serverSetDoc('rankPred/' + result.id, predAdminConverter.toFirestore(pred))
       console.log("prediction from Rank Expert has been added : " + JSON.stringify(resultForRank))
     }
     // notify follower
-const toDay = new Date()
+    const toDay = new Date()
     const noti: UserNoti = {
-      dateTime: toDay.getTime(), 
+      dateTime: toDay.getTime(),
       title: pred.assetName,
       content: "Chuyên gia " + expertInfo.name + " đã tạo khuyến nghị cổ phiếu " + pred.assetName,
       urlPath: '/expert/details/' + expertInfo.id + "#" + result.id
-  }
-  
+    }
 
+    let notifiedUsersIds: string[] = []
 
-  let notifiedUsersIds: string[] = []
-
-  if (expertInfo.expertType == 'rank') {
+    if (expertInfo.expertType == 'rank') {
       notifiedUsersIds = (await serverQueryCollection<User>('user', [{ key: 'rankExpire', operator: '>=', value: toDay }], userAdminConverter)).map((item) => item.uid)
-  } else {
+    } else {
 
-    notifiedUsersIds = expertInfo.follower.filter((item) => {return (item.endDate > toDay)}).map((item) => item.uid)
-  // console.log('follower ' + JSON.stringify(expertInfo.follower))
-  // console.log('notified User Ids ' + notifiedUsersIds)
-  }
+      notifiedUsersIds = expertInfo.follower.filter((item) => { return (item.endDate > toDay) }).map((item) => item.uid)
+      // console.log('follower ' + JSON.stringify(expertInfo.follower))
+      // console.log('notified User Ids ' + notifiedUsersIds)
+    }
 
 
-  for (const userID of notifiedUsersIds) {
-    await sendNotificationToUser(userID, noti)
-  }
-    
+    for (const userID of notifiedUsersIds) {
+      await sendNotificationToUser(userID, noti)
+    }
+    const notiBoard: UserNoti = {
+      dateTime: toDay.getTime(),
+      title: "",
+      content: "Chuyên gia " + expertInfo.name + " mới tạo thêm 1 khuyến nghị ",
+      urlPath: '/expert/details/' + expertInfo.id + "#" + result.id
+    }
+
+    await sendNotificationToBoard(notiBoard)
+
     // redirect("/admin")
     return {
       errors: {},

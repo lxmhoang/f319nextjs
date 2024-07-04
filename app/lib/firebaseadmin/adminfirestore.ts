@@ -1,5 +1,5 @@
 'use server'
-import { FirestoreDataConverter, WhereFilterOp, getFirestore } from "firebase-admin/firestore"
+import { FieldValue, FirestoreDataConverter, WhereFilterOp, getFirestore } from "firebase-admin/firestore"
 import { getCurrentUser, getUserInfoFromSession, getthuquyUID, setClaim } from "./adminauth"
 // import { getas adminDB } from "./firebaseadmin"
 import { didFollow } from "../utils"
@@ -12,209 +12,6 @@ import { TranType, Transaction } from "@/app/model/transaction"
 import { Subscription, subscriptionAdminConverter } from "@/app/model/subscription"
 import { Prediction, predAdminConverter } from "@/app/model/prediction"
 
-
-export async function joinRankUser(perm: boolean) {
-    
-    const userInfo = await getUserInfoFromSession() 
-
-    if (userInfo == null) {
-        return Promise.resolve({
-            success: false,
-            error: "not authorized"
-        })
-    }
-
-    const user = await serverGetModal<User>('user/' + userInfo.uid, userAdminConverter)
-    if (user == undefined) {
-        return Promise.resolve({
-            success: false,
-            error: "khong ton tai user"
-        })
-    }
-
-    const fee = perm ? Number(process.env.NEXT_PUBLIC_RANK_SPONSOR_PERM) : Number(process.env.NEXT_PUBLIC_RANK_SPONSOR_MONTH)
-    if (user.amount < fee) {
-        return Promise.resolve({
-            success: false,
-            error: "khong du tien , chi co " + user.amount + " , can : " + fee
-        })
-    }
-
-    const thuquyid = await getthuquyUID()
-    if (!thuquyid) {
-        return Promise.resolve({
-            success: false,
-            error: "khong tim duoc thu quy"
-        })
-    }
-
-    const tran: Transaction = {
-        tranType: TranType.followRank,
-        toUid: thuquyid,
-        fromUid: user.uid,
-        amount: fee,
-        status: "Done",
-        notebankacc: "",
-        date: new Date()
-    }
-    console.log(' trans ' + JSON.stringify(tran))
-    const result = await addANewTransaction(tran)
-    if (result.success == false) {
-        return Promise.resolve({
-            success: false,
-            error: result.message
-        })
-    }
-
-    const subRank : Subscription = {
-        uid: userInfo.uid,
-        eid: thuquyid,
-        startDate: new Date(),
-        perm: perm,
-        value: fee,
-        type: "rank"
-    }
-    console.log(' subRank ' + JSON.stringify(subRank))
-
-    await serverAddNewModal<Subscription>('subscription', subRank, subscriptionAdminConverter)
-
-    const expireDate = new Date()
-    const monthToAdd = perm ? 1200 : 1
-    expireDate.setMonth(expireDate.getMonth() + monthToAdd)
-
-    const cusClaim = {
-        expertType: userInfo.expertType,
-        expertPeriod: userInfo.expertPeriod,
-        expertExpire: userInfo.expertExpire,
-        rankExpire:  expireDate.getTime()
-    }
-
-    await setClaim(userInfo.uid, cusClaim) 
-
-    await serverUpdateDoc('user/' + userInfo.uid, {rankExpire: expireDate})
-
-
-    return {
-        success: true,
-        error: ""
-    }
-
-
-}
-
-export async function subcribleToAnExpert(eid: string, perm: boolean) {
-
-    const currentUser = await getCurrentUser()
-
-    if (currentUser == null) {
-        return Promise.resolve({
-            success: false,
-            error: "not authorized"
-        })
-    }
-
-    const user = await serverGetModal<User>('user/' + currentUser.uid, userAdminConverter)
-    if (user == undefined) {
-        return Promise.resolve({
-            success: false,
-            error: "khong ton tai user"
-        })
-    }
-
-    const expertToSub = await serverGetModal<Expert>('expert/' + eid, expertAdminConverter)
-
-    if (expertToSub == undefined) {
-        return Promise.resolve({
-            success: false,
-            error: "khong tim thay expert"
-        })
-    }
-
-    if (expertToSub.id == user.uid) {
-        return Promise.resolve({
-            success: false,
-            error: "user va expert la chung 1 nguoi"
-        })
-
-    }
-
-    if (perm == true && (expertToSub.expertType != 'perm') ) {
-        return Promise.resolve({
-            success: false,
-            error: "Chỉ có thể follow vĩnh viễn một chuyên gia trọn đời"
-        })
-    }
-
-    const fee = perm ? expertToSub.permPrice : expertToSub.monthlyPrice
-
-    if (!fee) {
-        return Promise.resolve({
-            success: false,
-            error: "Không xác định được giá "
-        })
-    }
-
-    if (user.amount < fee) {
-        return Promise.resolve({
-            success: false,
-            error: "khong du tien , chi co " + user.amount + " , can : " + fee
-        })
-    }
-
-
-    const existingSub = await getActivesubscriptionOf(user.uid, eid)
-    if (existingSub.length > 0) {
-        return Promise.resolve({
-            success: false,
-            error: "Subscription da ton tai"
-        })
-
-    }
-
-    const tran: Transaction = {
-        tranType: TranType.followSolo,
-        toUid: expertToSub.id,
-        fromUid: user.uid,
-        amount: Number(fee),
-        status: "Done",
-        notebankacc: "",
-        date: new Date()
-    }
-
-    const result = await addANewTransaction(tran)
-    if (result.success == false) {
-        return Promise.resolve({
-            success: false,
-            error: result.message
-        })
-    }
-
-    // const subCollection = db.collection('subscription/').withConverter(subscriptionAdminConverter)
-    if (user) {
-        const newSub: Subscription = {
-            uid: user.uid,
-            eid: eid,
-            startDate: new Date(),
-            perm: perm,
-            value: fee,
-            type: "solo"
-        }
-        console.log('adding new sub' + JSON.stringify(newSub))
-        await serverAddNewModal<Subscription>('subscription/', newSub, subscriptionAdminConverter)// subCollection.add(newSub)
-
-        return {
-            success: true,
-            error: ""
-        }
-    } else {
-        return {
-            error: "unauthorized",
-            success: false
-        }
-    }
-}
-
-
 export async function getFollowExpertByIDList(idList: string[]) {
     var result: Expert[] = []
 
@@ -226,37 +23,6 @@ export async function getFollowExpertByIDList(idList: string[]) {
     }
     return result
 }
-
-export async function getObservingPredsByExpertIDList(idList: string[]) {
-    var result : Prediction[] = []
-
-    for (const eid of idList) {
-        const preds = await serverQueryCollection('expert/' + eid + '/preds', [], predAdminConverter)
-        result.push(...preds)
-    }
-
-    
-    // let preds = result.
-    // // filter((doc) => {
-    // //     return doc.data().dateRelease == undefined
-    // // }).
-    // map((doc) => { return doc.data() })
-  
-    return result
-}
-
-async function getActivesubscriptionOf(uid: string, eid: string) {
-    let today = new Date()
-    let results = await adminDB.collection("subscription").where("eid", "==", eid).where("uid", "==", uid).where('endDate', '>=', today)
-        .withConverter(subscriptionAdminConverter).get();
-
-    // console.log("result = " + results.docs.length)
-
-    return results.docs.map(doc => {
-        return doc.data()
-    });
-}
-
 
 export async function serverAddNewModal<ModelType>(collectionPath: string, data: ModelType, converter: FirestoreDataConverter<ModelType>) {
     const predCollection = adminDB.collection(collectionPath).withConverter(converter)
@@ -299,13 +65,21 @@ export async function serverQueryCollectionGroup<ModelType>(name: string, filter
     
 }
 
-export async function serverQueryCollection<ModelType>(path: string, filters: { key: string, operator: WhereFilterOp, value: any }[], converter: FirestoreDataConverter<ModelType>, limit?: number) {
+export async function serverQueryCollection<ModelType>(path: string, filters: { key: string, operator: WhereFilterOp, value: any }[], converter: FirestoreDataConverter<ModelType>, limit?: number, orderBy?: string) {
     let ref = adminDB.collection(path)// query(collection(db, name));
     // console.log(filters)
     var q = undefined
     console.log('serverQueryCollection : ' + path)
     for (const { key, operator, value } of filters) {
         q = q ? q.where(key, operator, value) : ref.where(key, operator, value)
+    }
+    if (orderBy) {
+        if (q) {
+            q = q.orderBy(orderBy)
+        } else {
+            q = ref.orderBy(orderBy)
+        }
+
     }
     if (limit) {
         if (q) {

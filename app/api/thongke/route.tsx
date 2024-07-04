@@ -1,6 +1,7 @@
 // import { expertAdminConverter, predAdminConverter, userAdminConverter } from "@/app/lib/firebaseadmin/adminconverter";
 // import { serverQueryCollection, serverSetDoc, serverUpdateDoc } from "@/app/lib/firebaseadmin/firebaseadmin";
 import { serverQueryCollection, serverSetDoc, serverUpdateDoc } from "@/app/lib/firebaseadmin/adminfirestore";
+import { getRankData } from "@/app/lib/server";
 import { getPivotDates } from "@/app/lib/statistic";
 import { contentOf, datesGreaterThan, getPerformanceSince } from "@/app/lib/utils";
 import { ExpertStatus, expertAdminConverter } from "@/app/model/expert";
@@ -99,18 +100,17 @@ export async function GET(request: Request) {
       message.push(...yearData.message)
 
       const perInfo = {
-        curPerformance: {
-          week: weekData.performance,
-          month: monthData.performance,
-          quarter: quarterData.performance,
-          year: yearData.performance
-        }
+          weekPerform: weekData.performance,
+          monthPerform: monthData.performance,
+          quarterPerform: quarterData.performance,
+          yearPerform: yearData.performance
       }
 
       await serverUpdateDoc('expert/' + eid, perInfo)
-      message.push('\n expert ' + expert.name + ' performance info : ' + JSON.stringify(perInfo.curPerformance) + '\n\n\n\n')
+      message.push('\n expert ' + expert.name + ' performance info : ' + JSON.stringify(perInfo) + '\n\n\n\n')
 
     }
+
     // }
 
     // update followerNum for every expert
@@ -166,9 +166,12 @@ export async function GET(request: Request) {
     const dateTimeNowStr = (new Date()).getTime().toString()
 
     message.push(' =======================================================    \n')
-    message.push(' Theo quá trình trên, tiện tay đếm tổng số chuyên gia, số lượng sub ,tổng giá trị sub    \n')
+    message.push(' Theo quá trình trên, tiện tay đếm tổng số chuyên gia, số lượng sub ,tổng giá trị sub va rank Data   \n')
     console.log('=======================================================')
-    const data =  { numOfAllExpert, numOfAllSub: numOfAllSub,  sumAllSubValue , numOfSoloExperts, numOfRankExperts}
+
+    const rankData = await getRankData()
+
+    const data =  { numOfAllExpert, numOfAllSub: numOfAllSub,  sumAllSubValue , numOfSoloExperts, numOfRankExperts, rankData}
     await serverSetDoc('stats/' + dateTimeNowStr, data)
     await serverSetDoc('stats/latest', data, true)
 

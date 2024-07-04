@@ -187,121 +187,68 @@ exports.createTransaction = onDocumentCreated({document: "transaction/{documentI
 }
 );
 
-// exports.followerNum = onSchedule("25 * * * *", async () => {
 
-//     logger.info("begin to set number of follower")
-//     const expertsSnapshot = await getFirestore().collection('expert').get()
+// exports.createSubscription = onDocumentCreated({ document: "subscription/{documentId}", region: 'asia-southeast1'}, async (event) => {
+
 //     const toDay = new Date()
-//     const expertIDs = expertsSnapshot.docs.map(doc => doc.id)
-//     const subSnapshot = await getFirestore().collection('subscription').where('endDate','>=', toDay).get()
-//     const subs = subSnapshot.docs.map((doc) => { 
-//         return {
-//         uid: doc.data().uid,
-//         eid: doc.data().eid
-//         }
-//     })
 
-//     const result = expertIDs.map ((id) => {
-//         return {
-//             id : id,
-//             num: subs.filter((sub) => { 
-//                 return sub.eid == id
-//             }
-//             ).length
-//         }
-//     })
+//     const monthlaterDate = toDay()
+//     monthlaterDate.setMonth(toDay.getMonth() + 1)
 
-//     logger.info("result to update " + JSON.stringify(result))
-
-//     try {
-//         for (const e of result) {
-//             logger.info("--- aaaa"+JSON.stringify(e))
-//             await getFirestore().collection('expert').doc(e.id).update({followerNum:e.num})
-//         }
-//     } catch (err) {
-//         throw err
-//     }
-//   });
-
-
-
-exports.createSubscription = onDocumentCreated({ document: "subscription/{documentId}", region: 'asia-southeast1'}, async (event) => {
-
-    const data = event.data.data();
-    const date = new Date()
-    const uid = data.uid
-    const eid = data.eid
-    const perm = data.perm
-    const type = data.type
-    const value = data.value
-
-    const addMonth = data.perm == true ? 1200 : 1
+//     const data = event.data.data();
+//     const uid = data.uid
+//     const eid = data.eid
+//     const perm = data.perm
+//     const type = data.type
+//     const value = data.value
     
+//     const date = data.perm ? new Date('2050-01-01') : monthlaterDate
 
-    date.setMonth(date.getMonth() + addMonth)
+//     event.data.ref.update({"endDate":date}).then(() => {
 
-    event.data.ref.update({"endDate":date}).then(() => {
+//         const subInfo = {
+//             eid: eid,
+//             uid: uid,
+//             perm: perm,
+//             startDate: toDay,
+//             endDate: date,
+//             value: value,
+//             subDocID: event.data.id,
+//             type: type
+//         }
+//         console.log('Update sub enddate succeeded! Will add subInfo to user , expert with data' + JSON.stringify(subInfo));
 
-        const subInfo = {
-            eid: eid,
-            uid: uid,
-            perm: perm,
-            startDate: new Date(),
-            endDate: date,
-            value: value,
-            subDocID: event.data.id,
-            type: type
-        }
-        console.log('Write succeeded! with data' + JSON.stringify(subInfo));
-        // const fieldPath = new FieldPath(['following', eid.toString()])
-        // const str = 'following.'+eid
-        // getFirestore().collection('user').doc(uid).update(str, subInfo)
-        getFirestore().doc('user/' + uid).update({
-            following: FieldValue.arrayUnion(subInfo)
-        })
-        getFirestore().doc('user/' + uid + '/subHistory/' + event.data.id).set(subInfo)
+//         getFirestore().doc('user/' + uid).update({
+//             following: FieldValue.arrayUnion(subInfo)
+//         })
+//         getFirestore().doc('user/' + uid + '/subHistory/' + event.data.id).set(subInfo)
 
-        const notiForUser = {
-            dateTime : (new Date()).getTime(),
-            title: 'Theo dõi thành công',
-            content: 'Chúc quý nhà đầu tư có thê các khuyến nghị lợi nhuận cao',
-            urlPath: '/expert/details/' + eid
-        }
-        getFirestore().doc('user/' + uid).update({ 
-            notifies: FieldValue.arrayUnion(notiForUser)
-        })
-
-        if (type == 'solo') {
-            getFirestore().doc('expert/' + eid + '/subHistory/' + event.data.id).set(subInfo)
-            getFirestore().doc('expert/' + eid).update({ 
-                follower: FieldValue.arrayUnion(subInfo)
-            })
-            const notiForExpert = {
-                dateTime : (new Date()).getTime(),
-                title: 'Follower mới',
-                content: 'Xin chúc mừng, 1 nhà đầu tư vừa mới theo dõi bạn'
-            }
-            getFirestore().doc('user/' + eid).update({ 
-                notifies: FieldValue.arrayUnion(notiForExpert)
-            })
-        }    
-    });
-});
-
-
-// exports.makeuppercase = onDocumentCreated("/messages/{documentId}", (event) => {
-//     // Grab the current value of what was written to Firestore.
-//     const original = event.data.data().original;
-  
-//     // Access the parameter `{documentId}` with `event.params`
-//     logger.log("Uppercasing", event.params.documentId, original);
-  
-//     const uppercase = original.toUpperCase();
-  
-//     // You must return a Promise when performing
-//     // asynchronous tasks inside a function
-//     // such as writing to Firestore.
-//     // Setting an 'uppercase' field in Firestore document returns a Promise.
-//     return event.data.ref.set({uppercase}, {merge: true});
-//   });
-  
+//         // notify user
+//         if (type == 'rank') {
+//             const notiForUser = {
+//                 dateTime : toDay.getTime(),
+//                 title: 'Đã tham gia tài trợ rank',
+//                 content: 'Giờ đây quý nhà đầu tư đã có thể theo dõi toàn bộ chuyên gia đua rank',
+//                 urlPath: '/expert'
+//             }
+//             getFirestore().doc('user/' + uid).update({ 
+//                 notifies: FieldValue.arrayUnion(notiForUser)
+//             })
+//             getFirestore().collection('user/' + uid + '/notiHistory').add(notiForUser)
+            
+//         } else if (type == 'solo') {
+//             getFirestore().doc('expert/' + eid + '/subHistory/' + event.data.id).set(subInfo)
+//             getFirestore().doc('expert/' + eid).update({ 
+//                 follower: FieldValue.arrayUnion(subInfo)
+//             })
+//             const notiForExpert = {
+//                 dateTime : (new Date()).getTime(),
+//                 title: 'Follower mới',
+//                 content: 'Xin chúc mừng, 1 nhà đầu tư vừa mới theo dõi bạn'
+//             }
+//             getFirestore().doc('user/' + eid).update({ 
+//                 notifies: FieldValue.arrayUnion(notiForExpert)
+//             })
+//         }    
+//     });
+// });

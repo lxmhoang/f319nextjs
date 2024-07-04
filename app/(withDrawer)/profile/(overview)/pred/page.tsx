@@ -11,9 +11,6 @@ export default async function Page() {
   const expertIDs = await getMyFollowingExpertIDs()
   console.log('expertIDs ' + JSON.stringify(expertIDs))
   const experts = await getFollowExpertByIDList(expertIDs)
-  // const preds = expertIDs.length > 0 ? await getObservingPredsByExpertIDList(expertIDs) : []
-  // console.log('result ' + JSON.stringify(preds))
-  
   
   return (
 

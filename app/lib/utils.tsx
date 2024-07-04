@@ -100,7 +100,6 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
   return {
     performance: perform,
     message: message
-
   }
 }
 
@@ -131,8 +130,8 @@ export function sortByField<T, Key extends keyof T>(data: T[], field: Key) {
   })
 }
 
-export function contentOf(arrayStr: string[]) {
-  return arrayStr.reduce((a, b) => { return a + '\n \n' + b })
+export function contentOf(arrayStr: string[], joinBy: string = '\n \n') {
+  return arrayStr.reduce((a, b) => { return a + joinBy + b })
 }
 
 export const datesGreaterThan = (first: Date, second: Date) => {

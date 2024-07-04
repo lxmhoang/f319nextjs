@@ -1,7 +1,6 @@
 'use client'
-import { Card, Label } from "flowbite-react";
-import { Expert } from "../model/expert";
-import { Avatar, List, ListItem } from "flowbite-react";
+import { Label } from "flowbite-react";
+import { List, ListItem } from "flowbite-react";
 
 export type BoardProps = {
     title: string,
@@ -15,9 +14,9 @@ export type BoardProps = {
 export default function LeaderBoard(props: BoardProps) {
     const range = props.since + ' - ' + props.to
     return (
-        <div className="m-4 w-[300px] h-[300px] mx-auto border-gray-400 border-2 rounded-md   ">
+        <div className="m-2 w-[300px] h-[300px] mx-auto border-gray-400 border-2 rounded-md   ">
             <div className="flex justify-center  h-[30px] mb-2">
-                <Label className="m-2 text-md " value={props.total + " / người"} />
+                <Label className="m-2 text-md " value={props.total + " / người"} /> 
             </div>
             <div className="flex justify-center  h-[30px]">
                 <Label className="m-2" value={range} />

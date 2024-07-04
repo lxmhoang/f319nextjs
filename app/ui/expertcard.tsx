@@ -26,9 +26,11 @@ export default function ExpertCard({ expertInfo }: { expertInfo: string }) {
               <div className="block">
                 <div className="text-small">
                   {expert.expertType == 'solo' &&  <p>{expert.follower.length} follower</p>}
-                  {expert.expertType == 'rank' &&  <p>Ranking</p>}
+                  {expert.expertType == 'rank' &&  (
+                  <p>Ranking</p>
+                  )}
                   
-                  {expert.yearPerform &&  <p className={perfConver(expert.yearPerform).color}>{perfConver(expert.yearPerform).info}</p>}
+                  {(expert.expertType == 'rank' && expert.yearPerform) &&  <p className={perfConver(expert.yearPerform).color}>{perfConver(expert.yearPerform).info}</p>}
                 </div>
               </div>
 

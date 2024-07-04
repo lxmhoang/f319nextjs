@@ -7,13 +7,14 @@ import { useEffect, useState } from "react";
 import { ConfirmationModal } from "../confirm";
 import { Button } from "../button";
 import { addComma, perfConver } from "@/app/lib/utils";
-import { joinRankUser, subcribleToAnExpert, viewExpertPreds } from "@/app/lib/firebaseadmin/adminfirestore";
+import { viewExpertPreds } from "@/app/lib/firebaseadmin/adminfirestore";
 import { Prediction } from "@/app/model/prediction";
 import { Expert } from "@/app/model/expert";
 import { login, refreshToken } from "@/app/lib/client";
 import ExpertHorView from "../expertHorView";
 import ExpertVertView from "../expertVertView";
 import { redirect, useRouter } from "next/navigation";
+import { joinRankUser, subcribleToAnExpert } from "@/app/lib/server";
 
 type AlertModal = {
   isShown: boolean
@@ -52,7 +53,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
     if (expert) {
       exc()
     }
-  }, [user, expert]
+  }, [user]
   )
   const defaultOpen = (typeof window !== 'undefined') ? window.location.hash.slice(1) : "";
   console.log(' default open ' + defaultOpen)

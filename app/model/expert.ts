@@ -90,10 +90,6 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
             return follower
         }) : []
 
-        const week = data.curPerformance ? data.curPerformance.week : 1
-        const month = data.curPerformance ? data.curPerformance.month : 1
-        const quarter = data.curPerformance ? data.curPerformance.quarter : 1
-        const year = data.curPerformance ? data.curPerformance.year : 1
         const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
         return {
             id: snapshot.id,
@@ -107,10 +103,10 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
             expertPeriod: data.expertPeriod,
             expertType: data.expertType,
             expertExpire: data.expertExpire,
-            weekPerform: week,
-            monthPerform: month,
-            quarterPerform: quarter,
-            yearPerform: year,
+            weekPerform: data.weekPerform,
+            monthPerform: data.monthPerform,
+            quarterPerform: data.quarterPerform,
+            yearPerform: data.yearPerform,
             joinDate: joinDate,
             visible: data.visible,
             isExpired: new Date(data.expertExpire) < new Date()
@@ -155,10 +151,6 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
             }
             return follower
         }) : []
-        const week = data.curPerformance ? data.curPerformance.week : 1
-        const month = data.curPerformance ? data.curPerformance.month : 1
-        const quarter = data.curPerformance ? data.curPerformance.quarter : 1
-        const year = data.curPerformance ? data.curPerformance.year : 1
 
         const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
         return {
@@ -171,10 +163,10 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
             shortIntro: data.shortIntro,
             status: ExpertStatus.activated,
             visible: data.visible,
-            weekPerform: week,
-            monthPerform: month,
-            quarterPerform: quarter,
-            yearPerform: year,
+            weekPerform: data.weekPerform,
+            monthPerform: data.monthPerform,
+            quarterPerform: data.quarterPerform,
+            yearPerform: data.yearPerform,
             expertPeriod: data.expertPeriod,
             expertExpire: data.expertExpire,
             expertType: data.expertType,
