@@ -32,7 +32,7 @@ export default async function Home() {
   const dismissX = 400
   const speedPXPerSec = 60
   const rawtext = stats.notifies ? contentOf(stats.notifies.map((noti : UserNoti) => { return noti.content}), ) : ""
-  const space = stats.notifies.length * 20
+  const space = stats.notifies ? stats.notifies.length * 20 : 0
   const lengthOfTextInPx = rawtext.length * charSpace + space + dismissX  
   const time = Math.round(lengthOfTextInPx / speedPXPerSec)
   const css = `
