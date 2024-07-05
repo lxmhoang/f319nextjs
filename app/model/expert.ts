@@ -35,7 +35,7 @@ export type Expert = {
     expertPeriod: string;
     visible: boolean;
 
-    joinDate?: Date
+    joinDate: Date
 }
 
 export const expertRawConverter : AdminFirestoreDataConverter<any> = {
@@ -66,6 +66,7 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
             expertPeriod: expert.expertPeriod,
             status: expert.status,
             visible: expert.visible,
+            joinDate: expert.joinDate
         };
     },
     fromFirestore(
@@ -90,7 +91,8 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
             return follower
         }) : []
 
-        const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
+        const joinDate =new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate())
+        // console.log('aaaa ' + JSON.stringify(joinDate))
         return {
             id: snapshot.id,
             imageURL: data.imageURL,
@@ -152,7 +154,7 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
             return follower
         }) : []
 
-        const joinDate = data.joinDate ? new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate()) : undefined
+        const joinDate = new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate())
         return {
             id: snapshot.id,
             imageURL: data.imageURL,

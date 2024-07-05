@@ -20,30 +20,8 @@ import { Expert } from '@/app/model/expert';
 import { addComma, compressFile, convert } from '@/app/lib/utils';
 import { Blockquote, Checkbox, Label, Radio, Spinner, TextInput } from 'flowbite-react';
 import { useAppContext } from '@/app/lib/context';
-import { postIdToken } from '@/app/lib/firebase/auth';
 import { redirect } from 'next/navigation';
-import { revalidatePath } from 'next/cache';
-import { User } from 'firebase/auth';
 import { refreshToken } from '@/app/lib/client';
-
-// export function ExpertFormComponent({ expert }: { expert: Expert | undefined }) {
-
-//     const userInfo = useAppContext()
-
-
-//     return (
-//         <>
-//             {userInfo && userInfo.firebaseUser ?
-//                 <FormExpert expert={expert} />
-//                 :
-//                 <div>Loading user info</div>
-//             }
-//         </>
-//     )
-
-// }
-
-
 
 export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undefined }) {
 
@@ -109,31 +87,6 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
     const [state, dispatch] = useFormState<RegisterExpertFormState, FormData>(editExpert.bind(null, fileInside, currentAvatarURL, expert == undefined), initialState);
 
     const [showModal, setShowModal] = useState(false);
-    // console.log('form state ' + JSON.stringify(state) + showModal)
-
-    // const refreshToken = async (firebaseUser: User) => {
-    //     const newIdtoken = await firebaseUser.getIdToken(true)
-    //     console.log(' ========= newIdtoken ' + newIdtoken)
-    //     const newResult = await firebaseUser.getIdTokenResult()
-    //     console.log(' ========= newResult ' + JSON.stringify(newResult.claims))
-    //     var result: boolean
-    //     try {
-    //         result = await postIdToken(newIdtoken)
-
-    //         console.log('done updating token after creating expert')
-    //         setShowModal(true)
-    //     } catch (e) {
-    //         console.log('sth wrong with post new ID token')
-    //         result = false
-    //     }
-    //     if (result) {
-    //         console.log('aaaaa done post new ID token')
-    //     } else {
-    //         console.log('sth wrong with post new ID token')
-    //     }
-
-    // }
-
 
     useEffect(() => {
 

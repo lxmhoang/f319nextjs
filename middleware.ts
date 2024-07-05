@@ -25,7 +25,7 @@ export function middleware(request: NextRequest) {
                     if (value) {
                         // const descrypt = await decrypt(value)
                         const uInfo: { isExpert: boolean } = JSON.parse(value)
-                        console.log(' ------- uInfo ------' + uInfo)
+                        // console.log(' ------- uInfo ------' + uInfo)
                         if (!uInfo.isExpert) {
                             console.log('not an expert, redirect to home page')
                             return redirectToHomePage(request)

@@ -1,12 +1,7 @@
+'use client'
 
-import { Card, CardBody, CardHeader, Divider } from "@nextui-org/react";
-import Link from 'next/link'
-import { storage } from "../lib/firebase/firebase";
-import { getDownloadURL, ref } from 'firebase/storage';
-import { Label } from "flowbite-react";
+import { Card, CardBody } from "@nextui-org/react";
 import { Expert } from "../model/expert";
-import { perfConver } from "../lib/utils";
-import { useEffect, useState } from "react";
 import Image from 'next/image'
 
 export default function ExpertVertView({ expertInfo }: { expertInfo: string }) {
@@ -21,11 +16,36 @@ export default function ExpertVertView({ expertInfo }: { expertInfo: string }) {
           <CardBody>
             <div className="flex flex-wrap gap-4" >
               {/* className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center" */}
-              <div className="mt-2 ml-2  gap-6 md:gap-12 block ">
+              <div className="mt-2 ml-2  gap-6 md:gap-16 block ">
 
-                <Image width={100} height={100} priority={true} src={expert.imageURL} className="rounded-full w-[160px] h-[160px] mb-4" alt={""}
+                <Image width={100} height={100} priority={true} src={expert.imageURL} className="rounded-full w-[160px] h-[160px] mb-12" alt={""}
                 />
-                <div className="block md:gap-12">
+
+                <div className="flex cols-2 gap-12">
+                  <div>
+                    <p> Tên </p>
+                    <p> Ngày tham gia  </p>
+                    <p> Loại chuyên gia </p>
+                    {expert.expertType == 'solo' && (<p>{expert.follower.length} người theo dõi</p>)}
+                    {expert.expertType == 'rank' && expert.yearPerform && (<p>Kết quả theo năm</p>)}
+                    {expert.expertType == 'rank' && expert.quarterPerform && (<p>Kết quả theo quý</p>)}
+                    {expert.expertType == 'rank' && expert.monthPerform && (<p>Kết quả theo tháng</p>)}
+                    {expert.expertType == 'rank' && expert.weekPerform && (<p>Kết quả theo tuần</p>)}
+                   </div>
+                  <div>
+                    <p> {expert.name} </p>
+                    <p> {(new Date(expert.joinDate)).toLocaleDateString('vi')} </p>
+                    <p> {expert.expertType} </p>
+                    {expert.expertType == 'solo' && <p> </p>}
+
+                    {expert.expertType == 'rank' && expert.yearPerform && (<p>Kết quả theo năm</p>)}
+                    {expert.expertType == 'rank' && expert.quarterPerform && (<p>Kết quả theo quý</p>)}
+                    {expert.expertType == 'rank' && expert.monthPerform && (<p>Kết quả theo tháng</p>)}
+                    {expert.expertType == 'rank' && expert.weekPerform && (<p>Kết quả theo tuần</p>)}
+
+                  </div>
+                </div>
+                {/* <div className="block md:gap-12">
                   <p className="mb-5">Tên: {expert.name} </p>
                   {expert.joinDate && (<p className="mb-5">Ngày tham gia {(new Date(expert.joinDate)).toLocaleDateString('vi')} </p>)}
                   {expert.expertType == 'solo' && (<><p className="mb-5"> Loại chuyên gia: Solo</p> <p className="mb-5">{expert.follower.length} follower</p></>)}
@@ -48,7 +68,7 @@ export default function ExpertVertView({ expertInfo }: { expertInfo: string }) {
                       <p className={perfConver(expert.weekPerform).color}> {perfConver(expert.weekPerform).info}</p>
                     </>)}
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
 

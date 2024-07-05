@@ -8,8 +8,6 @@ export default async function Page() {
   const experts = await getFollowExpertByIDList(expertIDs)
   
   return (
-
-
     <div>
       <div>
         {experts.length > 0 ?
@@ -20,7 +18,6 @@ export default async function Page() {
               return <div key={item.id} >
                 <ExpertCard expertInfo={JSON.stringify(item)} />
               </div>
-
             })}
             </div>
           </>) : (<>Chưa theo dõi chuyên gia nào</>)

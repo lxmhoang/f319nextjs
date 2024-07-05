@@ -10,6 +10,8 @@ import { storage } from '../firebase/firebase';
 import { revalidatePath } from 'next/cache';
 import { addComma } from '../utils';
 import { Expert, ExpertStatus, expertAdminConverter } from '@/app/model/expert';
+import { UserNoti } from '@/app/model/noti';
+import { sendNotificationToBoard } from '../server';
 
 
 const ExpertFormSchema = z.object({
@@ -214,6 +216,15 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             }
             await serverSetDoc('expert/' + uid, expertAdminConverter.toFirestore(expert)) // create expert record
         }
+
+        const boardNoti: UserNoti = {
+            title: '',
+            dateTime: (new Date()).getTime(),
+            content: 'Chào mừng ' + newName + ' đã đăng ký làm chuyên gia ' + expertType,
+            urlPath: '/expert/details/' + uid
+        }
+
+        await sendNotificationToBoard(boardNoti)
         
 
         // revalidatePath('/advisor/register')

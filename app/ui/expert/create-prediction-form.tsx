@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation'
 
 import { useFormState } from 'react-dom';
 import { createRef, useEffect, useState } from 'react';
-import { Divider, useDisclosure, Autocomplete, AutocompleteItem, Slider, Button } from '@nextui-org/react';
+import { Divider, useDisclosure, Autocomplete, AutocompleteItem, Slider, Button, Link } from '@nextui-org/react';
 import { ConfirmationModal } from '../confirm';
 import { getLocalStockList, getRealTimeStockData } from '../../lib/getStockData';
 import { createNewPrediction } from '@/app/lib/action';
@@ -32,13 +32,14 @@ const marks = Array.from(Array(11).keys()).map((num) => {
     }
 })
 
-export function PredictCreationForm() {
+export function PredictCreationForm({ remainPortion }: { remainPortion: number }) {
 
-    const [remainPortion, setRemainPortion] = useState<number>()
+
+    // const [remainPortion, setRemainPortion] = useState<number>()
     const [selectedStock, setSelectedStock] = useState<{ code: string, name: string }>()
     const [selectedStockPrice, setSelectedStockPrice] = useState<{ high: number, low: number }>()
     const [stocksData, setStocksData] = useState<{ code: string, name: string }[]>([])
-    const stockCodes = stocksData.map((item) => item.code)
+    // const stockCodes = stocksData.map((item) => item.code)
     const [portion, setPortion] = useState<number>(0)
     const minTakeProfitPrice = selectedStockPrice ? Math.round(selectedStockPrice.high * 1.2 * 100) / 100 : undefined
     const maxCutLossPrice = selectedStockPrice ? Math.round(selectedStockPrice.high * 0.8 * 100) / 100 : undefined
@@ -46,22 +47,38 @@ export function PredictCreationForm() {
     const router = useRouter()
 
     const initialFormState = { message: "", errors: {}, justDone: false };
-    const [addPredictState, dispatchAddtran] = useFormState(createNewPrediction.bind(null, selectedStockPrice?.high), initialFormState);
+    const [addPredictState, dispatchAddtran] = useFormState(createNewPrediction.bind(null, selectedStock?.code, selectedStockPrice?.high), initialFormState);
     const [showModal, setShowModal] = useState(false);
-    const { isOpen, onOpen, onOpenChange } = useDisclosure();
-    const minDeadLine = new Date(new Date().getTime() + (5 * 24 * 60 * 60 * 1000)) // 5 ngay sau 
+    // const { isOpen, onOpen, onOpenChange } = useDisclosure();
+    const minDeadLine = new Date(new Date().getTime() + (10 * 24 * 60 * 60 * 1000)) // 10 ngay sau 
     const defaultDeadLine = new Date(new Date().getTime() + (30 * 24 * 60 * 60 * 1000)) // 20 ngay sau
-    if (addPredictState.justDone == true) {
-        setShowModal(true)
-        addPredictState.justDone = false
-    }
 
-    const handleLeftBtn = () => {
-        router.push('/advisor/prediction')
-        setShowModal(false)
-    };
+
+    useEffect(() => {
+        console.log("state " + JSON.stringify(addPredictState) + showModal)
+        if (addPredictState.justDone == false && addPredictState.message && addPredictState.message.length > 0) {
+            setShowModal(true)
+        }
+        if (addPredictState.justDone == false && addPredictState.message && addPredictState.message.length > 0) {
+            // show popup
+            console.log('11111')
+            setShowModal(true)
+        } else {
+            if (addPredictState.justDone == true) {
+                setShowModal(true)
+            }
+        }
+
+    }, [addPredictState])
+    
+   
+
+
 
     const handleCloseModal = () => {
+        if (addPredictState.justDone == true) {
+            router.push('/advisor/prediction')
+        }
         setShowModal(false)
     };
 
@@ -80,7 +97,7 @@ export function PredictCreationForm() {
     const ref = createRef<HTMLFormElement>();
     useEffect(() => {
         const fetchData = async () => {
-            console.log('aaaa --- selected stock : ' + selectedStock)
+            console.log('aaaa --- selected stock : ' + JSON.stringify(selectedStock))
             if (selectedStock) {
                 const result = await getRealTimeStockData([selectedStock.code])
                 const price = result[selectedStock.code]
@@ -89,6 +106,7 @@ export function PredictCreationForm() {
                 setSelectedStockPrice(undefined)
             }
         }
+
         ref.current?.reset()
         fetchData()
 
@@ -104,9 +122,7 @@ export function PredictCreationForm() {
          price : {queryPrice.error ? "Error" : queryPrice.isLoading ? 'Loading ' : queryPrice.data ? JSON.stringify(queryPrice.data)  : "No data" } 
         {} */}
             </>
-
-            <Divider />
-            <form ref={ref} action={dispatchAddtran} className='p-4'  >
+            <div className="relative mb-8 p-4">
                 {/* <Label value="Hãy chọn 1 cổ phiếu" /> */}
                 <div className="relative mb-2"> {!selectedStock ?
                     (<> Hãy chọn 1 cổ phiếu</>) :
@@ -116,19 +132,16 @@ export function PredictCreationForm() {
                         <>Fetching stock price</>
 
                 }</div>
-                {/* <input type="hidden" name="priceIn" value={selectedStockPrice ?? 0}></input> */}
-                {/* <input type="hidden" name="uid" value={getAuth().currentUser?.uid ?? ""}></input> */}
-                <div className="relative mb-8">
 
-                    {
-                        (stockCodes.length > 0) ?
-                            (<Autocomplete
+                {
+                    (stocksData.length > 0) ?
+                        (<div className="flex">
+                            <Autocomplete
                                 allowsEmptyCollection={false}
                                 // defaultSelectedKey={selectedStock.code}
                                 // onClose={() => {}}
                                 onClear={() => { setSelectedStock(undefined) }}
                                 aria-label='assetNamePicker'
-                                name="assetName"
                                 // onKeyDown={(e) => e.co()}
                                 onKeyDown={(e: any) => e.continuePropagation()}
                                 // label="Chọn 1 công ty"
@@ -145,190 +158,99 @@ export function PredictCreationForm() {
                                     // setSelectedCompComp(comps[index as number])
                                 }}
                             >
-
-                                {stockCodes.map((code, index) => (
-
-                                    <AutocompleteItem key={index} value={code} className="">
-                                        {code}
+                                {stocksData.map((item, index) => (
+                                    <AutocompleteItem key={index} value={item.code} className="">
+                                        {item.code}
                                     </AutocompleteItem>
                                 ))}
-                            </Autocomplete>)
-                            :
-                            (<>Loading list ... </>)
-                    }
-                </div>
+                            </Autocomplete>
+                            {/* <Button onClick={() => {
 
+                            }}>Submit</Button> */}
+                        </div>)
+                        :
+                        (<>Loading list ... </>)
+                }
+            </div>
 
-                {
-                    selectedStock && selectedStockPrice && maxCutLossPrice && minTakeProfitPrice && (
-                        <><div className="mb-2 mr-4 block max-w-screen-sm">
-                            Giá mua vào hiện tại {selectedStockPrice?.high}
+            <Divider />
+            {
+                selectedStock && selectedStockPrice && maxCutLossPrice && minTakeProfitPrice && (
+                    <form ref={ref} action={dispatchAddtran} className='p-4'  >
+
+                        <div className="mb-4 mr-8 block max-w-screen-sm">
+                            Giá tại thời điểm khuyến nghị (không thể thay đổi)
+                            <TextInput className='w-1/2' type="number" name="tempPriceIn" defaultValue={selectedStockPrice?.high.toString()} disabled />
                         </div>
-                            {/* <></> */}
-                            <div className="mb-2 mr-4 block max-w-screen-sm">
-                                <Label value={"Chọn giá chốt lãi (120-200%): " + minTakeProfitPrice + "-" + (selectedStockPrice.high * 2).toFixed(1) + ""} />
-                                <TextInput className='w-1/2' step={0.1} type="number" name="takeProfitPrice" 
-                                 defaultValue={minTakeProfitPrice} placeholder={"Chọn trong khoảng " + minTakeProfitPrice.toString() + "-" + (selectedStockPrice.high * 2)} required disabled={selectedStockPrice == undefined} onChange={(e) => {
-                                    // console.log('aaaa ' + e.target.value)
-                                    //       const value = Number(e.target.value)
-                                    //       if (value < minTakeProfitPrice) {
-                                    //         console.log('vvvvv ')
-                                    //           e.target.value = minTakeProfitPrice.toFixed(1)
-                                    //       }
-                                    //       if (value > selectedStockPrice?.high * 2) {
-                                    //         console.log('zzzzz ')
-                                    //           e.target.value = (selectedStockPrice?.high * 2).toFixed(1)
+                        <div className="mb-2 mr-4 block max-w-screen-sm gap-2" >
+                            <Label value={"Chọn giá chốt lãi (dương ít nhất 20%), từ " + minTakeProfitPrice + " trở lên ß"} />
+                            <TextInput className='w-1/2' step={0.1} type="number" name="takeProfitPrice"
+                                defaultValue={(minTakeProfitPrice + 1).toString()} placeholder={" >=  " + minTakeProfitPrice.toString()} required disabled={selectedStockPrice == undefined}
+                            />
+                        </div>
+                        <div className="mb-8 max-w max-w-screen-sm">
+                            <Label value={"Chọn giá cắt lỗ (âm ít nhất 20%), từ " + maxCutLossPrice.toString() + " trở xuống "} />
+                            <TextInput className='w-1/2' step={0.01} type="number" name="cutLossPrice" defaultValue={(maxCutLossPrice - 1).toString()} required disabled={selectedStockPrice == undefined}
+                            />
+                        </div>
 
-                                    //       }
-                                }} onBlur={(e) => {
-                                    // console.log('aaaa ' + e.target.value)
-                                    const value = Number(e.target.value)
-                                    if (value < minTakeProfitPrice) {
-                                        e.target.value = minTakeProfitPrice.toString()
-                                    }
-                                    if (value > selectedStockPrice?.high * 2) {
-                                        e.target.value = (selectedStockPrice?.high * 2).toString()
+                        <div className="mb-8 block max-w-screen-sm">
+                            <div className="mb-2 "><Label htmlFor="deadLine" value="Deadline nắm giữ, (sau ngày này hệ thống sẽ tự chốt theo giá thị trường" /></div>
+                            <div className="mb-2"><Label htmlFor="desDeadLine" className='text-xs' value={"Deadline phải ít nhất sau hôm nay 10 ngày, từ " + minDeadLine.toLocaleDateString('vi')} /></div>
+                            <Datepicker className='w-1/2' name="deadLine" defaultDate={defaultDeadLine} minDate={minDeadLine} autoHide={true} maxDate={new Date(2027, 1, 1)} required />
+                        </div>
+                        {remainPortion != undefined && (<div className="mb-14 max-w-sm">
 
-                                    }
-                                }} />
-                            </div>
-                            <div className="mb-8 max-w max-w-screen-sm">
-                                <Label value={"Chọn giá cắt lỗ (50-80%): " + (selectedStockPrice.high / 2).toString() + "-" + maxCutLossPrice} />
-                                =={maxCutLossPrice}=={selectedStockPrice.high}****
-                                <TextInput className='w-1/2' step={0.01} type="number" name="cutLossPrice" placeholder={"Chọn trong khoảng " + (selectedStockPrice.high / 2).toString() + "-" + maxCutLossPrice} defaultValue={maxCutLossPrice} required disabled={maxCutLossPrice == undefined} onBlur={(e) => {
-                                    // console.log('aaaa ' + e.target.value)
-                                    const value = Number(e.target.value)
-                                    if (value > maxCutLossPrice) {
-                                        e.target.value = maxCutLossPrice.toString()
-                                    }
-                                    if (value < selectedStockPrice.high / 2) {
-                                        e.target.value = (selectedStockPrice.high / 2).toString()
+                            <div className="mb-2"><Label className="mb-14 max-w-xs" value={"Phân bổ tỷ lệ cổ phiếu này trên tổng vốn. Bạn còn " + remainPortion + "%"} /></div>
 
-                                    }
+                            <TextInput className='w-1/2' step={1} type="number" name="portion" placeholder={"<= " + remainPortion} max={remainPortion} required />
 
-
-                                }} />
-                            </div>
-
-                            <div className="mb-8 block max-w-screen-sm">
-                                <div className="mb-2"><Label htmlFor="deadLine" value="Deadline nắm giữ, sau ngày này sẽ tự chốt theo giá thị trường" /></div>
-                                <div className="mb-2"><Label htmlFor="desDeadLine" value={"Chọn kể từ ngày  " + minDeadLine.toLocaleDateString('vi')} /></div>
-                                <Datepicker className='w-1/2' name="deadLine" defaultDate={defaultDeadLine} minDate={minDeadLine} autoHide={true} maxDate={new Date(2027, 1, 1)} required />
-                            </div>
-                            {remainPortion != undefined && (<div className="mb-14 max-w-sm">
-
-                                <div className="mb-2"><Label className="mb-14 max-w-xs" value={"Phân bổ tỷ lệ cổ phiếu này trên tổng vốn. Bạn còn " + remainPortion + "%"} /></div>
-                                {/* <div>
-                                    <p>Các khuyến nghị đang tiếp diễn </p>
-                                </div> */}
-
-                                <Slider
-                                    name='portion'
+                            {/* <Slider
+                                    // name='portion'
                                     label={"Đã chọn " + portion + "%"}
                                     step={10}
                                     maxValue={100}
                                     minValue={0}
-                                    value={portion}
+                                    // value={portion}
                                     showSteps
                                     showTooltip
                                     showOutline
                                     onChange={(e) => {
-                                        if (typeof e == 'number') {
-                                            if (e > remainPortion) {
-                                                setPortion(remainPortion)
-                                            } else {
-                                                setPortion(e)
-                                            }
-                                        }
+                                        // if (typeof e == 'number') {
+                                        //     if (e > remainPortion) {
+                                        //         setPortion(remainPortion)
+                                        //     } else {
+                                        //         setPortion(e)
+                                        //     }
+                                        // }
                                     }
                                     }
-                                    marks={marks}
+                                    // marks={marks}
 
                                     className="max-w-sm mt-30"
-                                />
-                            </div>)}
-                            <div className='mb-4 mr-4 max-w-full'>
-                                {(remainPortion != undefined && remainPortion < 100) && (<div className='mb-4 mt-4 '> <p>{100 - remainPortion}% vốn đang ngâm trong các khuyến nghị đang tiếp diễn, kết thúc một vài cái để tăng tỷ lệ cho khuyến nghị đang tạo</p> </div>)}
-                                <div className="">
+                                /> */}
+                        </div>)}
+                        <div className='mb-4 mr-4 max-w-full'>
+                            {(remainPortion != undefined && remainPortion < 100) && (<div className='mb-4 mt-4 '> <p>{100 - remainPortion}% vốn đang ngâm trong các khuyến nghị đang tiếp diễn, cân nhắc <Link href="/advisor">kết thúc một vài cái </Link> để tăng tỷ lệ cho khuyến nghị đang tạo</p> </div>)}
+                            {/* <div className="">
                                     <ReviewPrediction doneFetching={(total) => {
                                         setRemainPortion(100 - total);
                                     }} wip={true} />
-                                </div>
-                            </div>
-                            <Button type="submit" color='primary' isDisabled={portion == 0}>Tạo khuyến nghị </Button>
-                        </>
-
-                    )
-                }
-                <div id="customer-error" aria-live="polite" aria-atomic="true">
-                    {/* {addPredictState.errors?.priceOut &&
-                        addPredictState.errors.priceOut.map((error: string) => (
-                            <p className="mt-2 text-sm text-red-500" key={error}>
-                                {error}
-                            </p>
-                        ))} */}
-                </div>
-                {/* <label htmlFor="cutLossPrice" className="mb-2 block text-sm font-medium">
-                    Giá cắt lỗ
-                </label>
-                <div className="mb-4 max-w">
-                    <input
-                        name="cutLossPrice"
-                        className="peer block w-1/3 rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
-                        placeholder="Nhap gia cat lo"
-                        // startContent={<HeartIcon size={18} />}
-                        type="number"
-                    //  max={maxCutLossPrice}
-                    />
-                </div> */}
-                <div id="customer-error" aria-live="polite" aria-atomic="true">
-                    {/* {addPredictState.errors?.cutLoss &&
-                        addPredictState.errors.cutLoss.map((error: string) => (
-                            <p className="mt-2 text-sm text-red-500" key={error}>
-                                {error}
-                            </p>
-                        ))} */}
-                </div>
-                {/* <label htmlFor="deadLine" className="mb-2 block text-sm font-medium">
-                    Ngày cuối cùng nắm giữ
-                </label> */}
-                {/* <div className="mb-4 max-w">
-                    <input
-                        name="deadLine"
-                        className="peer block w-1/3 rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
-                        placeholder="Nhap ngay ket thuc"
-                        // startContent={<HeartIcon size={18} />}
-                        type="date"
-                    />
-                </div> */}
+                                </div> */}
+                        </div>
+                        <Button type="submit" color='primary' >Tạo khuyến nghị </Button>
 
 
-                <div id="customer-error" aria-live="polite" aria-atomic="true">
-                    {/* {addPredictState.errors?.deadLine &&
-                        addPredictState.errors.deadLine.map((error: string) => (
-                            <p className="mt-2 text-sm text-red-500" key={error}>
-                                {error}
-                            </p>
-                        ))} */}
-                </div>
-
-
-                {/* <div id="customer-error" aria-live="polite" aria-atomic="true">
-                    {addPredictState.errors?.assetName &&
-                        addPredictState.errors?.general.map((error: string) => (
-                            <p className="mt-2 text-sm text-red-500" key={error}>
-                                {error}
-                            </p>
-                        ))}
-                </div> */}
-            </form>
+                    </form>
+                )
+            }
             <Divider />
 
             <ConfirmationModal
                 isOpen={showModal}
                 onClose={handleCloseModal}
-                onLeftButtonClick={handleLeftBtn}
-                title={"Đã tạo xong khuyến nghị"}
+                onLeftButtonClick={handleCloseModal}
+                title={""}
                 message={addPredictState.message ?? "No message"}
                 leftButtonText={"Okey"}
             />

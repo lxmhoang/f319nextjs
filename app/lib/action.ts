@@ -11,7 +11,8 @@ import { Expert, expertAdminConverter } from '../model/expert';
 import { arrayUnion } from 'firebase/firestore';
 import firebase from 'firebase/compat/app';
 import { FieldValue } from 'firebase-admin/firestore';
-import { sendNotificationToBoard, sendNotificationToUser } from './server';
+import { getMyWIPPreds, sendNotificationToBoard, sendNotificationToUser } from './server';
+import { getRealTimeStockData } from './getStockData';
 
 
 
@@ -220,7 +221,6 @@ export type PredictionFormState = {
 const PredictionFormSchema = z.object({
   // assetType: z.string(),
   assetName: z.string(),
-  priceIn: z.number(),
   priceOut: z.number(),
   cutLoss: z.number(),
   dateIn: z.date(),
@@ -230,11 +230,20 @@ const PredictionFormSchema = z.object({
 })
 
 
-export async function createNewPrediction(selectedStockPrice: number | undefined, prevState: PredictionFormState, formData: FormData) {
-  console.log("Prediction to be added : ")
+export async function createNewPrediction(assetName: string | undefined, selectedStockPrice: number | undefined, prevState: PredictionFormState, formData: FormData) {
+  console.log("Prediction to be added : " + assetName + selectedStockPrice + JSON.stringify(formData))
+  
+  if (!selectedStockPrice || !assetName) {
+    return {
+      errors: {},
+      message: "Khong tim thay thong tin gia hoac thong tin co phieu",
+      // pred: result,
+      justDone: false
+    }
+  }
   const validatedFields = PredictionFormSchema.safeParse({
-    assetName: formData.get('assetName') as string,
-    priceIn: Number(formData.get('priceIn')),
+    assetName: assetName,
+    priceIn: selectedStockPrice,
     priceOut: Number(formData.get('takeProfitPrice')),
     cutLoss: Number(formData.get('cutLossPrice')),
     portion: Number(formData.get('portion')),
@@ -243,7 +252,10 @@ export async function createNewPrediction(selectedStockPrice: number | undefined
     // note: formData.get('note'),
   });
 
-  console.log("Prediction to be added : portion " + formData.get('portion') + " assetName " + formData.get('assetName') + formData.get('priceIn') + formData.get('takeProfitPrice') + " ----" + formData.get('cutLossPrice') + Date() + formData.get('deadLine'))
+
+
+  console.log("Prediction to be added : portion " + formData.get('portion') + " assetName " +  assetName + '  selected stock price ' + selectedStockPrice  + formData.get('takeProfitPrice') + " ----" + formData.get('cutLossPrice') + Date() + formData.get('deadLine'))
+
   if (!validatedFields.success) {
     console.log("error: " + JSON.stringify(validatedFields.error.flatten()))
     return {
@@ -252,6 +264,63 @@ export async function createNewPrediction(selectedStockPrice: number | undefined
       justDone: false
     };
   }
+
+  const stockPrice = await getRealTimeStockData([assetName])
+  const curPrice = stockPrice[assetName].high 
+
+  const gap = curPrice - selectedStockPrice
+
+  if (gap > 0.5 || gap < -0.5) {
+    return {
+      errors: {},
+      message: "Giá cổ phiếu đã thay đổi quá 500đ so với lúc bạn điền thông tin, hãy refresh và thử lại " + curPrice + "----" + selectedStockPrice,
+      // pred: result,
+      justDone: false
+    }
+  }
+
+  const toDay = new Date()
+  const priceIn = selectedStockPrice
+  const priceOut = Number(formData.get('takeProfitPrice'))
+  const cutLoss = Number(formData.get('cutLossPrice'))
+  const deadLine = new Date(formData.get('deadLine') as string)
+  const portion = Number(formData.get('portion'))
+
+  let message = ""
+
+  if (selectedStockPrice * 0.8 < cutLoss) {
+    return {
+      errors: {},
+      message: "Giá cắt lỗ quá tiệm cận giá mua vào, chỉ có thể cắt lỗ khi qúa -20%",
+      // pred: result,
+      justDone: false
+    }
+  }
+
+  if (selectedStockPrice * 1.2 > priceOut) {
+    return {
+      errors: {},
+      message: "Giá chốt lời quá tiệm cận giá mua vào, chỉ có thể chốt lời ít nhất 20%",
+      // pred: result,
+      justDone: false
+    }
+  }
+
+  const wipPreds = await getMyWIPPreds()
+  const totalUsedPortion = wipPreds.map((item) => { return item.portion}).reduce((a, b) => a + b, 0) 
+
+  if (totalUsedPortion + portion > 100 ) {
+    return {
+      errors: {},
+      message: "Tỷ trọng khuyến nghị quá cao, tối đa " + (100 - totalUsedPortion),
+      // pred: result,
+      justDone: false
+    }
+
+  }
+
+
+  
   // const uid = formData.get('uid') as string
   // console.log("uid " + uid);
   // if (uid) {
@@ -290,13 +359,8 @@ export async function createNewPrediction(selectedStockPrice: number | undefined
     }
 
   }
-  const assetName = formData.get('assetName') as string
-  const dateIn = new Date()
-  const deadLine = new Date(formData.get('deadLine') as string)
-  const priceIn = formData.get('priceIn') ? Number(formData.get('priceIn')) : selectedStockPrice
-  const priceOut = Number(formData.get('takeProfitPrice'))
-  const cutLoss = Number(formData.get('cutLossPrice'))
-  const portion = Number(formData.get('portion'))
+  // const assetName = formData.get('assetName') as string
+
 
   if (!priceIn) {
     return {
@@ -309,7 +373,7 @@ export async function createNewPrediction(selectedStockPrice: number | undefined
 
   const pred: Prediction = {
     assetName: assetName,
-    dateIn: dateIn,
+    dateIn: toDay,
     priceIn: priceIn,
     priceOut: priceOut,
     cutLoss: cutLoss,
@@ -366,7 +430,7 @@ export async function createNewPrediction(selectedStockPrice: number | undefined
     // redirect("/admin")
     return {
       errors: {},
-      message: "",
+      message: "Tạo khuyến nghị " + assetName + " thành công",
       // pred: result,
       justDone: true
     }
