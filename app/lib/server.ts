@@ -97,7 +97,7 @@ export async function getAllMypreds(filters: { key: string, operator: WhereFilte
 
     const info = await getUserInfoFromSession()
     if (!(info != undefined && info.isExpert)) {
-        throw new Error('bạn không phải chuyên gia' + JSON.stringify(info))
+        // throw new Error('bạn không phải chuyên gia' + JSON.stringify(info))
         return []
     }
     const result = await serverQueryCollection('expert/' + info.uid + '/preds', filters, predAdminConverter)
