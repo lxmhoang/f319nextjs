@@ -4,7 +4,7 @@ import { getUserInfoFromSession } from './app/lib/firebaseadmin/adminauth'
 import { User } from './app/model/user'
 
 export const config = {
-    matcher: ['/advisor/:path*', '/profile/:path*'],
+    matcher: ['/advisor/:path*', '/profile/:path*', '/register/:path*'],
 }
 
 export function middleware(request: NextRequest) {
