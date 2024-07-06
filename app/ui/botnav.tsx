@@ -90,7 +90,7 @@ export default function BottomNav() {
                             "dark:bg-slate-800 dark:text-blue-300 bg-gray-300 text-gray-800": !tab.actived,
                         })} >
                             <Link href={tab.path} type="button" className="" onClick={() => {
-                                if (tab.key == 'Profile' && !user) {
+                                if ((tab.key == 'Profile' || tab.key == 'Advisor') && !user) {
                                     login()
                                 }
                         }}>
