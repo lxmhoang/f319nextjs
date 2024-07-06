@@ -67,7 +67,7 @@ export async function getMyFollowingExpertIDs() {
 
 export async function getAdvisor() {
     const info = await getUserInfoFromSession()
-    console.log('getUserInfoFromSession ' + JSON.stringify(info))
+    // console.log('getUserInfoFromSession ' + JSON.stringify(info))
     if (info == undefined) {
         return {
             expert: undefined,

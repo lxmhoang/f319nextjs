@@ -69,7 +69,7 @@ export async function serverQueryCollection<ModelType>(path: string, filters: { 
     let ref = adminDB.collection(path)// query(collection(db, name));
     // console.log(filters)
     var q = undefined
-    console.log('serverQueryCollection : ' + path)
+    // console.log('serverQueryCollection : ' + path)
     for (const { key, operator, value } of filters) {
         q = q ? q.where(key, operator, value) : ref.where(key, operator, value)
     }

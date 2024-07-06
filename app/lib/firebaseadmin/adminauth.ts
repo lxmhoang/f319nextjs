@@ -140,30 +140,6 @@ export async function revokeAllSessions(session: string) {
 
 const ADMIN_APP_NAME = "stock-319-admin";
 
-const adminApp = createFirebaseAdminApp()
-const adminAuth = getAuth(adminApp)
-
-function formatPrivateKey(key: string) {
-    // console.log("key : " + key)
-    return key ? key.replace(/\\n/g, "\n") : "aa"
-}
-function createFirebaseAdminApp() {
-
-    const result = getApps().find((it) => it.name === ADMIN_APP_NAME)
-    if (result) {
-        return result
-    }
-
-    // console.log('fire base admin params : ' + JSON.stringify(params))
-
-    return admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: params.projectId,
-            clientEmail: params.clientEmail,
-            privateKey: formatPrivateKey(params.privateKey),
-        }),
-    }, ADMIN_APP_NAME);
-}
 
 // use emulator
 if (process.env.USE_EMULATOR == 'true') {
@@ -182,4 +158,31 @@ const params = {
     clientEmail: process.env.KEY_FIREBASE_CLIENT_EMAIL as string,
     privateKey: process.env.KEY_FIREBASE_PRIVATE_KEY as string
 }
+
+function formatPrivateKey(key: string) {
+    // console.log("key : " + key)
+    return key ? key.replace(/\\n/g, "\n") : "aa"
+}
+
+const adminApp = createFirebaseAdminApp()
+
+
+function createFirebaseAdminApp() {
+
+    const result = getApps().find((it) => it.name === ADMIN_APP_NAME)
+    if (result) {
+        return result
+    }
+
+    // console.log('fire base admin params : ' + JSON.stringify(params))
+
+    return admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId: params.projectId,
+            clientEmail: params.clientEmail,
+            privateKey: formatPrivateKey(params.privateKey),
+        }),
+    }, ADMIN_APP_NAME);
+}
+
 
