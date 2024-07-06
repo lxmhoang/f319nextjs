@@ -72,6 +72,16 @@ initializeApp();
 //     getAuth().setCustomUserClaims(event.params.expertId, {isExpert: false})
 // });
 
+// export enum TranType{
+//   deposit, withDraw, 
+//   registerSoloPerm, registerSoloYearly, followSolo, 
+//   registerRankPerm, registerRankYearly, followRank,  
+//   upgradeToSoloPerm, upgradeToRankPerm,
+//   referReward, // only from registerExpert, registerRank, followRank 
+//   rankReward,
+//   unknown,
+//   newFollower
+// }
 
 const TranType = {
     deposit: 0, 
@@ -86,13 +96,15 @@ const TranType = {
     upgradeToRankPerm: 9,
     referReward: 10, // only from registerExpert, registerRank, followRank 
     rankReward: 11,
-    unknown: 12
+    unknown: 12,
+    newFollower: 13
   }
 
   exports.updateTransaction = onDocumentUpdated({document: "transaction/{documentId}", region: 'asia-southeast1'}, (event) => {
 
     const after = event.data.after.data();
     const before = event.data.before.data();
+    const type = before.tranType
     logger.log("a transaction updated", event.params.documentId);
     const toUid = after.toUid
     const fromUid = after.fromUid
@@ -100,6 +112,11 @@ const TranType = {
 
          logger.log("khong co from hoac to UID", after);
         return
+    }
+
+    if (type != TranType.deposit) {
+        logger.log("Sth wrong, only update deposit type");
+       return
     }
     
     if (after.status == 'done' && before.status == 'pending') {
@@ -114,70 +131,80 @@ const TranType = {
     }
 });
 
-exports.createTransaction = onDocumentCreated({document: "transaction/{documentId}", region: 'asia-southeast1'}, (event) => {
+exports.createTransaction = onDocumentCreated({document: "transaction/{documentId}", region: 'asia-southeast1'}, async (event) => {
 
         const data = event.data.data();
         logger.log("new transaction created", event.params.documentId, data);
         const toUid = data.toUid
         if (toUid) {
-            getFirestore().collection('user').doc(toUid).update({ 
+            await getFirestore().collection('user').doc(toUid).update({ 
                 amount: FieldValue.increment(data.amount)
             })
-            getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).set(data)
+            await getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).set(data)
         }
         const fromUid = data.fromUid
         if (fromUid) {
-            getFirestore().collection('user').doc(fromUid).update({ 
+            await getFirestore().collection('user').doc(fromUid).update({ 
                 amount: FieldValue.increment(-data.amount)
             })
-            getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).set(data)
+            await getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).set(data)
         }
 
     if (data.tranType in [
         TranType.followRank,
         TranType.followSolo,
-        TranType.registerRankPerm,
-        TranType.registerRankYearly,
-        TranType.registerSoloPerm,
         TranType.registerSoloYearly,
+        TranType.upgradeToSoloPerm,
+        TranType.registerSoloPerm,
+        
+        TranType.registerRankYearly,
         TranType.upgradeToRankPerm,
-        TranType.upgradeToSoloPerm
+        TranType.registerRankPerm,
         ]) 
     {
-        logger.log("revenue trans type " + data.tranType + ' amount : '  + data.amount);
-        const toUid = data.toUid;
-        if (toUid) {
-            const userRef = getFirestore().collection('user').doc(toUid)
-            userRef.get().then((snapshotUser) => {
-                const refID = snapshotUser.data().refID
-                logger.info("Ref ID : " + refID)
-                if (refID) {
-                    // chia tien cho ref
-                    getFirestore().collection('user').where("accessId","==",refID).get().then((snapshot) => {
-                        if (snapshot.docs.length == 1) {
+        const ratio = data.tranType == TranType.followSolo ? 0.1 : 0.2
 
-                        const refUserDocID = snapshot.docs[0].id
-                        logger.info("Ref user ID : " + refUserDocID)
-                        const amountForReference = data.amount * 0.2
-                        getFirestore().collection('transaction').add({
-                            amount: amountForReference,
-                            date: Date.now(),
-                            toUid: refUserDocID,
-                            status: "Done",
-                            tranType: TranType.referReward,
-                            fromTranId: event.params.documentId
+        logger.log("chia tien trans type " + data.tranType + ' amount : '  + data.amount);
+        const benefitUid = data.toUid
+        const paidUid = data.fromUid;
+        if (paidUid) {
+            const userRef = getFirestore().collection('user').doc(paidUid)
+            const snapshotUser = await userRef.get()//.then((snapshotUser) => {
+            const refID = snapshotUser.data().refID
+            logger.info("Ref ID : " + refID)
+            
+            if (refID) {
+                // chia tien cho ref
+                const snapshot = await getFirestore().collection('user').where("accessId","==",refID).get()//.then((snapshot) => {
+                if (snapshot.docs.length == 1) {
+
+                    const refUserDocID = snapshot.docs[0].id
+                    logger.info("Ref user ID : " + refUserDocID)
+                    const amountForReference = data.amount * ratio
+
+                    await getFirestore().collection('transaction').add({
+                        amount: amountForReference,
+                        from: benefitUid,
+                        date: Date.now(),
+                        toUid: refUserDocID,
+                        status: "Done",
+                        tranType: TranType.referReward,
+                        triggerTranId: event.params.documentId,
+                        triggerTranType: data.tranType,
+                        notebankacc: ''
                         })
 
-                        }  else  if (snapshot.docs.length > 1) {
+                    }  else  if (snapshot.docs.length > 1) {
 
-                            logger.error("result of search is > 1 " + snapshot.docs.length)
-                        } else {
-                            logger.info(' not found ref user with accessID ' + refID)
-                        }
-                    })
+                        logger.error("result of search is > 1 " + snapshot.docs.length)
+                    } else {
+                        logger.info(' not found ref user with accessID ' + refID)
+                    }
+                    // })
     
                 }
-            })
+        //     }
+        // )
            
            
         }

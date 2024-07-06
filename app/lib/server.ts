@@ -123,7 +123,7 @@ export async function verifyAccessID(accessId: string) {
 
 export async function addUser(payload: string) {
     const user: User = JSON.parse(payload)
-    await serverSetDoc('user/' + user.uid, userAdminConverter.toFirestore(user) )
+    await serverSetDoc('user/' + user.uid, userAdminConverter.toFirestore(user))
     const noti: UserNoti = {
         title: "Welcome",
         dateTime: toDay.getTime(),
@@ -131,7 +131,7 @@ export async function addUser(payload: string) {
     }
     await sendNotificationToUser(user.uid, noti)
 
-    const notiBoard : UserNoti = {
+    const notiBoard: UserNoti = {
         title: "Welcome",
         dateTime: toDay.getTime(),
         content: "Chào mừng " + user.displayName + " đã tham gia"
@@ -215,7 +215,7 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
             if (expertInfo.expertType == 'rank') {
                 notifiedUsersIds = (await serverQueryCollection<User>('user', [{ key: 'rankExpire', operator: '>=', value: toDay }], userAdminConverter)).map((item) => item.uid)
             } else {
-                notifiedUsersIds = expertInfo.follower.filter((item) => {item.endDate < toDay}).map((item) => item.uid)
+                notifiedUsersIds = expertInfo.follower.filter((item) => { item.endDate < toDay }).map((item) => item.uid)
             }
 
             for (const userID of notifiedUsersIds) {
@@ -322,12 +322,12 @@ export async function decrypt(enText: string) {
 }
 
 export async function sendNotificationToBoard(noti: UserNoti) {
-    await serverUpdateDoc('stats/latest', {notifies: FieldValue.arrayUnion(noti)})    
+    await serverUpdateDoc('stats/latest', { notifies: FieldValue.arrayUnion(noti) })
 }
 
 export async function sendNotificationToUser(userID: string, noti: UserNoti) {
     await serverAddNewModal('user/' + userID + '/notiHistory', noti, notiAdminConverter)
-    await serverUpdateDoc('user/' + userID, {notifies: FieldValue.arrayUnion(noti)})    
+    await serverUpdateDoc('user/' + userID, { notifies: FieldValue.arrayUnion(noti) })
 }
 
 export async function getRankingInfo() {
@@ -335,11 +335,11 @@ export async function getRankingInfo() {
     if (!numOfWinner) {
         throw new Error('Khong tim duoc numbOfWinner')
     }
-    const experts = await serverQueryCollection('expert', 
-    [{ key: "expertType", operator: "==", value: "rank" },
-     { key: "status", operator: "==", value: "activated" }    
+    const experts = await serverQueryCollection('expert',
+        [{ key: "expertType", operator: "==", value: "rank" },
+        { key: "status", operator: "==", value: "activated" }
 
-    ], expertAdminConverter
+        ], expertAdminConverter
     )
     // let experts = rankExpert.filter((item) => { return item.status == 'activated' })
 
@@ -349,7 +349,7 @@ export async function getRankingInfo() {
             id: item.id,
             perf: perfConver(item.monthPerform ?? 0)
         }
-    }).slice(0,numOfWinner)
+    }).slice(0, numOfWinner)
 
     const yearly = sortByField(experts, "yearPerform").map((item) => {
         return {
@@ -357,7 +357,7 @@ export async function getRankingInfo() {
             id: item.id,
             perf: perfConver(item.yearPerform ?? 0)
         }
-    }).slice(0,numOfWinner)
+    }).slice(0, numOfWinner)
 
     const quarter = sortByField(experts, "quarterPerform").map((item) => {
         return {
@@ -365,7 +365,7 @@ export async function getRankingInfo() {
             id: item.id,
             perf: perfConver(item.quarterPerform ?? 0)
         }
-    }).slice(0,numOfWinner)
+    }).slice(0, numOfWinner)
 
     const weekly = sortByField(experts, "weekPerform").map((item) => {
         return {
@@ -373,7 +373,7 @@ export async function getRankingInfo() {
             id: item.id,
             perf: perfConver(item.weekPerform ?? 0)
         }
-    }).slice(0,numOfWinner)
+    }).slice(0, numOfWinner)
 
     return { weekly, monthly, quarter, yearly }
 }
@@ -386,8 +386,8 @@ export async function getRankingInfo() {
 
 
 export async function joinRankUser(perm: boolean) {
-    
-    const userInfo = await getUserInfoFromSession() 
+
+    const userInfo = await getUserInfoFromSession()
 
     if (userInfo == null) {
         return Promise.resolve({
@@ -438,7 +438,7 @@ export async function joinRankUser(perm: boolean) {
         })
     }
 
-    const subRank : Subscription = {
+    const subRank: Subscription = {
         uid: userInfo.uid,
         eid: soloGod,
         startDate: toDay,
@@ -455,24 +455,24 @@ export async function joinRankUser(perm: boolean) {
         expertType: userInfo.expertType,
         expertPeriod: userInfo.expertPeriod,
         expertExpire: userInfo.expertExpire,
-        rankExpire:  endDateSubWithPerm(perm).getTime()
+        rankExpire: endDateSubWithPerm(perm).getTime()
     }
 
-    await setClaim(userInfo.uid, cusClaim) 
+    await setClaim(userInfo.uid, cusClaim)
 
-    await serverUpdateDoc('user/' + userInfo.uid, {rankExpire: endDateSubWithPerm(perm).getTime()})
+    await serverUpdateDoc('user/' + userInfo.uid, { rankExpire: endDateSubWithPerm(perm).getTime() })
 
 
     const subInfo = subRank
     subInfo.id = newSubRef.id
 
-    await serverUpdateDoc('user/' + userInfo.uid, {following : FieldValue.arrayUnion(subInfo)})
+    await serverUpdateDoc('user/' + userInfo.uid, { following: FieldValue.arrayUnion(subInfo) })
     await serverSetDoc('user/' + userInfo.uid + '/subHistory/' + newSubRef.id, subInfo)
 
     // notify user
 
-    const notiForUser : UserNoti = {
-        dateTime : toDay.getTime(),
+    const notiForUser: UserNoti = {
+        dateTime: toDay.getTime(),
         title: 'Đã tham gia tài trợ rank',
         content: 'Giờ đây quý nhà đầu tư đã có thể theo dõi toàn bộ chuyên gia đua rank',
         urlPath: '/expert'
@@ -524,7 +524,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
 
     }
 
-    if (perm == true && (expertToSub.expertType != 'perm') ) {
+    if (perm == true && (expertToSub.expertType != 'perm')) {
         return Promise.resolve({
             success: false,
             error: "Chỉ có thể follow vĩnh viễn một chuyên gia trọn đời"
@@ -548,7 +548,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
     }
 
 
-    const existingSub = await serverQueryCollection('subscription',[{key: 'eid',operator: '==',value: eid},{key: 'uid',operator: '==',value: user.uid}, {key: 'endDate',operator: '>=',value: toDay}], subscriptionAdminConverter) 
+    const existingSub = await serverQueryCollection('subscription', [{ key: 'eid', operator: '==', value: eid }, { key: 'uid', operator: '==', value: user.uid }, { key: 'endDate', operator: '>=', value: toDay }], subscriptionAdminConverter)
     if (existingSub.length > 0) {
         return Promise.resolve({
             success: false,
@@ -557,9 +557,21 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
 
     }
 
-    const tran: Transaction = {
+
+    const thuquyid = await getthuquyUID()
+
+    if (!thuquyid) {
+        return Promise.resolve({
+            success: false,
+            error: "Thu quy not found"
+        })
+       
+    }
+
+
+    const tranUserPay: Transaction = {
         tranType: TranType.followSolo,
-        toUid: expertToSub.id,
+        toUid: thuquyid,
         fromUid: user.uid,
         amount: Number(fee),
         status: "Done",
@@ -567,13 +579,35 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
         date: new Date()
     }
 
-    const result = await addANewTransaction(tran)
+    const result = await addANewTransaction(tranUserPay)
+
     if (result.success == false) {
         return Promise.resolve({
             success: false,
-            error: result.message
+            error: 'error khi tra tien tu user den thu quy' + result.message
         })
     }
+
+    const tranPayToExpert: Transaction = {
+        tranType: TranType.newFollower,
+        toUid: expertToSub.id,
+        fromUid: thuquyid,
+        amount: Number(fee * 0.8),
+        status: "Done",
+        notebankacc: user.displayName + " theo dõi quý chuyên gia",
+        date: new Date()
+    }
+
+    const result2 = await addANewTransaction(tranPayToExpert)
+
+    if (result2.success == false) {
+        return Promise.resolve({
+            success: false,
+            error: 'error khi tra tien tu thu quy den chuyen gia' + result.message
+        })
+    }
+
+    
 
     // const subCollection = db.collection('subscription/').withConverter(subscriptionAdminConverter)
     if (user) {
@@ -592,16 +626,16 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
         const subInfo = newSub
         subInfo.id = newSubRef.id
 
-        await serverUpdateDoc('user/' + userInfo.uid, {following : FieldValue.arrayUnion(subInfo)})
+        await serverUpdateDoc('user/' + userInfo.uid, { following: FieldValue.arrayUnion(subInfo) })
         await serverSetDoc('user/' + userInfo.uid + '/subHistory/' + newSubRef.id, subInfo)
 
-        await serverUpdateDoc('expert/' + expertToSub.id, {follower : FieldValue.arrayUnion(subInfo)})
+        await serverUpdateDoc('expert/' + expertToSub.id, { follower: FieldValue.arrayUnion(subInfo) })
         await serverSetDoc('expert/' + expertToSub.id + '/subHistory/' + newSubRef.id, subInfo)
-    
+
         // notify user
-    
-        const notiForUser : UserNoti = {
-            dateTime : toDay.getTime(),
+
+        const notiForUser: UserNoti = {
+            dateTime: toDay.getTime(),
             title: 'Đã tham gia tài trợ rank',
             content: 'Giờ đây quý nhà đầu tư đã có thể theo dõi toàn bộ chuyên gia đua rank',
             urlPath: '/expert'
@@ -610,14 +644,14 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
 
 
         // notify expert
-    
-        const notiForExpert : UserNoti = {
-            dateTime : toDay.getTime(),
+
+        const notiForExpert: UserNoti = {
+            dateTime: toDay.getTime(),
             title: 'Đã tham gia tài trợ rank',
             content: 'Xin chúc mừng, 1 nhà đầu tư vừa mới theo dõi bạn ' + perm ? "trọn đời" : "1 tháng",
             urlPath: '/expert'
         }
-    
+
         await sendNotificationToUser(expertToSub.id, notiForExpert)
 
         return {
@@ -649,7 +683,7 @@ export async function getStatsRankData() {
 export async function getRankData() {
     const { weekly, monthly, quarter, yearly } = await getRankingInfo()
 
-  
+
     const { pivotWeek, pivotMonth, pivotQuarter, pivotYear, weekEnd, monthEnd, quarterEnd, yearEnd } = getPivotDates(new Date())
     const weekDate = pivotWeek.toLocaleDateString('vi', { day: 'numeric', month: 'numeric' })
     const monthDate = pivotMonth.toLocaleDateString('vi', { day: 'numeric', month: 'numeric' })
@@ -659,18 +693,18 @@ export async function getRankData() {
     const monthTo = monthEnd.toLocaleDateString('vi', { day: 'numeric', month: 'numeric' })
     const quarterTo = quarterEnd.toLocaleDateString('vi', { day: 'numeric', month: 'numeric' })
     const yearTo = yearEnd.toLocaleDateString('vi')
-  
+
     const numOfWinner = Number(process.env.RANK_NUM_WINNER)
     const weeklyReward = Number(process.env.RANK_WEEK_REWARD) / numOfWinner
     const monthlyReward = Number(process.env.RANK_MONTH_REWARD) / numOfWinner
     const quarterlyReward = Number(process.env.RANK_QUARTER_REWARD) / numOfWinner
     const yearlyReward = Number(process.env.RANK_YEAR_REWARD)
     const rankData: BoardProps[] = [
-      { title: 'Top Tuần', since: weekDate, to: weekTo, total: addComma(weeklyReward), rewards: [], data: weekly },
-      { title: 'Top Tháng', since: monthDate, to: monthTo, total: addComma(monthlyReward), rewards: [], data: monthly },
-      { title: 'Top Quý', since: quarterDate, to: quarterTo, total: addComma(quarterlyReward), rewards: [], data: quarter },
-      { title: 'Top Năm', since: yearDate, to: yearTo, total: addComma(yearlyReward), rewards: [], data: yearly }
+        { title: 'Top Tuần', since: weekDate, to: weekTo, total: addComma(weeklyReward), rewards: [], data: weekly },
+        { title: 'Top Tháng', since: monthDate, to: monthTo, total: addComma(monthlyReward), rewards: [], data: monthly },
+        { title: 'Top Quý', since: quarterDate, to: quarterTo, total: addComma(quarterlyReward), rewards: [], data: quarter },
+        { title: 'Top Năm', since: yearDate, to: yearTo, total: addComma(yearlyReward), rewards: [], data: yearly }
     ]
     return rankData
-  
-  }
+
+}

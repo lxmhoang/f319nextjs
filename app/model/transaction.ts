@@ -13,7 +13,8 @@ export enum TranType{
   upgradeToSoloPerm, upgradeToRankPerm,
   referReward, // only from registerExpert, registerRank, followRank 
   rankReward,
-  unknown
+  unknown,
+  newFollower
 }
 
 

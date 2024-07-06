@@ -54,7 +54,6 @@ export function perfConver(per: number) {
 
 export async function getPerformanceSince(date: Date, data: Prediction[]) {
 
-  console.log('getPerformanceSince')
   let openPreds = data.filter((item) => {
     return item.status == "Inprogress" && item.dateIn >= date
   })
