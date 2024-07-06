@@ -29,21 +29,14 @@ async function isUserAuthenticated(session: string | undefined = undefined) {
     }
 }
 
-export async function getSoloGod() {
-
-    const auth = getAuth(adminApp)
-    try {
-        const userRecord = await auth.getUserByEmail('lxmhoang@gmail.com')
-        return userRecord.uid
-    } catch (e) {
-        return undefined
-    }
-}
-
 export async function getthuquyUID() {
     // if (process.env.THUQUY_UID) {
     //     return process.env.THUQUY_UID
     // }
+    const thuquyuid = process.env.THU_QUY_UID as string
+    if (thuquyuid) {
+        return thuquyuid
+    }
 
     const auth = getAuth(adminApp)
     try {

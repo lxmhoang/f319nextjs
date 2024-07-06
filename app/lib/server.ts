@@ -5,7 +5,7 @@ import { Expert, expertAdminConverter } from "../model/expert";
 import { predAdminConverter } from "../model/prediction";
 import { addANewTransaction, serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc, serverUpdateDoc } from "./firebaseadmin/adminfirestore";
 
-import { getSoloGod, getUserInfoFromSession, getthuquyUID, setClaim } from "@/app/lib/firebaseadmin/adminauth";
+import { getUserInfoFromSession, getthuquyUID, setClaim } from "@/app/lib/firebaseadmin/adminauth";
 import { getRealTimeStockData } from "./getStockData";
 import { FieldValue, WhereFilterOp } from "firebase-admin/firestore";
 import { User, userAdminConverter } from "../model/user";
@@ -14,7 +14,6 @@ import { cookies } from "next/headers";
 import { addComma, perfConver, sortByField } from "./utils";
 import { UserNoti, notiAdminConverter } from "../model/noti";
 import { TranType, Transaction } from "../model/transaction";
-import { unstable_cache } from "next/cache";
 import { getPivotDates } from "./statistic";
 import { BoardProps } from "../ui/rank";
 
@@ -412,8 +411,8 @@ export async function joinRankUser(perm: boolean) {
         })
     }
 
-    const soloGod = await getSoloGod()
-    if (!soloGod) {
+    const thuquyUid = await getthuquyUID()
+    if (!thuquyUid) {
         return Promise.resolve({
             success: false,
             error: "khong tim duoc thu quy"
@@ -422,7 +421,7 @@ export async function joinRankUser(perm: boolean) {
 
     const tran: Transaction = {
         tranType: TranType.followRank,
-        toUid: soloGod,
+        toUid: thuquyUid,
         fromUid: user.uid,
         amount: fee,
         status: "Done",
@@ -440,22 +439,24 @@ export async function joinRankUser(perm: boolean) {
 
     const subRank: Subscription = {
         uid: userInfo.uid,
-        eid: soloGod,
+        eid: thuquyUid,
         startDate: toDay,
         endDate: endDateSubWithPerm(perm),
         perm: perm,
         value: fee,
         type: "rank"
     }
+
     console.log(' subRank ' + JSON.stringify(subRank))
 
     const newSubRef = await serverAddNewModal<Subscription>('subscription', subRank, subscriptionAdminConverter)
 
     const cusClaim = {
-        expertType: userInfo.expertType,
+        expertType: userInfo.expertType,   // 3 dong nay la de neu lo user nay la expert thi ko bi overwrite
         expertPeriod: userInfo.expertPeriod,
         expertExpire: userInfo.expertExpire,
-        rankExpire: endDateSubWithPerm(perm).getTime()
+
+        rankExpire: endDateSubWithPerm(perm).getTime() // set dong nay la chu yeu
     }
 
     await setClaim(userInfo.uid, cusClaim)

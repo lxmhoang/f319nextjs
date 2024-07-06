@@ -79,7 +79,7 @@ export async function actionWithDraw(prevState: AddNewTransFormState, formData: 
     amount: Number(formData.get('amount')),
     date: new Date(),
     notebankacc: notebankacc,
-    status: "pending"
+    status: "Pending"
   }
 
   console.log("transaction to be added : " + JSON.stringify(tran))
