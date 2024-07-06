@@ -100,7 +100,7 @@ export async function serverUpdateDoc(path: string, data: {}) {
     return adminDB.doc(path).update(data)
 }
 export async function serverSetDoc(path: string, data: {}, merge = false) {
-    return adminDB.doc(path).set(data, {merge: merge})
+    return adminDB.doc(path).set(data, { merge: merge })
 }
 
 export async function serverApprovePendingTrans(tranIDs: string[]) {
@@ -158,7 +158,7 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
         })
         )
     }
-    const getDonePredOnly = !(user && didFollow(user, expert) || (user && user.uid == expert.id)) 
+    const getDonePredOnly = !(user && didFollow(user, expert) || (user && user.uid == expert.id))
     console.log('getDonePredOnly ' + getDonePredOnly + '  user ' + user)
     let response = await serverQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
     let allPreds: Prediction[] = response// JSON.parse(response)
@@ -178,45 +178,47 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
 }
 
 
+// adminDB.settings({ ignoreUndefinedProperties: true })
+
+function formatPrivateKey(key: string) {
+    // console.log("key : " + key)
+    return key ? key.replace(/\\n/g, "\n") : "aa"
+}
+
+// use emulator
+if (process.env.USE_EMULATOR == 'true') {
+    console.log('admin FIRESTORE DATABASE connecting to emulator')
+    process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
+    process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
+    process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
+} else {
+    console.log('admin FIRESTORE DATABASE is NOT connecting to emulator ' + process.env.USE_EMULATOR + process.env.KEY_MEASUREMENT_ID)
+
+}
+
+const params = {
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string,
+    clientEmail: process.env.KEY_FIREBASE_CLIENT_EMAIL as string,
+    privateKey: process.env.KEY_FIREBASE_PRIVATE_KEY as string
+}
+
+// console.log('fire base admin params : ' + JSON.stringify(params))
+
+
+
 const ADMIN_APP_NAME = "stock-319-admin";
 
 const adminApp = createFirebaseAdminApp()
 const adminDB = getFirestore(adminApp)
 
-// adminDB.settings({ ignoreUndefinedProperties: true })
 
-function formatPrivateKey(key: string) {
-    console.log("key : " + key)
-    return key ? key.replace(/\\n/g, "\n") : "aa"
-}
 function createFirebaseAdminApp() {
 
     const result = getApps().find((it) => it.name === ADMIN_APP_NAME)
     if (result) {
         return result
     }
-
-
-// use emulator
-    if (process.env.USE_EMULATOR == 'true') {
-        console.log('admin fire store connecting to emulator')
-        process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
-        process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
-        process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
-    } else {
-        console.log('admin fire store NOT connecting to emulator ' + process.env.USE_EMULATOR + process.env.KEY_MEASUREMENT_ID)
-
-    }
-
-    const params = {
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string,
-        clientEmail: process.env.KEY_FIREBASE_CLIENT_EMAIL as string,
-        privateKey: process.env.KEY_FIREBASE_PRIVATE_KEY as string
-    }
-
-    // console.log('fire base admin params : ' + JSON.stringify(params))
-
     return admin.initializeApp({
         credential: admin.credential.cert({
             projectId: params.projectId,

@@ -154,24 +154,6 @@ function createFirebaseAdminApp() {
         return result
     }
 
-// use emulator
-    if (process.env.USE_EMULATOR == 'true') {
-        console.log('admin auth connecting to emulator')
-        process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
-        process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
-        process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
-    } else {
-        console.log('admin auth NOT connecting to emulator' + process.env.USE_EMULATOR)
-
-    }
-
-    const params = {
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
-        storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string,
-        clientEmail: process.env.KEY_FIREBASE_CLIENT_EMAIL as string,
-        privateKey: process.env.KEY_FIREBASE_PRIVATE_KEY as string
-    }
-
     // console.log('fire base admin params : ' + JSON.stringify(params))
 
     return admin.initializeApp({
@@ -182,3 +164,22 @@ function createFirebaseAdminApp() {
         }),
     }, ADMIN_APP_NAME);
 }
+
+// use emulator
+if (process.env.USE_EMULATOR == 'true') {
+    console.log('admin AUTH connecting to emulator')
+    process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
+    process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
+    process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
+} else {
+    console.log('admin AUTH NOT connecting to emulator' + process.env.USE_EMULATOR)
+
+}
+
+const params = {
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
+    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string,
+    clientEmail: process.env.KEY_FIREBASE_CLIENT_EMAIL as string,
+    privateKey: process.env.KEY_FIREBASE_PRIVATE_KEY as string
+}
+

@@ -12,8 +12,8 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
   const rankExperts = expertList.filter((item) => { return item.expertType == 'rank' })
   const soloExpert = expertList.filter((item) => { return item.expertType == 'solo' })
 
-  const [toggleSolo, setToggleSolo] = useState(true);
-  const [toggleRank, setToggleRank] = useState(true);
+  // const [toggleSolo, setToggleSolo] = useState(true);
+  // const [toggleRank, setToggleRank] = useState(true);
 
   const {user} = useAppContext()
 
@@ -28,8 +28,8 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
       <div className="flex max-w-md flex-col items-start gap-4"></div>
 
       <p className="mx-auto p-4"> Chuyên gia solo, theo dõi từng chuyên gia để xem khuyến nghị</p>
-      <ToggleSwitch className="ml-4 mb-4" checked={toggleSolo} label={toggleSolo ? "Ẩn" : "Xem"} onChange={setToggleSolo} />
-      {(toggleSolo && soloExpert.length > 0) && (<div className=" mb-4 flex flex-wrap">
+      {/* <ToggleSwitch className="ml-4 mb-4" checked={toggleSolo} label={toggleSolo ? "Ẩn" : "Xem"} onChange={setToggleSolo} /> */}
+      {(true && soloExpert.length > 0) && (<div className=" mb-4 flex flex-wrap">
         {soloExpert.map(
           (expert, index) => {
             return <div key={index}>
@@ -44,8 +44,8 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
       <Divider />
 
       <p className="mx-auto p-4"> Chuyên gia đua rank, {user?.joinRank ? "bạn có thể xem được hết" : "chọn tham gia theo dõi rank để xem được tất cả"} </p>
-      <ToggleSwitch className="ml-4 mb-4" checked={toggleRank} label={toggleRank ? "Ẩn" : "Xem"} onChange={setToggleRank} />
-      {(toggleRank && soloExpert.length > 0) && (<div className="flex flex-wrap mb-4">
+      {/* <ToggleSwitch className="ml-4 mb-4" checked={toggleRank} label={toggleRank ? "Ẩn" : "Xem"} onChange={setToggleRank} /> */}
+      {(true && soloExpert.length > 0) && (<div className="flex flex-wrap mb-4">
         {rankExperts.map(
           (expert, index) => {
             return <div key={index}>

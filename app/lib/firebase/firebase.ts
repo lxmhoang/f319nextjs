@@ -37,14 +37,17 @@ function createFirebaseApp() {
 }
 
 
-if (process.env.USE_EMULATOR == 'true') {
+// cu phai set if (true) moi duoc, ko dung useEmulator duoc ,ko hieu tai sao !!!!
 
+if (false) {
+  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
+}
+
+if (useEmulator) {
   console.log(' firebase connecting to emulator')
   connectFirestoreEmulator(db, '127.0.0.1', 8080);
-  connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
   connectStorageEmulator(storage, '127.0.0.1', 9199)
   connectFunctionsEmulator(cloudFunc, '127.0.0.1', 5001)
 } else {
   console.log(' firebase NOT connecting to emulator' + process.env.USE_EMULATOR + '___' + process.env.KEY_MEASUREMENT_ID)
-
 }
