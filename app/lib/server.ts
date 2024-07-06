@@ -249,6 +249,7 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
 
 export async function persistUserInfo(payload: string | undefined) {
     if (!payload) {
+        cookies().delete("__session");
         cookies().delete('uInfo')
     } else {
         const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days

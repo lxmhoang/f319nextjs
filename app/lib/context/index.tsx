@@ -59,6 +59,7 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
             return unsubscrible
         } else {
             if (firebaseUser == null && firebaseUser != undefined) {
+                // xac dinh la user dang bi logged out
                 persistUserInfo(undefined)
             }
             //

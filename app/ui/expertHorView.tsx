@@ -31,10 +31,10 @@ export default function ExpertHorView({ expertInfo }: { expertInfo: string }) {
                       <p> Ngày tham gia  </p>
                       <p> Loại chuyên gia </p>
                       {expert.expertType == 'solo' && (<p>{expert.follower.length} người theo dõi</p>)}
-                      {expert.expertType == 'rank' && expert.yearPerform && (<p>Kết quả theo năm</p>)}
-                      {expert.expertType == 'rank' && expert.quarterPerform && (<p>Kết quả theo quý</p>)}
-                      {expert.expertType == 'rank' && expert.monthPerform && (<p>Kết quả theo tháng</p>)}
-                      {expert.expertType == 'rank' && expert.weekPerform && (<p>Kết quả theo tuần</p>)}
+                      {expert.expertType == 'rank' && expert.yearPerform && (<p>Hiệu quả theo năm</p>)}
+                      {expert.expertType == 'rank' && expert.quarterPerform && (<p>Hiệu quả theo quý</p>)}
+                      {expert.expertType == 'rank' && expert.monthPerform && (<p>Hiệu quả theo tháng</p>)}
+                      {expert.expertType == 'rank' && expert.weekPerform && (<p>Hiệu quả theo tuần</p>)}
                      </div>
                     <div>
                       <p> {expert.name} </p>
@@ -42,10 +42,10 @@ export default function ExpertHorView({ expertInfo }: { expertInfo: string }) {
                       <p> {expert.expertType} </p>
                       {expert.expertType == 'solo' && <p> </p>}
 
-                      {expert.expertType == 'rank' && expert.yearPerform && (<p>Kết quả theo năm</p>)}
-                      {expert.expertType == 'rank' && expert.quarterPerform && (<p>Kết quả theo quý</p>)}
-                      {expert.expertType == 'rank' && expert.monthPerform && (<p>Kết quả theo tháng</p>)}
-                      {expert.expertType == 'rank' && expert.weekPerform && (<p>Kết quả theo tuần</p>)}
+                      {expert.expertType == 'rank' && expert.yearPerform && (<p>{expert.yearPerform}</p>)}
+                      {expert.expertType == 'rank' && expert.quarterPerform && (<p>{expert.quarterPerform}</p>)}
+                      {expert.expertType == 'rank' && expert.monthPerform && (<p>{expert.monthPerform}</p>)}
+                      {expert.expertType == 'rank' && expert.weekPerform && (<p>{expert.weekPerform}</p>)}
 
                     </div>
                   </div>
