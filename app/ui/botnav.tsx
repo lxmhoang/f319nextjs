@@ -45,10 +45,11 @@ export default function BottomNav() {
             }
         ]
         :
+        user ?
         [
             {
                 title: "Home",
-                key: "Home2",
+                key: "Home",
                 icon: HomeIcon,
                 path: "/",
                 actived: !(pathname.includes('/register') || pathname.includes('/profile') || pathname.includes('/advisor') || pathname.includes('/expert'))
@@ -75,6 +76,37 @@ export default function BottomNav() {
                 actived: pathname.startsWith('/profile')
             }
         ]
+            :
+            [
+                {
+                    title: "Home",
+                    key: "Home",
+                    icon: HomeIcon,
+                    path: "/",
+                    actived: !(pathname.includes('/register') || pathname.includes('/profile') || pathname.includes('/advisor') || pathname.includes('/expert'))
+                },
+                {
+                    title: "Các chuyên gia",
+                    key: "Expert",
+                    icon: ChartBarIcon,
+                    path: "/expert",
+                    actived: pathname.startsWith('/expert')
+                },
+                {
+                    title: "Đky chuyên gia",
+                    key: "Advisor",
+                    icon: WalletIcon,
+                    path: "#",
+                    actived: pathname.startsWith('/register')
+                },
+                {
+                    title: "Hồ sơ",
+                    key: "Profile",
+                    icon: UserCircleIcon,
+                    path: "#",
+                    actived: pathname.startsWith('/profile')
+                }
+            ]
 
 
     return (
@@ -93,7 +125,7 @@ export default function BottomNav() {
                                 if ((tab.key == 'Profile' || tab.key == 'Advisor') && !user) {
                                     login()
                                 }
-                        }}>
+                            }}>
                                 <div className="">
                                     {/* {tab.actived ? "a" : "n"} */}
                                     <tab.icon className={clsx('mx-auto w-5 h-5', {

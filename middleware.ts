@@ -9,7 +9,9 @@ export const config = {
 
 export function middleware(request: NextRequest) {
     // const token = crypto.randomUUID()
-    if (request.nextUrl.pathname.startsWith('/profile') || request.nextUrl.pathname.startsWith('/advisor')) {
+    if (request.nextUrl.pathname.startsWith('/profile') || request.nextUrl.pathname.startsWith('/advisor')
+        || request.nextUrl.pathname.startsWith('/register')
+    ) {
 
 
 
