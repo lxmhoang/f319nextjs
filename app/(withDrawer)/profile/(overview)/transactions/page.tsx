@@ -4,16 +4,17 @@ import { getMyTransHistory } from "@/app/lib/firebase/firestore";
 import { addComma } from "@/app/lib/utils";
 import { TranType, Transaction, tranTypeText } from "@/app/model/transaction";
 import { Divider, Table, TableBody, TableCell, TableColumn, TableHeader, TableRow, getKeyValue } from "@nextui-org/react";
-import { Label } from "flowbite-react";
+import { Label, Spinner } from "flowbite-react";
 import { useEffect, useState } from "react";
 
 
 export default function Page() {
   // const initValue = typeof window == undefined ? 100 : window.innerWidth
   const [width, setWidth] = useState<number>(200)
-  const space = width <= 768 ? width : width - 256
-  const num = Math.trunc(space * 0.8 / 100)
-  const columns = masterCols//.slice(0, num)
+  // const space = width <= 768 ? width : width - 256
+  // const num = Math.trunc(space * 0.8 / 50)
+  const num = width < 500 ? 3 : width < 600 ? 4 : 7
+  const columns = masterCols.slice(0, num)
   const updateDimensions = () => {
     if (typeof window !== 'undefined') {
       console.log("width " + window.innerWidth)
@@ -27,57 +28,68 @@ export default function Page() {
     return () => window.removeEventListener("resize", updateDimensions);
   }, []);
   
-  const [trans, setTrans] = useState<Transaction[]>([])
   const {user} = useAppContext()
+  const [trans, setTrans] = useState<Transaction[] | undefined>(undefined)
   const uid = user ? user.uid : ""
-  const transCome = trans.filter((item) => {return item.toUid == uid})
-  .map((item) => {
+  const transForTable = trans ?  trans.map((item) => {
+    const prefix = item.toUid == uid ? "+" : "-"
     return {
-      amount: addComma(item.amount),
+      amount: prefix + addComma(item.amount),
       date: item.date.toLocaleDateString('vi'),
       status: item.status,
       tranType: item.tranType,
       note: item.notebankacc,
       id: item.id,
     }
-  })
-  const transGo = trans.filter((item) => {return item.fromUid == uid})
-  .map((item) => {
-    return {
-      amount: addComma(item.amount),
-      date: item.date.toLocaleDateString('vi'),
-      status: item.status,
-      tranType: item.tranType,
-      note: item.notebankacc,
-      id: item.id,
-    }
-  })
+  }) : undefined
+  // const transCome = trans.filter((item) => {return item.toUid == uid})
+  // .map((item) => {
+  //   return {
+  //     amount: addComma(item.amount),
+  //     date: item.date.toLocaleDateString('vi'),
+  //     status: item.status,
+  //     tranType: item.tranType,
+  //     note: item.notebankacc,
+  //     id: item.id,
+  //   }
+  // })
+  // const transGo = trans.filter((item) => {return item.fromUid == uid})
+  // .map((item) => {
+  //   return {
+  //     amount: addComma(item.amount),
+  //     date: item.date.toLocaleDateString('vi'),
+  //     status: item.status,
+  //     tranType: item.tranType,
+  //     note: item.notebankacc,
+  //     id: item.id,
+  //   }
+  // })
 
   useEffect(() => {
     const fetchData = async (uid: string) => {
       const result = await getMyTransHistory(uid)
-      // console.log('result ' + JSON.stringify(result))
+      console.log('result ' + JSON.stringify(result))
       setTrans(result)
     }
 
-    if (user) {
+    if (user?.uid) {
       fetchData(user.uid)
     }
 
 
-  }, [user])
+  }, [user?.uid])
 
 
   return (
     <div>
-   
-
-      Tiền đến
+      {}
+      
+      {transForTable ? (
       <Table className="w-full  mt-8" aria-label="TransHistoryTable">
         <TableHeader columns={columns}>
-          {(column) => <TableColumn key={column.key}>{column.label}</TableColumn>}
+          {(column) => <TableColumn  key={column.key}>{column.label}</TableColumn>}
         </TableHeader>
-        <TableBody items={transCome}>
+        <TableBody items={transForTable}>
           {(item) => (
             <TableRow key={item.id}>
               {
@@ -98,8 +110,14 @@ export default function Page() {
             </TableRow>
           )}
         </TableBody>
-      </Table>
-      <Divider className="mt-8 mb-8"/>
+      </Table>)
+      :
+      (
+        <Spinner />
+      )
+      
+    }
+      {/* <Divider className="mt-8 mb-8"/>
       <Label className="mt-2 mb-4" value="Tiền đi" />
       <Table  className="w-full mt-8" aria-label="TransHistoryTable">
         <TableHeader columns={columns}>
@@ -126,7 +144,7 @@ export default function Page() {
             </TableRow>
           )}
         </TableBody>
-      </Table>
+      </Table> */}
     </div>
         
   
@@ -143,19 +161,19 @@ const masterCols = [
   },
   {
     key: "date",
-    label: "Date",
+    label: "Ngày",
   },
   {
-    key: "notebankacc",
-    label: "Note",
+    key: "tranType",
+    label: "Type",
   },
   {
     key: "status",
     label: "Status",
   },
   {
-    key: "tranType",
-    label: "Type",
+    key: "notebankacc",
+    label: "Note",
   },
   // {
   //   key: "id",

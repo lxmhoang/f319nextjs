@@ -82,7 +82,9 @@ export async function getMyTransHistory(uid: string) {
 		console.log('uid ' + uid)
 		let q = collection(db, 'user/' + uid + '/trans').withConverter(transConverter)
 		const querySnapshot = await getDocs(q)
-		return querySnapshot.docs.map((doc) => doc.data())
+		const array =  querySnapshot.docs.map((doc) => doc.data())
+		array.sort((a,b) => { return a.date.getTime() - b.date.getTime()})
+		return array
 	} else {
 		console.log('not usr')
 		return []
