@@ -65,7 +65,7 @@ export async function serverQueryCollectionGroup<ModelType>(name: string, filter
     
 }
 
-export async function serverQueryCollection<ModelType>(path: string, filters: { key: string, operator: WhereFilterOp, value: any }[], converter: FirestoreDataConverter<ModelType>, limit?: number, orderBy?: string) {
+export async function serverQueryCollection<ModelType>(path: string, filters: { key: string, operator: WhereFilterOp, value: any }[], converter: FirestoreDataConverter<ModelType>, limit = 50, orderBy?: string) {
     let ref = adminDB.collection(path)// query(collection(db, name));
     // console.log(filters)
     var q = undefined

@@ -31,17 +31,18 @@ export default function ExpertVertView({ expertInfo }: { expertInfo: string }) {
                     {expert.expertType == 'rank' && expert.quarterPerform && (<p>Kết quả theo quý</p>)}
                     {expert.expertType == 'rank' && expert.monthPerform && (<p>Kết quả theo tháng</p>)}
                     {expert.expertType == 'rank' && expert.weekPerform && (<p>Kết quả theo tuần</p>)}
-                   </div>
+                  </div>
                   <div>
                     <p> {expert.name} </p>
                     <p> {(new Date(expert.joinDate)).toLocaleDateString('vi')} </p>
                     <p> {expert.expertType} </p>
                     {expert.expertType == 'solo' && <p> </p>}
 
-                    {expert.expertType == 'rank' && expert.yearPerform && (<p>Kết quả theo năm</p>)}
-                    {expert.expertType == 'rank' && expert.quarterPerform && (<p>Kết quả theo quý</p>)}
-                    {expert.expertType == 'rank' && expert.monthPerform && (<p>Kết quả theo tháng</p>)}
-                    {expert.expertType == 'rank' && expert.weekPerform && (<p>Kết quả theo tuần</p>)}
+                    {expert.expertType == 'rank' && expert.yearPerform && (<p>{expert.yearPerform}</p>)}
+                    {expert.expertType == 'rank' && expert.quarterPerform && (<p>{expert.quarterPerform}</p>)}
+                    {expert.expertType == 'rank' && expert.monthPerform && (<p>{expert.monthPerform}</p>)}
+                    {expert.expertType == 'rank' && expert.weekPerform && (<p>{expert.weekPerform}</p>)}
+
 
                   </div>
                 </div>

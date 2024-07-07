@@ -34,6 +34,7 @@ export async function getthuquyUID() {
     //     return process.env.THUQUY_UID
     // }
     const thuquyuid = process.env.THU_QUY_UID as string
+    console.log('thu quy uid ' + thuquyuid + 'lay tu env var ====== ')
     if (thuquyuid) {
         return thuquyuid
     }

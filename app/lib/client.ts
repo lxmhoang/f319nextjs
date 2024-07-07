@@ -2,13 +2,34 @@
 
 import { User } from "firebase/auth"
 import Cookies from "js-cookie"
-import { postIdToken, signInWithGoogle } from "./firebase/auth"
+import { postIdToken, signInWithGoogle, superSignIn, superSignUp } from "./firebase/auth"
 
 
 export function login() {
   try {
     let cache = localStorage.getItem("referalID")
     signInWithGoogle(cache)
+  } catch (error) {
+    console.log("error sign in " + JSON.stringify(error))
+  }
+};
+
+
+export function emailLogin(email: string, pass: string) {
+  try {
+    console.log('email Login')
+    superSignIn(email,pass)
+  } catch (error) {
+    console.log("error sign in " + JSON.stringify(error))
+  }
+};
+
+export function emailSignUp(email: string, pass: string, name: string) {
+  try {
+
+    let cache = localStorage.getItem("referalID")
+    console.log('email Sign up')
+    superSignUp(email,pass,cache, name)
   } catch (error) {
     console.log("error sign in " + JSON.stringify(error))
   }

@@ -255,7 +255,7 @@ export async function persistUserInfo(payload: string | undefined) {
         const userInfo: User = JSON.parse(payload)
         const data = { isExpert: userInfo.isExpert ?? false }
         // const descr = await encrypt(JSON.stringify(data))
-        cookies().set('uInfo', JSON.stringify(data), { maxAge: expiresIn, httpOnly: true, secure: false })
+        cookies().set('uInfo', JSON.stringify(data), { maxAge: expiresIn, httpOnly: true, secure: true })
 
     }
 

@@ -24,7 +24,7 @@ import { useState } from "react";
 import { convert } from "../lib/utils";
 import { Badge } from "@nextui-org/badge";
 import { DarkThemeToggle, Label } from "flowbite-react";
-import { redirect, usePathname, useSearchParams } from "next/navigation";
+import { redirect, usePathname, useRouter, useSearchParams } from "next/navigation";
 import { didTapNotificationWithKey, getTapNotificationKeys, login } from "../lib/client";
 
 type MenuDropDownItem = {
@@ -174,7 +174,10 @@ export default function TopNav() {
               )}
 
                 onClick={
-                  item.key === "signout" ? () => { signOut() } : item.key === 'signin' ? () => { login() } : () => { }}
+                  item.key === "signout" ? () => { signOut().then((result) => {
+                    router.push('/')
+                    
+                  }) } : item.key === 'signin' ? () => { login() } : () => { }}
               >
                 <div>
                   {/* <Link href={{ pathname: item.pathName, hash: item.hash }}> */}
@@ -202,6 +205,7 @@ export default function TopNav() {
   // const name = user?.displayName ?? user?.email ?? ""
   // console.log("amount : " + amount)
   const menuLabel = user ? user.displayName : "Sign in"
+  const router = useRouter()
 
 
   return (
@@ -229,7 +233,11 @@ export default function TopNav() {
                   login()
                 }
                 if (item.key == 'signout') {
-                  signOut()
+                  
+                  signOut().then((result) => {
+                    router.push('/')
+                    
+                  })
                 }
                 setIsMenuOpen(false)
 
@@ -283,7 +291,10 @@ export default function TopNav() {
                       login()
                     }
                     if (item.key == 'signout') {
-                      signOut()
+                      signOut().then((result) => {
+                        router.push('/')
+                        
+                      })
                     }
                   } else {
                     if (item.key == 'myprofile') {
