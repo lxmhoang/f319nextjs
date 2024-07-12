@@ -17,7 +17,7 @@ export default function ExpertHorView({ expertInfo }: { expertInfo: string }) {
       {/* {expert.avatar} */}
       <Link className="justify-center" href={{ pathname: `/expert/details/${expert.id}` }}>
         <div className="p-2 rounded-sm">
-          <Card className="w-full h-[200px] m-1 bg-gray-500">
+          <Card className="w-full h-[200px] m-1 dark:bg-gray-500">
             <CardBody>
               <div className="flex flex-wrap gap-4" >
                 {/* className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center" */}
@@ -30,22 +30,25 @@ export default function ExpertHorView({ expertInfo }: { expertInfo: string }) {
                       <p> Tên </p>
                       <p> Ngày tham gia  </p>
                       <p> Loại chuyên gia </p>
+                      <p> Ngày hết hạn </p>
                       {expert.expertType == 'solo' && (<p>{expert.follower.length} người theo dõi</p>)}
                       {expert.expertType == 'rank' && expert.yearPerform && (<p>Hiệu quả theo năm</p>)}
                       {expert.expertType == 'rank' && expert.quarterPerform && (<p>Hiệu quả theo quý</p>)}
                       {expert.expertType == 'rank' && expert.monthPerform && (<p>Hiệu quả theo tháng</p>)}
                       {expert.expertType == 'rank' && expert.weekPerform && (<p>Hiệu quả theo tuần</p>)}
-                     </div>
+                    </div>
                     <div>
                       <p> {expert.name} </p>
                       <p> {(new Date(expert.joinDate)).toLocaleDateString('vi')} </p>
                       <p> {expert.expertType} </p>
+                      {expert.expertPeriod == 'perm' ? (<p>Vĩnh viễn</p>) :  (<p>{new Date(expert.expertExpire).toLocaleDateString('vi')}</p>)}
+                   
                       {expert.expertType == 'solo' && <p> </p>}
 
-                      {expert.expertType == 'rank' && expert.yearPerform && (<p>{expert.yearPerform}</p>)}
-                      {expert.expertType == 'rank' && expert.quarterPerform && (<p>{expert.quarterPerform}</p>)}
-                      {expert.expertType == 'rank' && expert.monthPerform && (<p>{expert.monthPerform}</p>)}
-                      {expert.expertType == 'rank' && expert.weekPerform && (<p>{expert.weekPerform}</p>)}
+                      {expert.expertType == 'rank' && expert.yearPerform && (<p className={perfConver(expert.yearPerform).color}>{perfConver(expert.yearPerform).info}</p>)}
+                      {expert.expertType == 'rank' && expert.quarterPerform && (<p className={perfConver(expert.quarterPerform).color}>{perfConver(expert.quarterPerform).info}</p>)}
+                      {expert.expertType == 'rank' && expert.monthPerform && (<p className={perfConver(expert.monthPerform).color}>{perfConver(expert.monthPerform).info}</p>)}
+                      {expert.expertType == 'rank' && expert.weekPerform && (<p className={perfConver(expert.weekPerform).color}>{perfConver(expert.weekPerform).info}</p>)}
 
                     </div>
                   </div>

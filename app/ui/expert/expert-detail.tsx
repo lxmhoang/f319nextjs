@@ -1,30 +1,18 @@
 'use client'
-import ExpertCard from "../expertcard";
 import { Accordion, AccordionItem, Divider } from "@nextui-org/react";
 import clsx from 'clsx';
 import { useAppContext } from "@/app/lib/context";
 import { useEffect, useState } from "react";
-import { ConfirmationModal } from "../confirm";
+import { AlertModal, ConfirmationModal, initAlertState } from "../confirm";
 import { Button } from "../button";
 import { addComma, perfConver } from "@/app/lib/utils";
-import { viewExpertPreds } from "@/app/lib/firebaseadmin/adminfirestore";
 import { Prediction } from "@/app/model/prediction";
 import { Expert } from "@/app/model/expert";
 import { login, refreshToken } from "@/app/lib/client";
-import ExpertHorView from "../expertHorView";
 import ExpertVertView from "../expertVertView";
-import { redirect, useRouter } from "next/navigation";
-import { joinRankUser, subcribleToAnExpert } from "@/app/lib/server";
+import { useRouter } from "next/navigation";
+import { joinRankUser, subcribleToAnExpert, viewExpertPreds } from "@/app/lib/server";
 
-type AlertModal = {
-  isShown: boolean
-  title: string
-  message: string
-  leftBtnTitle: string,
-  rightBtntitle?: string,
-  leftBtnClick: VoidFunction,
-  rightBtnClick?: VoidFunction
-}
 
 export default function ExpertDetail({ expertData }: { expertData: string }) {
   const expert: Expert = JSON.parse(expertData)
@@ -81,13 +69,6 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
 
   const id = expert.id
 
-  const initAlertState: AlertModal = {
-    isShown: false,
-    title: '',
-    message: '',
-    leftBtnTitle: '',
-    leftBtnClick: () => { }
-  }
 
   const [alertState, setAlertState] = useState<AlertModal>(initAlertState)
 
@@ -121,6 +102,8 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
     }
 
   }
+
+
   const handlePermSub = () => {
     if (user && expert && expert.permPrice && expert.id) {
       console.log('handlePermSub')
@@ -179,15 +162,15 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
   const permFollowenabled = expert.permPrice && expert.expertPeriod == 'perm'
 
   return (
-    <div className="block sm:flex sm:flex-row sm:flex-wrap">
-      <div className="justify-center sm:w-1/4">
-        {expert ? (<ExpertVertView expertInfo={expertData} />) : ""}
+    <div className=" sm:flex sm:justify-start">
+      <div className="">
+        {expert ? (<ExpertVertView expertInfo={expertData} />) : (<></>)}
 
       </div>
-      <div className="sm:w-3/4 p-1">
+      <div className=" p-4 grow">
         {predsInfo ? (
 
-          <div>
+          <div className="mt-5">
 
             {predsInfo.needFollow ?
               (<>
@@ -235,7 +218,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
 
                 </div>
               </>) :
-              (<>
+              (<div className="">
 
                 <div> Các khuyến nghị đang tiếp diễn </div>
                 <Accordion selectionMode="multiple" defaultExpandedKeys={[defaultOpen]}>
@@ -243,6 +226,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                     // const content = "Giá vào : " + item.priceIn + " Giá ra  : " + item.priceOut
                     const dateInStr = new Date(item.dateIn).toLocaleDateString('vi')
                     const deadLineStr = new Date(item.deadLine).toLocaleDateString('vi')
+                    const title = <p> {item.assetName}   <span className="ml-10 dark:text-zinc-200 text-sm">  {item.portion}%</span> </p>
                     const content = (
                       <div className="flex cols-2 gap-8">
                         <div>
@@ -289,17 +273,17 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                         </div>
                       </div>
                     )
-                    return (<AccordionItem id={item.id} key={item.id} title={item.assetName}><p className="text-sky-400">{content}</p></AccordionItem>)
+                    return (<AccordionItem id={item.id} key={item.id} title={title}><p className="text-sky-400">{content}</p></AccordionItem>)
                   }
 
                   )}
                 </Accordion>
-              </>)
+              </div>)
             }
 
 
 
-            <Divider />
+            <Divider className="mb-10" />
             <div> Các khuyến nghị đã kết thúc</div>
 
 
@@ -407,7 +391,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                     "text-sky-400": profit >= 100,
                     "text-red-400": profit < 100
                   }
-                )}> {item.assetName} {profitInfo} </p>
+                )}> {item.assetName} {profitInfo}  <span className="ml-10 text-gray-800 dark:text-zinc-200 text-sm"> {item.portion}%</span> </p>
                 return (<AccordionItem id={item.id} key={item.id} textValue={"content"} title={title}>{content}</AccordionItem>)
               }
 

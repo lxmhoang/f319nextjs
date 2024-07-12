@@ -2,6 +2,26 @@
 import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader } from "@nextui-org/react";
 import { FC } from "react";
 import { Button } from "./button";
+
+
+export const initAlertState: AlertModal = {
+  isShown: false,
+  title: '',
+  message: '',
+  leftBtnTitle: '',
+  leftBtnClick: () => { }
+}
+
+export type AlertModal = {
+  isShown: boolean
+  title: string
+  message: string
+  leftBtnTitle: string,
+  rightBtntitle?: string,
+  leftBtnClick: VoidFunction,
+  rightBtnClick?: VoidFunction
+}
+
   
   interface ConfirmationModalProps {
     isOpen: boolean;

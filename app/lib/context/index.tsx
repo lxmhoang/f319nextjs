@@ -3,11 +3,13 @@
 
 import Cookies from "js-cookie";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { auth, db } from "../firebase/firebase";
+import { auth, db, rtDB } from "../firebase/firebase";
 import { User as FireBaseUser, getAuth } from "firebase/auth";
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { User, userConverter } from "@/app/model/user";
+import { User, userConverter, userRTDBConverter } from "@/app/model/user";
 import { decrypt , encrypt, persistUserInfo} from "../server";
+import { onValue, ref } from "firebase/database";
+import { UserNoti } from "@/app/model/noti";
 
 
 const AppContext = createContext<{ user: User | undefined, firebaseUser: FireBaseUser | null | undefined }>({ user: undefined, firebaseUser: null });
@@ -35,32 +37,28 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
         // const token = firebaseUser?.getIdTokenResult()
         // var unsubscrible
         if (firebaseUser) {
-            var unsubscrible =
-                onSnapshot(doc(db, "user", firebaseUser.uid).withConverter(userConverter), (doc) => {
-                    console.log('onAuthStateChanged onSnapshot fetch user info' + JSON.stringify(doc.data()))
-                    // if (token) {
-
-                    // }
-
-                    // updateToken(firebaseUser)
-                    
-                    const userInfo = doc.data()
-                    if (userInfo?.notifies) {
-                        
-                        userInfo.notifies.sort((a,b) => { 
-                            return b.dateTime - a.dateTime})
-                    }
-                    // if (userInfo) {
-                    //     userInfo.amount = 400000
+           
+            var unsubscrible = onValue(ref(rtDB ,'user/' + firebaseUser.uid), (snapshot) => {
+                console.log('onValue Realtime Database onSnapshot fetch user info with id ' + firebaseUser.uid + ' data : ' + JSON.stringify(snapshot.val()))
+                if (snapshot.val()) {
+                    const userInfo : User = userRTDBConverter.fromRTDB(snapshot) 
+                    // if (userInfo.notifies) {
+                    //     userInfo.notifies.sort((a,b) => { 
+                    //         return b.dateTime - a.dateTime})
                     // }
                     persistUserInfo(JSON.stringify(userInfo))
                     setUser(userInfo)
-                })
+                }
+
+
+
+            })
+             
             return unsubscrible
         } else {
             if (firebaseUser == null && firebaseUser != undefined) {
                 // xac dinh la user dang bi logged out
-                persistUserInfo(undefined)
+                // persistUserInfo(undefined)
             }
             //
             setUser(undefined)

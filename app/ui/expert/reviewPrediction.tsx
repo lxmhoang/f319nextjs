@@ -6,16 +6,15 @@ import { useEffect, useState } from "react";
 import { getRealTimeStockData } from "@/app/lib/getStockData";
 import { Prediction, PredictionReview } from "@/app/model/prediction";
 import { Button, Label, Spinner, Toast } from "flowbite-react";
-import { closeWIPPreds, getAllMypreds, getMyWIPPreds } from "@/app/lib/server";
+import { clientGetAllMyPreds, closeWIPPreds, getAllMypreds, getMyWIPPreds } from "@/app/lib/server";
 import { perfConver } from "@/app/lib/utils";
 
 
-export default function ReviewPrediction({ doneFetching, wip }: {
+export default function ReviewPrediction({ doneFetching }: {
   // preds: Prediction[]
   // preds:
   // WIPPrediction[],
-  doneFetching: (totalPortion: number) => void,
-  wip: boolean
+  doneFetching: (totalPortion: number) => void
 }) {
 
 
@@ -35,8 +34,9 @@ export default function ReviewPrediction({ doneFetching, wip }: {
   }
 
   const fetchPred = async () => {
-    const result = wip ? await getMyWIPPreds() : await getAllMypreds()
-    setPreds(result)
+    const res = await clientGetAllMyPreds()
+    const preds: Prediction[] = JSON.parse(res)
+    setPreds(preds)
     setSelectedKeys(new Set([]))
   }
   // const [closingPreds, setClosingPreds] = useState<boolean>(false)
@@ -57,8 +57,8 @@ export default function ReviewPrediction({ doneFetching, wip }: {
       priceRelease: pred.priceRelease?.toFixed(2),
       perm: perfConver(pred.priceRelease! / pred.priceIn),
       priceOut: pred.priceOut.toFixed(2),
-      deadLine: pred.deadLine.toLocaleDateString('vi'),
-      dateIn: pred.dateIn.toLocaleDateString('vi'),
+      deadLine: new Date(pred.deadLine).toLocaleDateString('vi'),
+      dateIn: new Date(pred.dateIn).toLocaleDateString('vi'),
       cutLoss: pred.cutLoss.toFixed(2),
       status: pred.status,
       portion: pred.portion.toString() + '%'
@@ -85,6 +85,7 @@ export default function ReviewPrediction({ doneFetching, wip }: {
       setWidth(window.innerWidth);
     }
   }
+
   useEffect(() => {
     window.addEventListener("resize", updateDimensions);
     return () => window.removeEventListener("resize", updateDimensions);
@@ -116,15 +117,15 @@ export default function ReviewPrediction({ doneFetching, wip }: {
         if (!curPrice) {
           throw new Error('can not get real time stock data of asset ' + pred.assetName)
         }
-        const predAge = (new Date()).getTime() - pred.dateIn.getTime()
+        const predAge = (new Date()).getTime() - pred.dateIn
         console.log("predAge : " + predAge)
         return {
           id: pred.id,
           assetName: pred.assetName,
           priceIn: pred.priceIn.toFixed(2),
           priceOut: pred.priceOut.toFixed(2),
-          deadLine: pred.deadLine.toLocaleDateString('vi'),
-          dateIn: pred.dateIn.toLocaleDateString('vi'),
+          deadLine: new Date(pred.deadLine).toLocaleDateString('vi'),
+          dateIn: new Date(pred.dateIn).toLocaleDateString('vi'),
           cutLoss: pred.cutLoss.toFixed(2),
           status: pred.status,
           curPrice: curPrice.low.toFixed(2),
@@ -136,7 +137,7 @@ export default function ReviewPrediction({ doneFetching, wip }: {
       setWIPData(dataList)
     };
 
-    if (wipPreds) {
+    if (wipPreds && doneFetching) {
       if (wipPreds.length > 0) {
         const sum = wipPreds.map((i) => i.portion).reduce((a, b) => a + b, 0)
         doneFetching(sum)

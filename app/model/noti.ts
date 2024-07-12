@@ -14,32 +14,6 @@ export type UserNoti = {
     urlPath?: string
 }
 
-
-export const notiConverter: FirestoreDataConverter<UserNoti> = {
-    toFirestore(item: WithFieldValue<UserNoti>): DocumentData {
-      return {
-        dateTime: item.dateTime,
-        content: item.content,
-        urlPath: item.urlPath,
-        title: item.title
-      };
-    },
-    fromFirestore(
-      snapshot: QueryDocumentSnapshot,
-      options: SnapshotOptions
-    ): UserNoti {
-      const data = snapshot.data(options);
-      return {
-        id: snapshot.id,
-        dateTime: (new Date((data.date as FirebaseFirestore.Timestamp).toDate())).getTime(),
-        title: data.title,
-        content: data.content,
-        urlPath: data.urlPath
-      };
-    },
-  };
-  
-
 export const notiAdminConverter: AdminFirestoreDataConverter<UserNoti> = {
     toFirestore(item: AdminWithFieldValue<UserNoti>): AdminDocumentData {
         return {
@@ -62,3 +36,5 @@ export const notiAdminConverter: AdminFirestoreDataConverter<UserNoti> = {
         };
     },
   };
+
+  

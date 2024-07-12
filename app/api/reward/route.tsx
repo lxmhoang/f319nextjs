@@ -4,8 +4,7 @@
 // At 11:00 PM, on day 31, 30, and 29 of the month, and on Friday
 
 import { getthuquyUID } from "@/app/lib/firebaseadmin/adminauth"
-import { serverAddNewModal, serverUpdateDoc } from "@/app/lib/firebaseadmin/adminfirestore"
-import { getRankingInfo, sendNotificationToUser } from "@/app/lib/server"
+import { getRankingInfo, sendNotificationToUser, serverAddANewTransaction } from "@/app/lib/server"
 import { getPivotDates } from "@/app/lib/statistic"
 import { contentOf } from "@/app/lib/utils"
 import { UserNoti } from "@/app/model/noti"
@@ -75,11 +74,12 @@ export async function GET(request: Request) {
               toUid: winner.id,
               fromUid: thuquyid,
               amount: reward,
-              date: toDay,
+              date: toDay.getTime(),
               note: 'thuong tuan ' + weekEndStr,
               status: "Done"
             }
-            await serverAddNewModal<Transaction>('transaction', tran, tranAdminConverter)
+            // await addANewTransaction(tran)
+            await serverAddANewTransaction(tran)
             // notify user
             const noti : UserNoti = {
               title: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top tuần',
@@ -103,11 +103,11 @@ export async function GET(request: Request) {
               toUid: winner.id,
               fromUid: thuquyid,
               amount: reward / numOfWinner,
-              date: toDay,
+              date: toDay.getTime(),
               note: 'thuong thang ' + monthEndStr,
               status: "Done"
             }
-            await serverAddNewModal<Transaction>('transaction', tran, tranAdminConverter)
+            await serverAddANewTransaction(tran)
             // notify user
             const noti : UserNoti = {
               title: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top tháng',
@@ -130,11 +130,11 @@ export async function GET(request: Request) {
               toUid: winner.id,
               fromUid: thuquyid,
               amount: reward / numOfWinner,
-              date: toDay,
+              date: toDay.getTime(),
               note: 'thuong quy '+ quarterEndStr,
               status: "Done"
             }
-            await serverAddNewModal<Transaction>('transaction', tran, tranAdminConverter)
+            await serverAddANewTransaction(tran)
             // notify user
             const noti : UserNoti = {
               title: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top quý',
@@ -157,11 +157,11 @@ export async function GET(request: Request) {
               toUid: winner.id,
               fromUid: thuquyid,
               amount: reward / numOfWinner,
-              date: toDay,
+              date: toDay.getTime(),
               note: 'thuong nam ' + yearEndStr,                                         
               status: "Done"
             }
-            await serverAddNewModal<Transaction>('transaction', tran, tranAdminConverter)
+            await serverAddANewTransaction(tran)
             // notify user
             const noti : UserNoti = {
               title: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top năm',

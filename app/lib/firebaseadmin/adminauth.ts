@@ -2,9 +2,8 @@
 'server-only'
 import { SessionCookieOptions, getAuth } from "firebase-admin/auth";
 import { cookies } from "next/headers";
+import { createFirebaseAdminApp } from "./adminApp";
 
-import admin from "firebase-admin"
-import { getApps } from "firebase-admin/app";
 
 export async function getSession() {
     try {
@@ -33,17 +32,21 @@ export async function getthuquyUID() {
     // if (process.env.THUQUY_UID) {
     //     return process.env.THUQUY_UID
     // }
-    const thuquyuid = process.env.THU_QUY_UID as string
-    console.log('thu quy uid ' + thuquyuid + 'lay tu env var ====== ')
-    if (thuquyuid) {
-        return thuquyuid
-    }
+    // const thuquyuid = process.env.THU_QUY_UID as string
+    // if (thuquyuid) {
+    //     console.log('thu quy uid ' + thuquyuid + 'lay tu env var ====== ')
+    //     return thuquyuid
+    // }
 
+    // console.log('thu quy uid by email ')
     const auth = getAuth(adminApp)
     try {
         const userRecord = await auth.getUserByEmail('lxmhoang@gmail.com')
+
+        console.log('thu quy uid got ' + JSON.stringify(userRecord))
         return userRecord.uid
     } catch (e) {
+        console.log('error ' + JSON.stringify(e))
         return undefined
     }
 }
@@ -122,7 +125,9 @@ export async function getCurrentUser() {
 }
 
 export async function createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions) {
-    return getAuth(adminApp).createSessionCookie(idToken, sessionCookieOptions);
+    console.log('zzzzz ' )
+    const cookie =  getAuth(adminApp).createSessionCookie(idToken, sessionCookieOptions);
+    return cookie
 }
 
 export async function revokeAllSessions(session: string) {
@@ -132,51 +137,5 @@ export async function revokeAllSessions(session: string) {
 }
 
 
-const ADMIN_APP_NAME = "stock-319-admin";
-
-
-// use emulator
-if (process.env.USE_EMULATOR == 'true') {
-    console.log('admin AUTH connecting to emulator')
-    process.env['FIRESTORE_EMULATOR_HOST'] = 'localhost:8080';
-    process.env['FIREBASE_AUTH_EMULATOR_HOST'] = 'localhost:9099';
-    process.env['KEY_GCLOUD_PROJECT'] = 'stock319-f3905';
-} else {
-    console.log('admin AUTH NOT connecting to emulator' + process.env.USE_EMULATOR)
-
-}
-
-const params = {
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID as string,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET as string,
-    clientEmail: process.env.KEY_FIREBASE_CLIENT_EMAIL as string,
-    privateKey: process.env.KEY_FIREBASE_PRIVATE_KEY as string
-}
-
-function formatPrivateKey(key: string) {
-    // console.log("key : " + key)
-    return key ? key.replace(/\\n/g, "\n") : "aa"
-}
-
 const adminApp = createFirebaseAdminApp()
-
-
-function createFirebaseAdminApp() {
-
-    const result = getApps().find((it) => it.name === ADMIN_APP_NAME)
-    if (result) {
-        return result
-    }
-
-    // console.log('fire base admin params : ' + JSON.stringify(params))
-
-    return admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: params.projectId,
-            clientEmail: params.clientEmail,
-            privateKey: formatPrivateKey(params.privateKey),
-        }),
-    }, ADMIN_APP_NAME);
-}
-
 

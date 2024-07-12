@@ -5,20 +5,21 @@ import {
     WithFieldValue as AdminWithFieldValue
 } from "firebase-admin/firestore";
 import { DocumentData, FirestoreDataConverter, QueryDocumentSnapshot, SnapshotOptions, WithFieldValue } from "firebase/firestore";
+import { Subscription } from "./subscription";
 
-type Follower = {
-    uid: string,
-    endDate: Date,
-    startDate: Date,
-    perm: boolean,
-    subDocID: string,
-}
+// type Follower = {
+//     uid: string,
+//     endDate: Date,
+//     startDate: Date,
+//     perm: boolean,
+//     subDocID: string,
+// }
 
 export type Expert = {
     id: string;
     imageURL: string;
     name: string;
-    follower: Follower[];
+    follower: Subscription[];
     permPrice?: number;
     monthlyPrice?: number;
     shortIntro: string;
@@ -35,7 +36,7 @@ export type Expert = {
     expertPeriod: string;
     visible: boolean;
 
-    joinDate: Date
+    joinDate: number
 }
 
 export const expertRawConverter : AdminFirestoreDataConverter<any> = {
@@ -73,27 +74,10 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
         snapshot: AdminQueryDocumentSnapshot
     ): Expert {
         const data = snapshot.data();
-        const follower = data.follower ? (data.follower as {
-            eid: string;
-            uid: string;
-            startDate: FirebaseFirestore.Timestamp;
-            endDate: FirebaseFirestore.Timestamp;
-            perm: boolean;
-            subDocID: string;
-        }[]).map((item) => {
-            const follower: Follower = {
-                uid: item.uid,
-                endDate: new Date((item.endDate as FirebaseFirestore.Timestamp).toDate()),
-                startDate: new Date((item.startDate as FirebaseFirestore.Timestamp).toDate()),
-                perm: item.perm,
-                subDocID: item.subDocID
-            }
-            return follower
-        }) : []
+        const follower = data.follower ? data.follower : []
 
-        const joinDate =new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate())
         // console.log('aaaa ' + JSON.stringify(joinDate))
-        return {
+        const expert : Expert =  {
             id: snapshot.id,
             imageURL: data.imageURL,
             name: data.name,
@@ -109,10 +93,11 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
             monthPerform: data.monthPerform,
             quarterPerform: data.quarterPerform,
             yearPerform: data.yearPerform,
-            joinDate: joinDate,
+            joinDate: data.joinDate,
             visible: data.visible,
             isExpired: new Date(data.expertExpire) < new Date()
         };
+        return expert
     },
 };
 
@@ -136,26 +121,9 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
         snapshot: QueryDocumentSnapshot
     ): Expert {
         const data = snapshot.data();
-        const follower = data.follower ? (data.follower as {
-            eid: string;
-            uid: string;
-            startDate: FirebaseFirestore.Timestamp;
-            endDate: FirebaseFirestore.Timestamp;
-            perm: boolean;
-            subDocID: string;
-        }[]).map((item) => {
-            const follower: Follower = {
-                uid: item.uid,
-                endDate: new Date((item.endDate as FirebaseFirestore.Timestamp).toDate()),
-                startDate: new Date((item.startDate as FirebaseFirestore.Timestamp).toDate()),
-                perm: item.perm,
-                subDocID: item.subDocID
-            }
-            return follower
-        }) : []
+        const follower = data.follower ? data.follower : []
 
-        const joinDate = new Date((data.joinDate as FirebaseFirestore.Timestamp).toDate())
-        return {
+        const expert : Expert =  {
             id: snapshot.id,
             imageURL: data.imageURL,
             name: data.name,
@@ -172,9 +140,10 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
             expertPeriod: data.expertPeriod,
             expertExpire: data.expertExpire,
             expertType: data.expertType,
-            joinDate: joinDate,
+            joinDate: data.joinDate,
             isExpired: new Date(data.expertExpire) < new Date()
         };
+        return expert
     },
 };
 

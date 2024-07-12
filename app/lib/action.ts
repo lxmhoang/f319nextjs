@@ -1,201 +1,10 @@
 
 "use server"
-// khong dung firebase client o day vi nhu the request.auth se bi null
 import { z } from 'zod';
-import { serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc, serverUpdateDoc } from './firebaseadmin/adminfirestore';
 import { getUserInfoFromSession } from './firebaseadmin/adminauth';
-import { User, userAdminConverter } from '../model/user';
-import { Prediction, predAdminConverter } from '../model/prediction';
-import { UserNoti } from '../model/noti';
-import { Expert, expertAdminConverter } from '../model/expert';
-import { arrayUnion } from 'firebase/firestore';
-import firebase from 'firebase/compat/app';
-import { FieldValue } from 'firebase-admin/firestore';
-import { getMyWIPPreds, sendNotificationToBoard, sendNotificationToUser } from './server';
+import { Prediction } from '../model/prediction';
+import { getExpert, getMyWIPPreds, serverAddANewPred } from './server';
 import { getRealTimeStockData } from './getStockData';
-
-
-
-// const TransactionFormSchema = z.object({
-//   amount: z.number(),
-//   notebankacc: z.string().optional(),
-// })
-
-// export type AddNewTransFormState = {
-//   errors?: {
-//     amount?: string[];
-//     date?: string[];
-//     note?: string[];
-//     notebankacc?: string[],
-//     logic?: string[]
-//   };
-//   tran?: Transaction;
-//   message?: string | null;
-//   justDone?: boolean
-// };
-
-// export async function createWithDrawTransaction(prevState: AddNewTransFormState, formData: FormData) {
-//   console.log("transaction to be added : ")
-//   const validatedFields = TransactionFormSchema.safeParse({
-//     amount: Number(formData.get('amount')),
-//     notebankacc: formData.get('notebankacc') as string
-//   });
-
-//   console.log("transaction to be added : " + formData.get('amount') + " notebank acc  " + formData.get('notebankacc'))
-//   if (!validatedFields.success) {
-//     console.log("error: " + JSON.stringify(validatedFields.error.flatten()))
-//     return {
-//       errors: validatedFields.error.flatten().fieldErrors,
-//       message: 'Hãy điền đầy đủ thông tin',
-//       justDone: false
-//     };
-//   }
-
-//   const notebankacc = formData.get('notebankacc') as string
-
-//   // must be perform with authed user
-//   const userInfo = await getUserInfoFromSession()
-//   if (!userInfo.authenticated || !userInfo.uid) {
-//     return {
-//       errors: [],
-//       message: 'User not found',
-//       justDone: false
-//     };
-//   }
-
-//   const thuquyid = await getthuquyUID()
-
-//   if (!thuquyid) {
-//     return {
-//       errors: [],
-//       message: 'Thu quy not found',
-//       justDone: false
-//     };
-//   }
-
-//   // const toUid = process.env.THUQUY_UID ?? "thuquy"
-
-//   const tran: Transaction = {
-//     tranType: TranType.withDraw,
-//     toUid: thuquyid,
-//     fromUid: userInfo.uid,
-//     amount: Number(formData.get('amount')),
-//     date: new Date(),
-//     notebankacc: notebankacc,
-//     status: "pending"
-//   }
-
-//   console.log("transaction to be added : " + JSON.stringify(tran))
-
-//   const userData = await serverGetModal<User>('user/' + userInfo.uid, userAdminConverter)
-//   if (!userData) {
-//     console.log('sth wrong with uid')
-
-//     return {
-//       errors: {
-
-//       },
-//       message: 'Can not verify amount ',
-//       justDone: false
-//     }
-//   }
-//   if (tran.amount > userData.amount) {
-//     console.log('amount withDraw is > user current amount')
-//     return {
-//       errors: {
-//         anmount: [""],
-//         notebankacc: [""],
-//         logic: ['amount withDraw is > user current amount']
-//       },
-//       message: 'amount withDraw is > user current amount',
-//       justDone: false
-//     }
-
-//   }
-
-
-
-//   const result = await addANewTransaction(tran)
-//   if (result.success) {
-
-//     console.log("transaction has been added with ref " + result.message)
-//     return {
-//       errors: {},
-//       message: JSON.stringify(result),
-//       tran: tran,
-//       justDone: true
-//     }
-//   } else {
-//     console.log("transaction FAILED TO added")
-//     return {
-//       errors: {},
-//       message: 'failed to add transaction',
-//       justDone: false
-//     }
-//   }
-// }
-
-// Search User
-
-const SearchUserForPaymentFormSchema = z.object({
-  accessId: z.string({
-    invalid_type_error: ' payment Id phai la chuoi'
-  })
-
-})
-
-
-const SearchUser = SearchUserForPaymentFormSchema
-
-
-
-export type SearchUseFormState = {
-  errors?: {
-    [key: string]: string[]
-  };
-  user?: string;
-  message?: string | null;
-};
-
-export async function searchUserForPayment(prevState: SearchUseFormState, formData: FormData) {
-  const accessId = formData.get('accessId')
-  const validatedFields = SearchUser.safeParse({
-    accessId: formData.get('accessId'),
-  });
-
-  if (!validatedFields.success) {
-    return {
-      errors: validatedFields.error.flatten().fieldErrors,
-      message: 'Hãy điền đầy đủ thông tin',
-    };
-  }
-
-  const searchResult = await serverQueryCollection<User>("user", [{ key: "accessId", operator: "==", value: accessId as string }], userAdminConverter)
-
-  if (searchResult && searchResult.length == 1) {
-    return {
-      message: "Good ",
-      user: JSON.stringify(searchResult[0])
-    }
-  } else if (!searchResult || searchResult.length == 0) {
-    return {
-      errors: {
-        general: ["No user found"]
-      },
-      message: "No user found"
-    }
-
-  } else {
-    return {
-      errors: {
-        general: ["too many user found"]
-      },
-      message: "too many user found"
-    }
-
-  }
-
-}
 
 
 // Add prediction
@@ -327,7 +136,6 @@ export async function createNewPrediction(assetName: string | undefined, selecte
 
   const userInfo = await getUserInfoFromSession()
   if (userInfo && userInfo.authenticated && userInfo.uid) {
-    // const userInfo = await serverGetModal<User>('user/' + uid, userAdminConverter)
     if (!(userInfo.isExpert && userInfo.isExpert == true)) {
       console.log("not expert")
       return {
@@ -349,7 +157,7 @@ export async function createNewPrediction(assetName: string | undefined, selecte
     }
   }
 
-  const expertInfo = await serverGetModal<Expert>('expert/' + userInfo.uid, expertAdminConverter)
+  const expertInfo = await getExpert(userInfo.uid)
   if (!expertInfo) {
     return {
       errors: {
@@ -373,11 +181,11 @@ export async function createNewPrediction(assetName: string | undefined, selecte
 
   const pred: Prediction = {
     assetName: assetName,
-    dateIn: toDay,
+    dateIn: Date.now(),
     priceIn: priceIn,
     priceOut: priceOut,
     cutLoss: cutLoss,
-    deadLine: deadLine,
+    deadLine: deadLine.getTime(),
     status: "Inprogress",
     note: '',
     portion: portion,
@@ -386,48 +194,9 @@ export async function createNewPrediction(assetName: string | undefined, selecte
 
   console.log('prediction : ' + JSON.stringify(pred))
 
-
-  const result = await serverAddNewModal<Prediction>('expert/' + userInfo.uid + '/preds', pred, predAdminConverter)
+  const  result = await serverAddANewPred(pred, expertInfo)
+  
   if (result) {
-    console.log("prediction has been added : " + JSON.stringify(result))
-    if (userInfo.expertType == 'rank') {
-      const resultForRank = await serverSetDoc('rankPred/' + result.id, predAdminConverter.toFirestore(pred))
-      console.log("prediction from Rank Expert has been added : " + JSON.stringify(resultForRank))
-    }
-    // notify follower
-    const toDay = new Date()
-    const noti: UserNoti = {
-      dateTime: toDay.getTime(),
-      title: pred.assetName,
-      content: "Chuyên gia " + expertInfo.name + " đã tạo khuyến nghị cổ phiếu " + pred.assetName,
-      urlPath: '/expert/details/' + expertInfo.id + "#" + result.id
-    }
-
-    let notifiedUsersIds: string[] = []
-
-    if (expertInfo.expertType == 'rank') {
-      notifiedUsersIds = (await serverQueryCollection<User>('user', [{ key: 'rankExpire', operator: '>=', value: toDay }], userAdminConverter)).map((item) => item.uid)
-    } else {
-
-      notifiedUsersIds = expertInfo.follower.filter((item) => { return (item.endDate > toDay) }).map((item) => item.uid)
-      // console.log('follower ' + JSON.stringify(expertInfo.follower))
-      // console.log('notified User Ids ' + notifiedUsersIds)
-    }
-
-
-    for (const userID of notifiedUsersIds) {
-      await sendNotificationToUser(userID, noti)
-    }
-    const notiBoard: UserNoti = {
-      dateTime: toDay.getTime(),
-      title: "",
-      content: "Chuyên gia " + expertInfo.name + " mới tạo thêm 1 khuyến nghị ",
-      urlPath: '/expert/details/' + expertInfo.id + "#" + result.id
-    }
-
-    await sendNotificationToBoard(notiBoard)
-
-    // redirect("/admin")
     return {
       errors: {},
       message: "Tạo khuyến nghị " + assetName + " thành công",
@@ -435,11 +204,12 @@ export async function createNewPrediction(assetName: string | undefined, selecte
       justDone: true
     }
   } else {
-    console.log("transaction FAILED TO added")
     return {
       errors: {},
-      message: 'failed to add transaction',
+      message: "Có lỗi khi tạo khuyến nghị ",
+      // pred: result,
       justDone: false
     }
   }
+ 
 }

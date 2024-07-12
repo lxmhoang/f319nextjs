@@ -1,17 +1,13 @@
-// import { expertAdminConverter, predAdminConverter, userAdminConverter } from "@/app/lib/firebaseadmin/adminconverter";
-// import { serverQueryCollection, serverSetDoc, serverUpdateDoc } from "@/app/lib/firebaseadmin/firebaseadmin";
-import { serverQueryCollection, serverSetDoc, serverUpdateDoc } from "@/app/lib/firebaseadmin/adminfirestore";
-import { getRankData } from "@/app/lib/server";
+
+import { getExperts, getPredsSince, getRankData, serverMarkExpertExpired, serverUpdateExpertInfo, serverUpdateStats } from "@/app/lib/server";
 import { getPivotDates } from "@/app/lib/statistic";
 import { contentOf, datesGreaterThan, getPerformanceSince } from "@/app/lib/utils";
-import { ExpertStatus, expertAdminConverter } from "@/app/model/expert";
-import { Prediction, predAdminConverter } from "@/app/model/prediction";
-import { subscriptionAdminConverter } from "@/app/model/subscription";
 
 
 // ********* update performance of every activated expert, de tao rankInfo, run at 5PM every day *********
 // ********** update followNum of every solo expert ******************
 // *********  run at 5PM every day *********
+
 export async function GET(request: Request) {
   const toDay = new Date()
   try {
@@ -33,70 +29,52 @@ export async function GET(request: Request) {
 
 
     message.push('Earlies Date to check: ' + minDate.toLocaleDateString('vi') + ' expert count ')
-    // let expertRank = await serverQueryCollection('expert', [{ key: 'expertType', operator: '==', value: 'rank' }], expertAdminConverter)
-    // let experts = expertRank.filter((item) => { return item.status == 'activated'})
-    const experts = await serverQueryCollection('expert', 
-      [  
-        //  { key: "expertType", operator: "==", value: "rank" },
-          { key: "status", operator: "==", value: "activated" }    
-
-      ], 
-      expertAdminConverter,
-    )
-
-    // const rankExpert = experts.filter((item) => { return item.expertType == 'rank'})
-
-
-    // console.log('2222222 ==== : ' + minDate.toLocaleDateString('vi') + ' expert count ' + experts.length)
+    const experts = await getExperts([ { key: "status", operator: "==", value: "activated" }])
     message.push('start checking performance of ALL( not only ranked) expert ; ' )
 
+    var numOfAllSub = 0
+    var sumAllSubValue = 0
+    var numOfSoloExperts = experts.filter((item) => {return item.expertType == 'solo'}).length
+    var numOfRankExperts = experts.length - numOfSoloExperts
     for (const expert of experts) {
-      
+
+      numOfAllSub += expert.follower.length
+
+      const subValueOfExpert = expert.follower.map((item) => item.value).reduce((a,b) =>  a + b, 0)
+      sumAllSubValue += subValueOfExpert
+
+
       const dateExpire = new Date(expert.expertExpire)  
       if (datesGreaterThan(toDay, dateExpire)) {
-        message.push(' phat hien expired expert : ' + JSON.stringify(expert))
-        await serverUpdateDoc('expert/' + expert.id , {status: ExpertStatus.expired})
-        
+        message.push(' phat hien expired expert : ' + JSON.stringify(expert))   
+        await serverMarkExpertExpired(expert.id) 
+
       }
-    
 
       message.push('start checking performance of this expert ; ' + expert.name)
       // var perform = 1.0
       const eid = expert.id
-      let wipPreds = await serverQueryCollection<Prediction>('expert/' + eid + '/preds', 
-      [
-        // { key: 'dateIn', operator: '>=', value: minDate },
-        { key: 'status', operator: '!=', value: 'Inprogress' }
-
-      ],
-       predAdminConverter)
-
-       let allPreds = wipPreds.filter((item) => {
-        return item.dateIn >= minDate
-       })
-
-      // let openPreds = allPreds.filter((item) => {
-      //   return item.status == "Inprogress"
-      // })
-
+      let donePreds = await getPredsSince(minDate
+        , false, eid) 
+      message.push('number of done Preds ' + donePreds.length)
       message.push('Kiem tra expert id : ' + eid + ' name ' + expert.name )
 
 
       message.push('Tinh toan performance theo tuan ' )
 
-      const weekData = await getPerformanceSince(pivotWeek, allPreds)
+      const weekData = await getPerformanceSince(pivotWeek, donePreds)
       message.push(...weekData.message)
 
       message.push('Tinh toan performance theo thang ' )
-      const monthData = await getPerformanceSince(pivotMonth, allPreds)
+      const monthData = await getPerformanceSince(pivotMonth, donePreds)
       message.push(...monthData.message)
 
       message.push('Tinh toan performance theo quy ' )
-      const quarterData = await getPerformanceSince(pivotQuarter, allPreds)
+      const quarterData = await getPerformanceSince(pivotQuarter, donePreds)
       message.push(...quarterData.message)
 
       message.push('Tinh toan performance theo nam ' )
-      const yearData = await getPerformanceSince(pivotYear, allPreds)
+      const yearData = await getPerformanceSince(pivotYear, donePreds)
       message.push(...yearData.message)
 
       const perInfo = {
@@ -106,60 +84,14 @@ export async function GET(request: Request) {
           yearPerform: yearData.performance
       }
 
-      await serverUpdateDoc('expert/' + eid, perInfo)
+      await serverUpdateExpertInfo(eid, perInfo)
       message.push('\n expert ' + expert.name + ' performance info : ' + JSON.stringify(perInfo) + '\n\n\n\n')
 
-    }
+      message.push(' update follower Num')
 
-    // }
+      const followerNum = expert.follower.filter((item) => { return item.endDate > Date.now()}).length
+      await serverUpdateExpertInfo(expert.id, { followerNum: followerNum })
 
-    // update followerNum for every expert
-
-    message.push(' =======================================================    \n')
-    message.push(' Begin to  update followerNum for every SOLO expert    \n')
-    console.log('=======================================================')
-    const soloExperts =  experts.filter((item) => { return item.expertType == 'solo'})
-
-    const numOfSoloExperts = soloExperts.length
-
-    const numOfRankExperts = experts.length - numOfSoloExperts
-
-    const soloExpertIDs = soloExperts.map(doc => doc.id)
-
-    const allSub = await serverQueryCollection('subscription', [], subscriptionAdminConverter)
-    const sumAllSubValue = allSub.map ((item) => item.value).reduce((a,b) => a+b , 0)
-    
-    const currentSub = allSub.filter((item) => { 
-      const endDate = item.endDate ?? new Date('2030-01-01')
-      return item.perm || endDate >= new Date()
-    })
-
-    const subs = currentSub.map((item) => {
-      return {
-        uid: item.uid,
-        eid: item.eid
-      }
-    })
-
-    message.push(' currentSub duoc don gian hoa : ' + JSON.stringify(subs) + '   \n')
-    
-    const result = soloExpertIDs.map((id) => {
-      return {
-        id: id,
-        num: subs.filter((sub) => {
-          return sub.eid == id
-        }
-        ).length
-      }
-    })
-
-    message.push(' KV result of counting follower num for solo expert' + JSON.stringify(result) + '   \n')
-
-    var numOfAllSub = 0
-    for (const e of result) {
-      message.push(' update solo expert ' + e.id + ' with follower Num  : ' + e.num + '  \n')
-      await serverUpdateDoc('expert/' + e.id, { followerNum: e.num })
-      numOfAllSub += e.num
     }
 
     const numOfAllExpert = experts.length
@@ -171,10 +103,12 @@ export async function GET(request: Request) {
 
     const rankData = await getRankData()
 
-    const data =  { numOfAllExpert, numOfAllSub: numOfAllSub,  sumAllSubValue , numOfSoloExperts, numOfRankExperts, rankData}
-    await serverSetDoc('stats/' + dateTimeNowStr, data)
-    await serverSetDoc('stats/latest', data, true)
+    message.push(JSON.stringify(rankData))
 
+    const data =  { numOfAllExpert, numOfAllSub: numOfAllSub,  sumAllSubValue , numOfSoloExperts, numOfRankExperts, rankData}
+
+
+    await serverUpdateStats(data)
   } catch (error) {
     return new Response(`Webhook error: ` + JSON.stringify(error), {
       status: 400,

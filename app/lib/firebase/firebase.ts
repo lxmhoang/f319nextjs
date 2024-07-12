@@ -7,6 +7,7 @@ import {
 import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 import { connectFirestoreEmulator, getFirestore } from "firebase/firestore";
 import { connectStorageEmulator, getStorage, } from "firebase/storage";
+import { connectDatabaseEmulator, getDatabase } from "firebase/database";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -24,6 +25,7 @@ const useEmulator = process.env.USE_EMULATOR == 'true'
 export const clientApp = createFirebaseApp();
 export const auth = getAuth(clientApp);
 export const db = getFirestore(clientApp);
+export const rtDB = getDatabase(clientApp)
 export const storage = getStorage(clientApp);
 export const cloudFunc = getFunctions(clientApp);
 
@@ -45,7 +47,8 @@ if (false) {
 
 if (useEmulator) {
   console.log(' firebase connecting to emulator')
-  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  connectDatabaseEmulator(rtDB, '127.0.0.1', 9000 )
+  connectFirestoreEmulator(db, '127.0.0.1', 8080)
   connectStorageEmulator(storage, '127.0.0.1', 9199)
   connectFunctionsEmulator(cloudFunc, '127.0.0.1', 5001)
 } else {

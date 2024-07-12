@@ -10,10 +10,10 @@ const {auth}  = require('firebase-functions');
 
 const {onSchedule} = require("firebase-functions/v2/scheduler");
 const logger = require("firebase-functions/logger");
-const {onDocumentCreated, onDocumentUpdated} = require("firebase-functions/v2/firestore");
+const {onDocumentUpdated} = require("firebase-functions/v2/firestore");
 // const {onCreate} = require("firebase-functions/v2/auth");
 const {initializeApp} = require("firebase-admin/app");
-const {getFirestore, FieldValue} = require("firebase-admin/firestore");
+const {getFirestore} = require("firebase-admin/firestore");
 const { getAuth } = require('firebase-admin/auth');
 
 // The es6-promise-pool to limit the concurrency of promises.
@@ -83,22 +83,8 @@ initializeApp();
 //   newFollower
 // }
 
-const TranType = {
-    deposit: 0, 
-    withDraw: 1, 
-    registerSoloPerm: 2, 
-    registerSoloYearly: 3, 
-    followSolo: 4, 
-    registerRankPerm: 5, 
-    registerRankYearly: 6, 
-    followRank: 7,  
-    upgradeToSoloPerm: 8, 
-    upgradeToRankPerm: 9,
-    referReward: 10, // only from registerExpert, registerRank, followRank 
-    rankReward: 11,
-    unknown: 12,
-    newFollower: 13
-  }
+
+
 
   exports.updateTransaction = onDocumentUpdated({document: "transaction/{documentId}", region: 'asia-southeast1'}, (event) => {
 
@@ -114,105 +100,105 @@ const TranType = {
         return
     }
 
-    if (type != TranType.deposit) {
+    if (type != TranType.withDraw) {
         logger.log("Sth wrong, only update deposit type");
        return
     }
     
-    if (after.status == 'done' && before.status == 'pending') {
+    // if (after.status == 'done' && before.status == 'pending') {
 
         logger.log("update status from pending to done" + event.params.documentId);
-        getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).update({ 
-            status: after.status
-        })
-        getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).update({ 
-            status: after.status
-        })
-    }
+        getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).update(after)
+        getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).update(after)
+    // }
 });
 
-exports.createTransaction = onDocumentCreated({document: "transaction/{documentId}", region: 'asia-southeast1'}, async (event) => {
+// exports.createTransaction = onDocumentCreated({document: "transaction/{documentId}", region: 'asia-southeast1'}, async (event) => {
 
-        const data = event.data.data();
-        logger.log("new transaction created", event.params.documentId, data);
-        const toUid = data.toUid
-        if (toUid) {
-            await getFirestore().collection('user').doc(toUid).update({ 
-                amount: FieldValue.increment(data.amount)
-            })
-            await getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).set(data)
-        }
-        const fromUid = data.fromUid
-        if (fromUid) {
-            await getFirestore().collection('user').doc(fromUid).update({ 
-                amount: FieldValue.increment(-data.amount)
-            })
-            await getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).set(data)
-        }
+//         const data = event.data.data();
+//         logger.log("new transaction created", event.params.documentId, data);
+//         const toUid = data.toUid
+//         if (toUid) {
+//             await getFirestore().collection('user').doc(toUid).update({ 
+//                 amount: FieldValue.increment(data.amount)
+//             })
+//             await getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).set(data)
+//         }
+//         const fromUid = data.fromUid
+//         if (fromUid) {
+//             await getFirestore().collection('user').doc(fromUid).update({ 
+//                 amount: FieldValue.increment(-data.amount)
+//             })
+//             await getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).set(data)
+//         }
 
-    if (data.tranType in [
-        TranType.followRank,
-        TranType.followSolo,
-        TranType.registerSoloYearly,
-        TranType.upgradeToSoloPerm,
-        TranType.registerSoloPerm,
+//     if (data.tranType in [
+//         TranType.followRank,
+//         TranType.followSolo,
+//         TranType.registerSoloYearly,
+//         TranType.upgradeToSoloPerm,
+//         TranType.registerSoloPerm,
         
-        TranType.registerRankYearly,
-        TranType.upgradeToRankPerm,
-        TranType.registerRankPerm,
-        ]) 
-    {
-        const ratio = data.tranType == TranType.followSolo ? 0.1 : 0.2
+//         TranType.registerRankYearly,
+//         TranType.upgradeToRankPerm,
+//         TranType.registerRankPerm,
+//         ]) 
+//     {
+//         const ratio = data.tranType == TranType.followSolo ? 0.1 : 0.2
 
-        logger.log("chia tien trans type " + data.tranType + ' amount : '  + data.amount);
-        const benefitUid = data.toUid
-        const paidUid = data.fromUid;
-        if (paidUid) {
-            const userRef = getFirestore().collection('user').doc(paidUid)
-            const snapshotUser = await userRef.get()//.then((snapshotUser) => {
-            const refID = snapshotUser.data().refID
-            logger.info("Ref ID : " + refID)
+//         logger.log("chia tien trans type " + data.tranType + ' amount : '  + data.amount);
+//         const benefitUid = data.toUid
+//         const paidUid = data.fromUid;
+//         if (paidUid) {
+//             const userRef = getFirestore().collection('user').doc(paidUid)
+//             const snapshotUser = await userRef.get()//.then((snapshotUser) => {
+//             const refID = snapshotUser.data().refID
+//             const displayName = snapshotUser.data().displayName
+//             logger.info("Ref ID : " + refID)
             
-            if (refID) {
-                // chia tien cho ref
-                const snapshot = await getFirestore().collection('user').where("accessId","==",refID).get()//.then((snapshot) => {
-                if (snapshot.docs.length == 1) {
+//             if (refID) {
+//                 // chia tien cho ref
+//                 const snapshot = await getFirestore().collection('user').where("accessId","==",refID).get()//.then((snapshot) => {
+//                 if (snapshot.docs.length == 1) {
 
-                    const refUserDocID = snapshot.docs[0].id
-                    logger.info("Ref user ID : " + refUserDocID)
-                    const amountForReference = data.amount * ratio
+//                     const refUserDocID = snapshot.docs[0].id
+//                     logger.info("Ref user ID : " + refUserDocID)
+//                     const amountForReference = data.amount * ratio
 
-                    await getFirestore().collection('transaction').add({
-                        amount: amountForReference,
-                        from: benefitUid,
-                        date: Date.now(),
-                        toUid: refUserDocID,
-                        status: "Done",
-                        tranType: TranType.referReward,
-                        triggerTranId: event.params.documentId,
-                        triggerTranType: data.tranType,
-                        notebankacc: ''
-                        })
+//                     const detail = 'Do ' + displayName + '  ' + tranTypeText(data.tranType)
 
-                    }  else  if (snapshot.docs.length > 1) {
+//                     await getFirestore().collection('transaction').add({
+//                         amount: amountForReference,
+//                         from: benefitUid,
+//                         date: new Date(),
+//                         toUid: refUserDocID,
+//                         status: "Done",
+//                         tranType: TranType.referReward,
+//                         triggerTranId: event.params.documentId,
+//                         triggerTranType: data.tranType,
+//                         notebankacc: detail
+//                         }
+//                     )
 
-                        logger.error("result of search is > 1 " + snapshot.docs.length)
-                    } else {
-                        logger.info(' not found ref user with accessID ' + refID)
-                    }
-                    // })
+//                     }  else  if (snapshot.docs.length > 1) {
+
+//                         logger.error("result of search is > 1 " + snapshot.docs.length)
+//                     } else {
+//                         logger.info(' not found ref user with accessID ' + refID)
+//                     }
+//                     // })
     
-                }
-        //     }
-        // )
+//                 }
+//         //     }
+//         // )
            
            
-        }
-    }
+//         }
+//     }
    
     
-}
-);
+// }
+// );
 
 
 // exports.createSubscription = onDocumentCreated({ document: "subscription/{documentId}", region: 'asia-southeast1'}, async (event) => {

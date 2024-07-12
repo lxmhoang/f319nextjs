@@ -11,7 +11,7 @@
   "dependencies": {
     "@aws-amplify/adapter-nextjs": "^1.0.20",
     "@heroicons/react": "^2.1.1",
-    "@nextui-org/react": "^2.2.10",
+    "@nextui-org/react": "^2.4.0",
     "aws-amplify": "^6.0.20",
     "browser-image-compression": "^2.0.2",
     "firebase": "^10.9.0",

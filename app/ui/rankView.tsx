@@ -10,9 +10,9 @@ export default function RankView({ rankData }: { rankData: BoardProps[] }) {
                 {
                     rankData.map((item, index) => {
                         return (
-                            <TabItem title={item.title} key={index}>
+                            <TabItem title={<span className="text-xs">{item.title}</span>} key={index} >
                                 <div className="mx-auto justify-center mb-0">
-                                    <div className="mt-0 mx-auto w-[300px]">
+                                    <div className="mt-0 mx-auto w-[350px]">
                                         <Label value="* không bao gồm chuyên gia solo" className="text-xs " /></div>
                                     <LeaderBoard title={item.title} since={item.since} to={item.to} total={item.total} rewards={[]} data={item.data} />
                                 </div>

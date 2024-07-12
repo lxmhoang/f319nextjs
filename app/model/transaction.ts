@@ -40,6 +40,8 @@ export function tranTypeText (num: Number) {
     case TranType.referReward: return "Thưởng refer"
     case TranType.rankReward: return "Thưởng rank"
     case TranType.unknown: return "unknown"
+    case TranType.newFollower: return "Thêm follower"
+    default: "..."
 
   }
 
@@ -51,11 +53,13 @@ export type Transaction = {
     toUid: string;
     fromUid: string;
     amount: number;
-    date: Date
+    date: number;
     note?: string
     // imageURL?: string[]
     notebankacc?: string
-    status: string
+    status: string,
+    triggerTranId?: string,
+    triggerTranType?: number
   }
 
   export const transConverter: FirestoreDataConverter<Transaction> = {
@@ -82,7 +86,7 @@ export type Transaction = {
         fromUid: data.fromUid,
         amount: data.amount,
         tranType: data.tranType,
-        date: (data.date as FirebaseFirestore.Timestamp).toDate(),
+        date: data.date,
         // imageURL: data.imageURL,
         note: data.note,
         id: snapshot.id,
@@ -104,7 +108,10 @@ export const tranAdminConverter: AdminFirestoreDataConverter<Transaction> = {
         date: trans.date,
         // imageURL: trans.imageURL,
         notebankacc: trans.notebankacc,
-        status: trans.status
+        note: trans.note,
+        status: trans.status,
+        triggerTranId: trans.triggerTranId,
+        triggerTranType: trans.triggerTranType
       };
     },
     fromFirestore(
@@ -119,6 +126,8 @@ export const tranAdminConverter: AdminFirestoreDataConverter<Transaction> = {
         date: data.date,
         // imageURL: data.imageURL,
         note: data.note,
+        triggerTranId: data.triggerTranId,
+        triggerTranType: data.triggerTranType,
         id: snapshot.id,
         notebankacc: data.notebankacc,
         status: data.status

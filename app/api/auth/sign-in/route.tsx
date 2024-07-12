@@ -17,19 +17,12 @@ export async function POST(request: NextRequest) {
   // console.log('========== idtoken posted' + JSON.stringify(idToken))
   const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
 
-  // const oldcookie = cookies().get("__session")?.value
-  // const old = await getUserInfoFromSession(oldcookie)
 
-  // console.log('========= old user info' + JSON.stringify(old))
-  
 
   const sessionCookie = await createSessionCookie(idToken, { expiresIn });
-
-// just for testing
-  // const new22 = await getUserInfoFromSession(sessionCookie)
-  // console.log('========= just for testing update token after creating expert new user info' + JSON.stringify(new22))
+  console.log('========= cookie' + JSON.stringify(sessionCookie))
   
-  // console.log('aaaaa newly created sessionCookie' + JSON.stringify(sessionCookie))
+
   
   cookies().set("__session", sessionCookie, { maxAge: expiresIn, httpOnly: true, secure: true });
 

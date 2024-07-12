@@ -9,12 +9,12 @@ export type Prediction = {
     id?: string;
     ownerId: string;
     assetName: string;
-    dateIn: Date;
+    dateIn: number;
     priceIn: number;
     priceOut: number;
     cutLoss: number;
-    deadLine: Date;
-    dateRelease?: Date;
+    deadLine: number;
+    dateRelease?: number;
     priceRelease?: number;
     status: string;
     note: string;
@@ -75,16 +75,15 @@ export const predAdminConverter: AdminFirestoreDataConverter<Prediction> = {
     snapshot: AdminQueryDocumentSnapshot,
   ): Prediction {
     const data = snapshot.data();
-    const dateRelease = data.dateRelease ?  (data.dateRelease as FirebaseFirestore.Timestamp).toDate() : undefined
     return {
       assetName: data.assetName,
       ownerId: data.ownerId,
-      dateIn: (data.dateIn as FirebaseFirestore.Timestamp).toDate(),
+      dateIn: data.dateIn,
       priceIn: data.priceIn,
       priceOut: data.priceOut,
       cutLoss: data.cutLoss,
-      deadLine: (data.deadLine as FirebaseFirestore.Timestamp).toDate(),
-      dateRelease: dateRelease,
+      deadLine: data.deadLine,
+      dateRelease: data.dateRelease,
       priceRelease: data.priceRelease,
       id: snapshot.id,
       note: data.note,
@@ -120,11 +119,11 @@ export const predConverter: FirestoreDataConverter<Prediction> = {
     return {
       assetName: data.assetName,
       ownerId: data.ownerId,
-      dateIn: (data.dateIn as FirebaseFirestore.Timestamp).toDate(),
+      dateIn: data.dateIn,
       priceIn: data.priceIn,
       priceOut: data.priceOut,
       cutLoss: data.cutLoss,
-      deadLine: (data.deadLine as FirebaseFirestore.Timestamp).toDate(),
+      deadLine: data.deadLine,
       dateRelease: data.dateRelease,
       priceRelease: data.priceRelease,
       id: snapshot.id,

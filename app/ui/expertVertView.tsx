@@ -3,6 +3,7 @@
 import { Card, CardBody } from "@nextui-org/react";
 import { Expert } from "../model/expert";
 import Image from 'next/image'
+import { perfConver } from "../lib/utils";
 
 export default function ExpertVertView({ expertInfo }: { expertInfo: string }) {
   const expert: Expert = JSON.parse(expertInfo)
@@ -12,64 +13,45 @@ export default function ExpertVertView({ expertInfo }: { expertInfo: string }) {
       {/* {expert.avatar} */}
       {/* <Link className="justify-center" href={{ pathname: `/expert/details/${expert.id}` }}> */}
       <div className="p-2 rounded-sm">
-        <Card className="h-full w-full m-1 bg-gray-500">
+        <Card className="h-full w-full m-1 dark:bg-gray-500 bg-gray-200">
           <CardBody>
-            <div className="flex flex-wrap gap-4" >
+            <div className=" gap-4" >
               {/* className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center" */}
-              <div className="mt-2 ml-2  gap-6 md:gap-16 block ">
+              <div className="mt-2 block ">
 
-                <Image width={100} height={100} priority={true} src={expert.imageURL} className="rounded-full w-[160px] h-[160px] mb-12" alt={""}
+                <Image width={100} height={100} priority={true} src={expert.imageURL} className="rounded-full w-[160px] h-[160px] mb-12 mx-auto" alt={""}
                 />
 
                 <div className="flex cols-2 gap-12">
-                  <div>
+                  <div className="gap-4">
                     <p> Tên </p>
                     <p> Ngày tham gia  </p>
                     <p> Loại chuyên gia </p>
+                    <p>Ngày hết hạn</p>
+                    {/* {expert.expertPeriod == 'perm' ? (<p>Vĩnh viễn</p>) :  (<p>Ngày hết hạn</p>)} */}
                     {expert.expertType == 'solo' && (<p>{expert.follower.length} người theo dõi</p>)}
-                    {expert.expertType == 'rank' && expert.yearPerform && (<p>Kết quả theo năm</p>)}
-                    {expert.expertType == 'rank' && expert.quarterPerform && (<p>Kết quả theo quý</p>)}
-                    {expert.expertType == 'rank' && expert.monthPerform && (<p>Kết quả theo tháng</p>)}
-                    {expert.expertType == 'rank' && expert.weekPerform && (<p>Kết quả theo tuần</p>)}
+                    {expert.expertType == 'rank' && expert.yearPerform && (<p>Hiệu quả theo năm</p>)}
+                    {expert.expertType == 'rank' && expert.quarterPerform && (<p>Hiệu quả theo quý</p>)}
+                    {expert.expertType == 'rank' && expert.monthPerform && (<p>Hiệu quả theo tháng</p>)}
+                    {expert.expertType == 'rank' && expert.weekPerform && (<p>Hiệu quả theo tuần</p>)}
                   </div>
                   <div>
                     <p> {expert.name} </p>
                     <p> {(new Date(expert.joinDate)).toLocaleDateString('vi')} </p>
                     <p> {expert.expertType} </p>
+
+                    {expert.expertPeriod == 'perm' ? (<p>Vĩnh viễn</p>) :  (<p>{new Date(expert.expertExpire).toLocaleDateString('vi')}</p>)}
                     {expert.expertType == 'solo' && <p> </p>}
 
-                    {expert.expertType == 'rank' && expert.yearPerform && (<p>{expert.yearPerform}</p>)}
-                    {expert.expertType == 'rank' && expert.quarterPerform && (<p>{expert.quarterPerform}</p>)}
-                    {expert.expertType == 'rank' && expert.monthPerform && (<p>{expert.monthPerform}</p>)}
-                    {expert.expertType == 'rank' && expert.weekPerform && (<p>{expert.weekPerform}</p>)}
+                    {expert.expertType == 'rank' && expert.yearPerform && (<p className={perfConver(expert.yearPerform).color}>{perfConver(expert.yearPerform).info}</p>)}
+                    {expert.expertType == 'rank' && expert.quarterPerform && (<p className={perfConver(expert.quarterPerform).color}>{ perfConver(expert.quarterPerform).info}</p>)}
+                    {expert.expertType == 'rank' && expert.monthPerform && (<p className={perfConver(expert.monthPerform).color}>{perfConver(expert.monthPerform).info}</p>)}
+                    {expert.expertType == 'rank' && expert.weekPerform && (<p className={perfConver(expert.weekPerform).color}>{perfConver(expert.weekPerform).info}</p>)}
 
 
                   </div>
                 </div>
-                {/* <div className="block md:gap-12">
-                  <p className="mb-5">Tên: {expert.name} </p>
-                  {expert.joinDate && (<p className="mb-5">Ngày tham gia {(new Date(expert.joinDate)).toLocaleDateString('vi')} </p>)}
-                  {expert.expertType == 'solo' && (<><p className="mb-5"> Loại chuyên gia: Solo</p> <p className="mb-5">{expert.follower.length} follower</p></>)}
-                  {expert.expertType == 'rank' && <p className="mb-5">Loại chuyên gia: Rank</p>}
-                  <div className="mb-5">
-                  {expert.yearPerform && (<>
-                      <p>Hiệu quả năm nay</p>
-                      <p className={perfConver(expert.yearPerform).color}> {perfConver(expert.yearPerform).info}</p>
-                    </>)}
-                    {expert.quarterPerform && (<>
-                      <p>Hiệu quả quý</p>
-                      <p className={perfConver(expert.quarterPerform).color}> {perfConver(expert.quarterPerform).info}</p>
-                    </>)}
-                    {expert.monthPerform && (<>
-                      <p>Hiệu quả tháng</p>
-                      <p className={perfConver(expert.monthPerform).color}> {perfConver(expert.monthPerform).info}</p>
-                    </>)}
-                    {expert.weekPerform && (<>
-                      <p>Hiệu quả tuần</p>
-                      <p className={perfConver(expert.weekPerform).color}> {perfConver(expert.weekPerform).info}</p>
-                    </>)}
-                  </div>
-                </div> */}
+                
               </div>
             </div>
 

@@ -1,9 +1,9 @@
 
 'server-only'
 'use server'
-import { Expert, expertAdminConverter } from "../model/expert";
-import { predAdminConverter } from "../model/prediction";
-import { addANewTransaction, serverAddNewModal, serverGetModal, serverQueryCollection, serverSetDoc, serverUpdateDoc } from "./firebaseadmin/adminfirestore";
+import { Expert, ExpertStatus, expertAdminConverter } from "../model/expert";
+import { Prediction, predAdminConverter } from "../model/prediction";
+import { firestoreAddNewModal, firestoreBatchUpdate, firestoreCountModal, firestoreGetModal, firestoreGetRaw, firestoreQueryCollection, firestoreQueryCollectionGroup, firestoreSetDoc, firestoreUpdateDoc } from "./firebaseadmin/adminfirestore";
 
 import { getUserInfoFromSession, getthuquyUID, setClaim } from "@/app/lib/firebaseadmin/adminauth";
 import { getRealTimeStockData } from "./getStockData";
@@ -11,57 +11,66 @@ import { FieldValue, WhereFilterOp } from "firebase-admin/firestore";
 import { User, userAdminConverter } from "../model/user";
 import { Subscription, subscriptionAdminConverter } from "../model/subscription";
 import { cookies } from "next/headers";
-import { addComma, perfConver, sortByField } from "./utils";
+import { addComma, didFollow, perfConver, sortByField } from "./utils";
 import { UserNoti, notiAdminConverter } from "../model/noti";
-import { TranType, Transaction } from "../model/transaction";
+import { TranType, Transaction, tranAdminConverter, tranTypeText } from "../model/transaction";
 import { getPivotDates } from "./statistic";
 import { BoardProps } from "../ui/rank";
+import { databaseAddDoc, databaseGetDoc, databaseSetDoc, databaseUpdateDoc } from "./firebaseadmin/adminRealTimeDatabase";
+import { FeedBack, feedBackAdminConverter } from "../model/feedback";
+import { increment } from "firebase/database";
+
+//  RT : user (for admin), board noti, user noti , subscription (follower, folowwing), transaction , stats
+// FS : user , expert, prediction, feedback, 
+
+
+export async function sendNotificationToBoard(noti: UserNoti) {
+    // const newRef = await firestoreAddNewModal('notifies', noti, notiAdminConverter)
+    // noti.id = newRef.id
+    // await firestoreSetDoc('stats/latest', { notifies: FieldValue.arrayUnion(noti) }, true)
+
+    //rtdb
+    await databaseAddDoc('boardNoti', noti)
+}
+
+export async function sendNotificationToUser(userID: string, noti: UserNoti) {
+    // firestore
+    // const newRef = await firestoreAddNewModal('user/' + userID + '/notiHistory', noti, notiAdminConverter)
+    // noti.id = newRef.id
+    // await firestoreUpdateDoc('user/' + userID, { notifies: FieldValue.arrayUnion(noti) })
+
+    //rtdb
+    const refPath = await databaseAddDoc('user/' + userID + '/notifies', noti)
+    console.log(' ref Path ' + refPath.toString())
+}
+
 
 export async function getExpert(eid: string) {
-    // console.log('get expert with id ' + eid)
-    return await serverGetModal<Expert>('expert/' + eid, expertAdminConverter)
+    return firestoreGetModal<Expert>('expert/' + eid, expertAdminConverter)
 }
+
+export async function getExperts(filters: {key:string, operator: WhereFilterOp, value:any }[]) {
+    return firestoreQueryCollection('expert',filters,
+        // [
+        //     { key: "status", operator: "==", value: "activated" }
+        // ],
+        expertAdminConverter,
+    )
+}
+
+
 
 export async function getUserDBInfo() {
 
     const info = await getUserInfoFromSession()
     console.log(JSON.stringify(info))
     if (info) {
-        const result = await serverGetModal('user/' + info.uid, userAdminConverter)
+        const result = await firestoreGetModal('user/' + info.uid, userAdminConverter)
+        // const dbResult = await databaseGetDoc('user')
         return result
     } else {
         return undefined
     }
-}
-
-export async function getMyFollowingExpertIDs() {
-    const userInfo = await getUserInfoFromSession()
-    if (!userInfo) {
-        return []
-    }
-    const uid = userInfo.uid
-
-    const toDay = new Date()
-
-    console.log('aaaa')
-    const result = await serverQueryCollection('subscription', [{ key: 'uid', operator: '==', value: uid }, { key: 'endDate', operator: '>=', value: toDay }], subscriptionAdminConverter, 5)
-
-    console.log('aaaa')
-
-    let eids = result.map((sub) => {
-        return sub.eid
-    })
-
-    if (userInfo.isRank) {
-        const rankExpert = await serverQueryCollection('expert', [{ key: 'expertType', operator: '==', value: 'rank' }], expertAdminConverter)
-        const rankIds = rankExpert.map((item) => {
-            return item.id
-        })
-
-        eids.push(...rankIds)
-    }
-
-    return eids
 }
 
 export async function getAdvisor() {
@@ -92,6 +101,12 @@ export async function getAdvisor() {
 
 }
 
+export async function clientGetAllMyPreds() {
+    const preds = await getAllMypreds()
+    return JSON.stringify(preds)
+
+}
+
 export async function getAllMypreds(filters: { key: string, operator: WhereFilterOp, value: any }[] = []) {
 
     const info = await getUserInfoFromSession()
@@ -99,7 +114,7 @@ export async function getAllMypreds(filters: { key: string, operator: WhereFilte
         // throw new Error('bạn không phải chuyên gia' + JSON.stringify(info))
         return []
     }
-    const result = await serverQueryCollection('expert/' + info.uid + '/preds', filters, predAdminConverter)
+    const result = await firestoreQueryCollection('expert/' + info.uid + '/preds', filters, predAdminConverter)
     const wrongPred = result.find((it) => it.ownerId != info.uid)
     if (wrongPred) {
         throw new Error('Thông tin data bị lệch ')
@@ -111,36 +126,38 @@ export async function getAllMypreds(filters: { key: string, operator: WhereFilte
 
 export async function getMyWIPPreds() {
 
-
     return getAllMypreds([{ key: 'status', operator: '==', value: 'Inprogress' }])
 }
 
 export async function verifyAccessID(accessId: string) {
-    const result = await serverQueryCollection('user', [{ key: 'accessId', operator: '==', value: accessId }], userAdminConverter)
+    const result = await firestoreQueryCollection('user', [{ key: 'accessId', operator: '==', value: accessId }], userAdminConverter)
     return result.length == 0
 }
 
-export async function addUser(payload: string) {
+export async function serverAddUser(payload: string) {
     const user: User = JSON.parse(payload)
-    await serverSetDoc('user/' + user.uid, userAdminConverter.toFirestore(user))
+    try {
+        await databaseSetDoc('user/' + user.uid, user)
+        await firestoreSetDoc('user/' + user.uid, userAdminConverter.toFirestore(user))
+    } catch (error) {
+        console.log('error Adding User ' + JSON.stringify(error))
+    }
     const noti: UserNoti = {
         title: "Welcome",
-        dateTime: toDay.getTime(),
+        dateTime: Date.now(),
         content: "Chào mừng quý nhà đầu tư "
     }
     await sendNotificationToUser(user.uid, noti)
 
     const notiBoard: UserNoti = {
         title: "Welcome",
-        dateTime: toDay.getTime(),
+        dateTime: Date.now(),
         content: "Chào mừng " + user.displayName + " đã tham gia"
     }
     await sendNotificationToBoard(notiBoard)
 }
 
 export async function closeWIPPreds(ids: string[], rank: boolean = false) {
-
-    const toDay = new Date()
 
     const userInfo = await getUserInfoFromSession()
     if (!userInfo) {
@@ -150,7 +167,7 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
         throw new Error('user is not an expert')
     }
 
-    const expertInfo = await serverGetModal('expert/' + userInfo.uid, expertAdminConverter)
+    const expertInfo = await firestoreGetModal('expert/' + userInfo.uid, expertAdminConverter)
 
 
     if (!expertInfo) {
@@ -190,58 +207,42 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
 
             const payload = {
                 priceRelease: currentLowPrice,
-                dateRelease: toDay,
+                dateRelease: Date.now(),
                 status: "OWNER_CLOSED"
             }
 
-            await serverUpdateDoc('expert/' + pred.ownerId + '/preds/' + pred.id, payload)
+            await firestoreUpdateDoc('expert/' + pred.ownerId + '/preds/' + pred.id, payload)
             if (expertInfo.expertType == 'rank') {
-                await serverUpdateDoc('rankPred/' + pred.id, payload)
-                // await serverQueryCollection(path:'user', {key:'rank'})
+                await firestoreUpdateDoc('rankPred/' + pred.id, payload)
             }
 
             // notify  user 
 
             const noti: UserNoti = {
-                dateTime: toDay.getTime(),
+                dateTime: Date.now(),
                 title: pred.assetName,
                 content: "Chuyên gia " + expertInfo.name + " đã khuyên kết thúc khuyến nghị cổ phiếu " + pred.assetName + " trước thời hạn, với giá hiện tại " + currentLowPrice,
                 urlPath: '/expert/details/' + pred.ownerId + "#" + pred.id
             }
 
-            let notifiedUsersIds: string[] = []
+            await notifyObserverOfExpert(noti, expertInfo)
 
-            if (expertInfo.expertType == 'rank') {
-                notifiedUsersIds = (await serverQueryCollection<User>('user', [{ key: 'rankExpire', operator: '>=', value: toDay }], userAdminConverter)).map((item) => item.uid)
-            } else {
-                notifiedUsersIds = expertInfo.follower.filter((item) => { item.endDate < toDay }).map((item) => item.uid)
-            }
+            // let notifiedUsersIds: string[] = []
 
-            for (const userID of notifiedUsersIds) {
-                await sendNotificationToUser(userID, noti)
-            }
+            // if (expertInfo.expertType == 'rank') {
+            //     notifiedUsersIds = (await firestoreQueryCollection<User>('user', [{ key: 'rankExpire', operator: '>=', value: toDay }], userAdminConverter)).map((item) => item.uid)
+            // } else {
+            //     notifiedUsersIds = expertInfo.follower.filter((item) => { item.endDate > Date.now() }).map((item) => item.uid)
+            // }
+
+            // for (const userID of notifiedUsersIds) {
+            //     await sendNotificationToUser(userID, noti)
+            // }
 
 
         }
     }
 
-    // const delay = () => {
-
-    //     return new Promise<void>(resolve => {
-    //         setTimeout(() => {
-    //             resolve()
-    //         }, 2000)
-    //     })
-    // }
-
-    // await delay()
-
-
-
-    // const info = await getUserInfoFromSession()
-    // if (!(info.uid && info.isExpert)) {
-    //     throw new Error('bạn không phải chuyên gia')
-    // }
 
 }
 
@@ -320,21 +321,25 @@ export async function decrypt(enText: string) {
 
 }
 
-export async function sendNotificationToBoard(noti: UserNoti) {
-    await serverUpdateDoc('stats/latest', { notifies: FieldValue.arrayUnion(noti) })
+export async function getUIDfromRefID(refID: string) {
+    const result = await firestoreQueryCollection('user', [{ key: 'accessId', operator: '==', value: refID }], userAdminConverter)
+    if (result.length == 1) {
+        return result[0].uid
+    }
+    return undefined
 }
 
-export async function sendNotificationToUser(userID: string, noti: UserNoti) {
-    await serverAddNewModal('user/' + userID + '/notiHistory', noti, notiAdminConverter)
-    await serverUpdateDoc('user/' + userID, { notifies: FieldValue.arrayUnion(noti) })
+export async function serverAddFeedback(feedback: FeedBack) {
+    return firestoreAddNewModal('feedBack', feedback, feedBackAdminConverter)
 }
+
 
 export async function getRankingInfo() {
     const numOfWinner = Number(process.env.RANK_NUM_WINNER) ?? undefined
     if (!numOfWinner) {
         throw new Error('Khong tim duoc numbOfWinner')
     }
-    const experts = await serverQueryCollection('expert',
+    const experts = await firestoreQueryCollection('expert',
         [{ key: "expertType", operator: "==", value: "rank" },
         { key: "status", operator: "==", value: "activated" }
 
@@ -345,6 +350,7 @@ export async function getRankingInfo() {
     const monthly = sortByField(experts, "monthPerform").map((item) => {
         return {
             name: item.name,
+            avatar: item.imageURL,
             id: item.id,
             perf: perfConver(item.monthPerform ?? 0)
         }
@@ -353,6 +359,7 @@ export async function getRankingInfo() {
     const yearly = sortByField(experts, "yearPerform").map((item) => {
         return {
             name: item.name,
+            avatar: item.imageURL,
             id: item.id,
             perf: perfConver(item.yearPerform ?? 0)
         }
@@ -361,6 +368,7 @@ export async function getRankingInfo() {
     const quarter = sortByField(experts, "quarterPerform").map((item) => {
         return {
             name: item.name,
+            avatar: item.imageURL,
             id: item.id,
             perf: perfConver(item.quarterPerform ?? 0)
         }
@@ -369,6 +377,7 @@ export async function getRankingInfo() {
     const weekly = sortByField(experts, "weekPerform").map((item) => {
         return {
             name: item.name,
+            avatar: item.imageURL,
             id: item.id,
             perf: perfConver(item.weekPerform ?? 0)
         }
@@ -395,7 +404,7 @@ export async function joinRankUser(perm: boolean) {
         })
     }
 
-    const user = await serverGetModal<User>('user/' + userInfo.uid, userAdminConverter)
+    const user = await firestoreGetModal<User>('user/' + userInfo.uid, userAdminConverter)
     if (user == undefined) {
         return Promise.resolve({
             success: false,
@@ -426,21 +435,22 @@ export async function joinRankUser(perm: boolean) {
         amount: fee,
         status: "Done",
         notebankacc: "",
-        date: new Date()
+        date: Date.now()
     }
     console.log(' trans ' + JSON.stringify(tran))
-    const result = await addANewTransaction(tran)
-    if (result.success == false) {
+    try {
+        const result = await serverAddANewTransaction(tran)
+    } catch (error) {
         return Promise.resolve({
             success: false,
-            error: result.message
+            error: error
         })
     }
 
     const subRank: Subscription = {
         uid: userInfo.uid,
         eid: thuquyUid,
-        startDate: toDay,
+        startDate: Date.now(),
         endDate: endDateSubWithPerm(perm),
         perm: perm,
         value: fee,
@@ -449,37 +459,49 @@ export async function joinRankUser(perm: boolean) {
 
     console.log(' subRank ' + JSON.stringify(subRank))
 
-    const newSubRef = await serverAddNewModal<Subscription>('subscription', subRank, subscriptionAdminConverter)
+    const newSubRef = await firestoreAddNewModal<Subscription>('subscription', subRank, subscriptionAdminConverter)
 
     const cusClaim = {
         expertType: userInfo.expertType,   // 3 dong nay la de neu lo user nay la expert thi ko bi overwrite
         expertPeriod: userInfo.expertPeriod,
         expertExpire: userInfo.expertExpire,
 
-        rankExpire: endDateSubWithPerm(perm).getTime() // set dong nay la chu yeu
+        rankExpire: endDateSubWithPerm(perm)// set dong nay la chu yeu
     }
 
     await setClaim(userInfo.uid, cusClaim)
 
-    await serverUpdateDoc('user/' + userInfo.uid, { rankExpire: endDateSubWithPerm(perm).getTime() })
+    await firestoreUpdateDoc('user/' + userInfo.uid, { rankExpire: endDateSubWithPerm(perm) })
+    await databaseUpdateDoc('user/' + userInfo.uid, { rankExpire: endDateSubWithPerm(perm) })
 
 
     const subInfo = subRank
     subInfo.id = newSubRef.id
 
-    await serverUpdateDoc('user/' + userInfo.uid, { following: FieldValue.arrayUnion(subInfo) })
-    await serverSetDoc('user/' + userInfo.uid + '/subHistory/' + newSubRef.id, subInfo)
+    await firestoreUpdateDoc('user/' + userInfo.uid, { following: FieldValue.arrayUnion(subInfo) })
+    await firestoreSetDoc('user/' + userInfo.uid + '/subHistory/' + newSubRef.id, subInfo)
 
     // notify user
 
     const notiForUser: UserNoti = {
-        dateTime: toDay.getTime(),
+        dateTime: Date.now(),
         title: 'Đã tham gia tài trợ rank',
         content: 'Giờ đây quý nhà đầu tư đã có thể theo dõi toàn bộ chuyên gia đua rank',
         urlPath: '/expert'
     }
 
     await sendNotificationToUser(userInfo.uid, notiForUser)
+
+    // notify board
+    const notiBoard: UserNoti = {
+        dateTime: Date.now(),
+        title: "",
+        content: "Nhà đầu tư " + user.displayName + ' đã tham gia tài trợ rank, tổng tiền tài trợ sẽ được dùng trả thưởng cho top chuyên gia rank',
+        urlPath: '/expert'
+    }
+
+    await sendNotificationToBoard(notiBoard)
+
 
     return {
         success: true,
@@ -490,7 +512,7 @@ export async function joinRankUser(perm: boolean) {
 
 export async function subcribleToAnExpert(eid: string, perm: boolean) {
 
-    const userInfo = await getUserInfoFromSession() 
+    const userInfo = await getUserInfoFromSession()
 
 
     if (userInfo == null) {
@@ -500,7 +522,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
         })
     }
 
-    const user = await serverGetModal<User>('user/' + userInfo.uid, userAdminConverter)
+    const user = await firestoreGetModal<User>('user/' + userInfo.uid, userAdminConverter)
     if (user == undefined) {
         return Promise.resolve({
             success: false,
@@ -508,7 +530,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
         })
     }
 
-    const expertToSub = await serverGetModal<Expert>('expert/' + eid, expertAdminConverter)
+    const expertToSub = await firestoreGetModal<Expert>('expert/' + eid, expertAdminConverter)
 
     if (expertToSub == undefined) {
         return Promise.resolve({
@@ -549,7 +571,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
     }
 
 
-    const existingSub = await serverQueryCollection('subscription', [{ key: 'eid', operator: '==', value: eid }, { key: 'uid', operator: '==', value: user.uid }, { key: 'endDate', operator: '>=', value: toDay }], subscriptionAdminConverter)
+    const existingSub = await firestoreQueryCollection('subscription', [{ key: 'eid', operator: '==', value: eid }, { key: 'uid', operator: '==', value: user.uid }, { key: 'endDate', operator: '>=', value: Date.now() }], subscriptionAdminConverter)
     if (existingSub.length > 0) {
         return Promise.resolve({
             success: false,
@@ -566,7 +588,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
             success: false,
             error: "Thu quy not found"
         })
-       
+
     }
 
 
@@ -577,17 +599,17 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
         amount: Number(fee),
         status: "Done",
         notebankacc: "",
-        date: new Date()
+        date: Date.now()
     }
 
-    const result = await addANewTransaction(tranUserPay)
-
-    if (result.success == false) {
+    try { await serverAddANewTransaction(tranUserPay) }
+    catch (error) {
         return Promise.resolve({
             success: false,
-            error: 'error khi tra tien tu user den thu quy' + result.message
+            error: 'error khi tra tien tu user den thu quy' + JSON.stringify(error)
         })
     }
+
 
     const tranPayToExpert: Transaction = {
         tranType: TranType.newFollower,
@@ -596,50 +618,51 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
         amount: Number(fee * 0.8),
         status: "Done",
         notebankacc: user.displayName + " theo dõi quý chuyên gia",
-        date: new Date()
+        date: Date.now()
     }
 
-    const result2 = await addANewTransaction(tranPayToExpert)
-
-    if (result2.success == false) {
+    try { await serverAddANewTransaction(tranPayToExpert) }
+    catch (error) {
         return Promise.resolve({
             success: false,
-            error: 'error khi tra tien tu thu quy den chuyen gia' + result.message
+            error: 'error khi tra tien tu thu quy den chuyen gia' + JSON.stringify(error)
         })
     }
 
-    
-
-    // const subCollection = db.collection('subscription/').withConverter(subscriptionAdminConverter)
     if (user) {
         const newSub: Subscription = {
             uid: user.uid,
             eid: eid,
-            startDate: new Date(),
+            startDate: Date.now(),
             perm: perm,
             endDate: endDateSubWithPerm(perm),
             value: fee,
             type: "solo"
         }
         console.log('adding new sub' + JSON.stringify(newSub))
-        const newSubRef = await serverAddNewModal<Subscription>('subscription/', newSub, subscriptionAdminConverter)// subCollection.add(newSub)
+        const newSubRef = await firestoreAddNewModal<Subscription>('subscription/', newSub, subscriptionAdminConverter)// subCollection.add(newSub)
 
         const subInfo = newSub
         subInfo.id = newSubRef.id
 
-        await serverUpdateDoc('user/' + userInfo.uid, { following: FieldValue.arrayUnion(subInfo) })
-        await serverSetDoc('user/' + userInfo.uid + '/subHistory/' + newSubRef.id, subInfo)
+        await databaseUpdateDoc('user/' + userInfo.uid + '/following/' + subInfo.id, newSub)
 
-        await serverUpdateDoc('expert/' + expertToSub.id, { follower: FieldValue.arrayUnion(subInfo) })
-        await serverSetDoc('expert/' + expertToSub.id + '/subHistory/' + newSubRef.id, subInfo)
+        await databaseUpdateDoc('user/' + expertToSub.id + '/follower/' + subInfo.id, newSub)
+
+
+        await firestoreUpdateDoc('user/' + userInfo.uid, { following: FieldValue.arrayUnion(subInfo) })
+        await firestoreSetDoc('user/' + userInfo.uid + '/subHistory/' + newSubRef.id, subInfo)
+
+        await firestoreUpdateDoc('expert/' + expertToSub.id, { follower: FieldValue.arrayUnion(subInfo) })
+        await firestoreSetDoc('expert/' + expertToSub.id + '/subHistory/' + newSubRef.id, subInfo)
 
         // notify user
 
         const notiForUser: UserNoti = {
-            dateTime: toDay.getTime(),
-            title: 'Đã tham gia tài trợ rank',
-            content: 'Giờ đây quý nhà đầu tư đã có thể theo dõi toàn bộ chuyên gia đua rank',
-            urlPath: '/expert'
+            dateTime: Date.now(),
+            title: 'Đã theo dõi chuyên gia' + expertToSub.name,
+            content: 'Giờ đây quý nhà đầu tư đã có thể theo dõi chuyên gia' + expertToSub.name,
+            urlPath: '/expert/details/' + eid
         }
         await sendNotificationToUser(userInfo.uid, notiForUser)
 
@@ -647,13 +670,23 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
         // notify expert
 
         const notiForExpert: UserNoti = {
-            dateTime: toDay.getTime(),
-            title: 'Đã tham gia tài trợ rank',
-            content: 'Xin chúc mừng, 1 nhà đầu tư vừa mới theo dõi bạn ' + perm ? "trọn đời" : "1 tháng",
-            urlPath: '/expert'
+            dateTime: Date.now(),
+            title: 'Thêm 1 người theo dõi',
+            content: 'Xin chúc mừng, 1 nhà đầu tư vừa mới theo dõi bạn ' + (perm ? "trọn đời" : "1 tháng"),
+            urlPath: '/profile'
         }
 
         await sendNotificationToUser(expertToSub.id, notiForExpert)
+
+        // notify board
+        const notiBoard: UserNoti = {
+            dateTime: Date.now(),
+            title: "",
+            content: "Chuyên gia " + expertToSub.name + " đã có thêm 1 người theo dõi  ",
+            urlPath: '/expert/details/' + eid
+        }
+
+        await sendNotificationToBoard(notiBoard)
 
         return {
             success: true,
@@ -668,14 +701,6 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
 }
 
 
-
-const toDay = new Date()
-
-const endDateSubWithPerm = (perm: boolean) => {
-    const monthlater = toDay
-    monthlater.setMonth(monthlater.getMonth() + 1)
-    return perm ? new Date('2050-01-01') : monthlater
-}
 
 export async function getStatsRankData() {
 
@@ -708,4 +733,404 @@ export async function getRankData() {
     ]
     return rankData
 
+}
+
+export async function getMyTransHistory() {
+
+    const userInfo = await getUserInfoFromSession()
+
+    // const user = await getCurrentUser()
+    if (userInfo && userInfo.uid) {
+        console.log('path ' + 'user/' + userInfo.uid + '/trans')
+        const result = await firestoreQueryCollection('user/' + userInfo.uid + '/trans', [], tranAdminConverter)
+        console.log('result 3333' + JSON.stringify(result))
+        // let q = collection(db, 'user/' + uid + '/trans').withConverter(transConverter)
+        // const querySnapshot = await getDocs(q)
+        // const array =  querySnapshot.docs.map((doc) => doc.data())
+        result.sort((a, b) => { return a.date - b.date })
+        return result
+    } else {
+        console.log('not usr')
+        return []
+    }
+
+}
+
+export async function getFollowExpertByIDList(idList: string[]) {
+    var result: Expert[] = []
+
+    for (const eid of idList) {
+        const info = await firestoreGetModal<Expert>('expert/' + eid, expertAdminConverter)
+        if (info) {
+            result.push(info)
+        }
+    }
+
+    
+    return result
+}
+
+export async function serverCount(name: string) {
+    return firestoreCountModal(name)
+}
+
+export async function serverUpdateStats(data: {}) {
+
+    await firestoreSetDoc('stats/' + Date.now(), data)
+    await firestoreSetDoc('stats/latest', data, true)
+
+    await databaseSetDoc('stats/' + Date.now(), data)
+    await databaseUpdateDoc('stats/latest', data)
+}
+
+export async function serverGetAllInprogressPred() {
+    return firestoreQueryCollectionGroup<Prediction>('preds', [{ key: 'status', operator: '==', value: 'Inprogress' }], predAdminConverter)
+
+}
+
+
+export async function serverGetStat() {
+    // const result = await firestoreGetRaw('stats/latest')
+    const result = await databaseGetDoc('stats/latest')
+    // const docRef = adminDB.doc('stats/latest')
+    // const docSnap = await docRef.get()
+    return result ?? {}
+}
+
+export async function serverAddANewPred(pred: Prediction, expertInfo: Expert) {
+
+
+
+    const result = await firestoreAddNewModal<Prediction>('expert/' + expertInfo.id + '/preds', pred, predAdminConverter)
+    const resultDB = await databaseSetDoc('user/' + expertInfo.id + '/preds/' + result.id, pred)
+
+
+    if (result) {
+
+        console.log("prediction has been added : " + JSON.stringify(result))
+        // if (userInfo.expertType == 'rank') {
+        //     const resultForRank = await firestoreSetDoc('rankPred/' + result.id, predAdminConverter.toFirestore(pred))
+        //     console.log("prediction from Rank Expert has been added : " + JSON.stringify(resultForRank))
+        //   }
+        // notify follower
+        const noti: UserNoti = {
+            dateTime: Date.now(),
+            title: pred.assetName,
+            content: "Chuyên gia " + expertInfo.name + " đã tạo khuyến nghị cổ phiếu " + pred.assetName,
+            urlPath: '/expert/details/' + expertInfo.id + "#" + result.id
+        }
+
+        await notifyObserverOfExpert(noti, expertInfo)
+
+
+        // notify board
+        const notiBoard: UserNoti = {
+            dateTime: Date.now(),
+            title: "",
+            content: "Chuyên gia " + expertInfo.name + " mới tạo thêm 1 khuyến nghị ",
+            urlPath: '/expert/details/' + expertInfo.id + "#" + result.id
+        }
+
+        await sendNotificationToBoard(notiBoard)
+
+    }
+
+    return result
+
+}
+
+export async function serverAddANewTransaction(tran: Transaction) {
+    console.log("transactin being added ======" + JSON.stringify(tran))
+
+    // trung tam o day
+    const newRef = await firestoreAddNewModal('transaction', tran, tranAdminConverter)
+    // addition actions 
+
+    const benefitUid = tran.toUid
+    const paidUid = tran.fromUid;
+
+    await databaseUpdateDoc('user/' + benefitUid, { amount: increment(tran.amount) })
+    await databaseSetDoc('user/' + benefitUid + '/trans/' + newRef.id, tran)
+
+    await databaseUpdateDoc('user/' + paidUid, { amount: increment(-tran.amount) })
+    await databaseSetDoc('user/' + paidUid + '/trans/' + newRef.id, tran)
+
+
+    await firestoreUpdateDoc('user/' + benefitUid, { amount: FieldValue.increment(tran.amount) })
+    await firestoreSetDoc('user/' + benefitUid + '/trans/' + newRef.id, tran)
+
+    await firestoreUpdateDoc('user/' + paidUid, { amount: FieldValue.increment(-tran.amount) })
+    await firestoreSetDoc('user/' + paidUid + '/trans/' + newRef.id, tran)
+    console.log('============check if trantype ' + tran.tranType + ' is in array ' + [
+        TranType.followRank,
+        TranType.followSolo,
+        TranType.registerSoloYearly,
+        TranType.upgradeToSoloPerm,
+        TranType.registerSoloPerm,
+        TranType.registerRankYearly,
+        TranType.upgradeToRankPerm,
+        TranType.registerRankPerm,
+    ])
+
+    if ([
+        TranType.followRank,
+        TranType.followSolo,
+        TranType.registerSoloYearly,
+        TranType.upgradeToSoloPerm,
+        TranType.registerSoloPerm,
+        TranType.registerRankYearly,
+        TranType.upgradeToRankPerm,
+        TranType.registerRankPerm,
+    ].includes(tran.tranType)) {
+
+        // kiem tra ref ID
+        const paidUser = await firestoreGetModal<User>('user/' + paidUid, userAdminConverter)
+        const refID = paidUser?.refID
+        console.log('redID ' + refID)
+
+        if (refID) {
+            // chia tien cho ref
+            const ratio = tran.tranType == TranType.followSolo ? 0.1 : 0.2
+            const displayName = paidUser.displayName
+
+            const amountForReference = tran.amount * ratio
+
+            const description = 'Do ' + displayName + '  ' + tranTypeText(tran.tranType)?.toLocaleLowerCase('vi')
+
+            const thuquyuid = await getthuquyUID()
+
+            if (thuquyuid) {
+                const refTran: Transaction = {
+                    tranType: TranType.referReward,
+                    toUid: refID,
+                    fromUid: thuquyuid,
+                    amount: amountForReference,
+                    date: Date.now(),
+                    status: "Done",
+                    note: description,
+                    triggerTranId: newRef.id,
+                    triggerTranType: tran.tranType
+                }
+
+                await serverAddANewTransaction(refTran)
+            }
+        }
+    } else if (tran.tranType == TranType.referReward) {
+
+
+        const benefitUser = await firestoreGetModal<User>('user/' + benefitUid, userAdminConverter)
+
+        if (benefitUser) {
+
+            const boardNoti: UserNoti = {
+                title: "Duoc chia tien",
+                dateTime: Date.now(),
+                content: benefitUser.displayName + ' được chia ' + addComma(tran.amount) + ' ' + tran.note,
+                urlPath: '/profile/transactions'
+            }
+            await sendNotificationToBoard(boardNoti)
+
+            const refNoti: UserNoti = {
+                title: "Duoc chia tien",
+                dateTime: Date.now(),
+                content: 'Bạn được chia ' + addComma(tran.amount) + ' ' + tran.note,
+                urlPath: '/profile/transactions'
+
+            }
+            await sendNotificationToUser(benefitUid, refNoti)
+
+        }
+    }
+
+    return newRef.id
+}
+
+export async function banExpert(docId: string) {
+    await firestoreUpdateDoc('expert/' + docId, { status: ExpertStatus.banned })
+}
+
+
+export async function activateExpert(docId: string) {
+    await firestoreUpdateDoc('expert/' + docId, { status: ExpertStatus.activated })
+}
+
+
+export async function viewExpertPreds(user: User | undefined, expert: Expert | undefined) {
+    if (!expert) {
+        return Promise.resolve(JSON.stringify({
+            needFollow: true,
+            data: {
+                numOfInProgress: 0,
+                onTrackPreds: [],
+                donePreds: []
+            }
+        })
+        )
+    }
+    const getDonePredOnly = !(user && didFollow(user, expert) || (user && user.uid == expert.id))
+    console.log('getDonePredOnly ' + getDonePredOnly + '  user ' + user)
+    let response = await firestoreQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
+    let allPreds: Prediction[] = response// JSON.parse(response)
+    const inProgressPreds = allPreds.filter((item) => { return item.status == 'Inprogress' })
+    const donePreds = allPreds.filter((item) => { return item.status != 'Inprogress' }).sort((a, b) => { return (b.dateIn - a.dateIn) })
+    const result = {
+        needFollow: getDonePredOnly,
+        data: {
+            numOfInProgress: inProgressPreds.length,
+            onTrackPreds: getDonePredOnly ? [] : inProgressPreds,
+            donePreds: donePreds
+        }
+    }
+    // console.log('result ' + JSON.stringify(result))
+    return JSON.stringify(result)
+
+}
+
+export async function getPredsSince(date: Date, inProgress: boolean, eid: string) {
+    return firestoreQueryCollection<Prediction>('expert/' + eid + '/preds',
+        [
+            { key: 'dateIn', operator: '>=', value: date.getTime() },
+            { key: 'status', operator: inProgress ? '==' : '!=', value: 'Inprogress' }
+
+        ],
+        predAdminConverter)
+}
+
+export async function serverMarkPredCutLoss(pred: Prediction) {
+    const path = 'expert/' + pred.ownerId + '/preds/' + pred.id
+    const payload = {
+        priceRelease: pred.cutLoss,
+        dateRelease: Date.now(),
+        status: "LOSE"
+    }
+    await firestoreUpdateDoc(path, payload)
+
+    await databaseUpdateDoc('user/' + pred.ownerId + '/preds/' + pred.id, payload)
+
+    // notify user
+    const expertInfo = await firestoreGetModal('expert/' + pred.ownerId, expertAdminConverter)
+    if (!expertInfo) {
+        return new Response(` Khong tim duoc expert voi id` + pred.ownerId, {
+            status: 400,
+        })
+    }
+    const noti: UserNoti = {
+        title: pred.assetName + " chạm điểm cắt lỗ",
+        dateTime: Date.now(),
+        content: "Khuyến nghị cổ phiếu " + pred.assetName + " của chuyên gia " + expertInfo.name + " từ ngày " + new Date(pred.dateIn).toLocaleDateString('vi') + " đã chạm điểm cắt lỗ , xin chúc mừng bạn ",
+        urlPath: '/expert/details/' + pred.ownerId + "#" + pred.id
+    }
+
+    // notify audience
+    await notifyObserverOfExpert(noti, expertInfo)
+    // notify owner
+    await sendNotificationToUser(pred.ownerId, noti)
+}
+
+
+export async function serverMarkPredExpired(pred: Prediction, priceRelease: number) {
+    const path = 'expert/' + pred.ownerId + '/preds/' + pred.id
+    const payload = {
+        priceRelease: priceRelease,
+        dateRelease: Date.now(),
+        status: "EXPIRED"
+    }
+
+    await firestoreUpdateDoc(path, payload)
+    await databaseUpdateDoc('user/' + pred.ownerId + '/preds/' + pred.id, payload)
+
+
+    // notify user
+    const expertInfo = await firestoreGetModal('expert/' + pred.ownerId, expertAdminConverter)
+    if (!expertInfo) {
+        return new Response(` Khong tim duoc expert voi id` + pred.ownerId, {
+            status: 400,
+        })
+    }
+    const noti: UserNoti = {
+        title: pred.assetName + " tới deadline",
+        dateTime: Date.now(),
+        content: "Khuyến nghị cổ phiếu " + pred.assetName + " của chuyên gia " + expertInfo.name + " từ ngày " + new Date(pred.dateIn).toLocaleDateString('vi') + " đã tới deadline , bạn có thể kết thúc theo khuyến nghị  ",
+        urlPath: '/expert/details/' + pred.ownerId + "#" + pred.id
+    }
+
+    await notifyObserverOfExpert(noti, expertInfo)
+
+    // notify owner
+    await sendNotificationToUser(pred.ownerId, noti)
+}
+
+
+export async function serverMarkPredWin(pred: Prediction) {
+    const path = 'expert/' + pred.ownerId + '/preds/' + pred.id
+
+    const payload = {
+        priceRelease: pred.priceOut,
+        dateRelease: Date.now(),
+        status: "WIN"
+    }
+
+    await firestoreUpdateDoc(path, payload)
+    await databaseUpdateDoc('user/' + pred.ownerId + '/preds/' + pred.id, payload)
+
+    // notify user
+    const expertInfo = await firestoreGetModal('expert/' + pred.ownerId, expertAdminConverter)
+    if (!expertInfo) {
+        return new Response(` Khong tim duoc expert voi id` + pred.ownerId, {
+            status: 400,
+        })
+    }
+    const noti: UserNoti = {
+        title: pred.assetName + " chạm điểm chốt lời , xin chúc mừng bạn ",
+        dateTime: Date.now(),
+        content: "Khuyến nghị cổ phiếu " + pred.assetName + " của chuyên gia " + expertInfo.name + " từ ngày " + new Date(pred.dateIn).toLocaleDateString('vi') + " đã chạm điểm chốt lời , xin chúc mừng bạn ",
+        urlPath: '/expert/details/' + pred.ownerId + "#" + pred.id
+    }
+
+    await notifyObserverOfExpert(noti, expertInfo)
+    // notify owner
+    await sendNotificationToUser(pred.ownerId, noti)
+}
+
+async function notifyObserverOfExpert(noti: UserNoti, expertInfo: Expert) {
+
+    let notifiedUsersIds: string[] = []
+    console.log(' followers to be notified ' + JSON.stringify(expertInfo.follower))
+
+    if (expertInfo.expertType == 'rank') {
+        notifiedUsersIds = (await firestoreQueryCollection<User>('user', [{ key: 'rankExpire', operator: '>=', value: Date.now() }], userAdminConverter)).map((item) => item.uid)
+    } else {
+        notifiedUsersIds = expertInfo.follower.filter((item) => { return item.endDate > Date.now() }).map((item) => item.uid)
+    }
+
+    console.log('notified user ids ' + notifiedUsersIds)
+
+
+
+    for (const userID of notifiedUsersIds) {
+        await sendNotificationToUser(userID, noti)
+    }
+}
+
+export async function serverMarkExpertExpired(eid: string) {
+    await firestoreUpdateDoc('expert/' + eid, { status: ExpertStatus.expired })
+}
+
+export async function serverInsertNewExpert(expert: Expert, uid: string) {
+    await firestoreSetDoc('expert/' + uid, expertAdminConverter.toFirestore(expert)) // create expert record
+}
+export async function serverUpdateExpertInfo(eid: string, data: {}) {
+    await firestoreUpdateDoc('expert/' + eid, data)
+}
+
+export async function serverUpdateUserInfo(eid: string, data: {}) {
+    await databaseUpdateDoc('user/' + eid, data)
+    await firestoreUpdateDoc('user/' + eid, data)
+}
+
+
+const endDateSubWithPerm = (perm: boolean) => {
+    const monthlater = new Date()
+    monthlater.setMonth(monthlater.getMonth() + 1)
+    return perm ? (new Date('2050-01-01')).getTime() : monthlater.getTime()
 }

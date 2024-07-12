@@ -4,14 +4,14 @@ import { z } from 'zod';
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { getUserInfoFromSession, getthuquyUID, setClaim } from '@/app/lib/firebaseadmin/adminauth';
 import { User, userAdminConverter } from '@/app/model/user';
-import { serverAddNewModal, serverGetModal, serverSetDoc, serverUpdateDoc } from '@/app/lib/firebaseadmin/adminfirestore';
+import { firestoreAddNewModal, firestoreGetModal, firestoreSetDoc, firestoreUpdateDoc } from '@/app/lib/firebaseadmin/adminfirestore';
 import { TranType, Transaction, tranAdminConverter } from '@/app/model/transaction';
 import { storage } from '../firebase/firebase';
 import { revalidatePath } from 'next/cache';
 import { addComma } from '../utils';
 import { Expert, ExpertStatus, expertAdminConverter } from '@/app/model/expert';
 import { UserNoti } from '@/app/model/noti';
-import { sendNotificationToBoard } from '../server';
+import { getUserDBInfo, sendNotificationToBoard, sendNotificationToUser, serverAddANewTransaction, serverInsertNewExpert, serverUpdateExpertInfo, serverUpdateUserInfo } from '../server';
 
 
 const ExpertFormSchema = z.object({
@@ -44,8 +44,8 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
 
     console.log('******************************************************')
     console.log('previous state ' + JSON.stringify(_prevState))
-    const curUser = await getUserInfoFromSession()
-    if (!curUser) {
+    const userData = await getUserDBInfo()
+    if (!userData) {
         return {
             errors: {
             },
@@ -64,8 +64,8 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
 
     }
 
-    console.log("uid for expert register : " + curUser?.uid)
-    const uid = curUser.uid
+    console.log("uid for expert register : " + userData.uid)
+    const uid = userData.uid
     const newName = formData.get('name')
     const expertType = formData.get('expertType')
     const expertPeriod = formData.get('expertPeriod')
@@ -118,7 +118,6 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
                 Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_PERM) :
                 Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_YEAR)
 
-        const userData = await serverGetModal<User>('user/' + uid, userAdminConverter)
         console.log('expert Type to register ' + expertType + " and fee " + fee)
         if (!(userData && userData.amount >= fee)) {
             return {
@@ -130,9 +129,9 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             };
             // ok
         }
-        const toUid = await getthuquyUID()
+        const thuquyuid = await getthuquyUID()
 
-        if (!toUid) {
+        if (!thuquyuid) {
             return {
                 errors: {},
                 message: 'Thu quy not found',
@@ -150,18 +149,15 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
 
         const tran: Transaction = {
             tranType: tranType,
-            toUid: toUid,
+            toUid: thuquyuid,
             fromUid: userData.uid,
             amount: fee,
-            date: new Date(),
+            date: Date.now(),
             notebankacc: "",
             status: "Done"
         }
 
-
-        await serverAddNewModal<Transaction>('transaction', tran, tranAdminConverter) // tru tien
-
-
+        await serverAddANewTransaction(tran)
 
         const yearlate = new Date()
         yearlate.setFullYear(yearlate.getFullYear() + 1)
@@ -173,11 +169,11 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         await setClaim(uid, { expertType: expertType, expertExpire: expertExpire, expertPeriod: expertPeriod }) // set claim tren auth
         
         // await setExpert(uid, expertType,expertExpire )
-        await serverUpdateDoc('user/' + uid, {
+        await serverUpdateUserInfo(uid, {
             expertType: expertType,
             expertExpire: expertExpire,
             expertPeriod: expertPeriod
-        }) // update user record
+        })
         if (expertType == 'solo') {
             const expert: Expert = {
                 id: '',
@@ -191,13 +187,13 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
                 expertPeriod: expertPeriod,
                 expertType: expertType,
                 expertExpire: expertExpire,
-                joinDate: new Date(),       
+                joinDate: Date.now(),       
                 status: ExpertStatus.activated,
                 visible: true,
                 imageURL: '',
                 isExpired: false
             }
-            await serverSetDoc('expert/' + uid, expertAdminConverter.toFirestore(expert)) // create expert record
+            await serverInsertNewExpert(expert, uid)
         } else {
             const expert: Expert = {
                 id: '',
@@ -208,23 +204,33 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
                 expertPeriod: expertPeriod,
                 expertType: expertType,
                 expertExpire: expertExpire,
-                joinDate: new Date(),
+                joinDate: Date.now(),
                 status: ExpertStatus.activated,
                 visible: true,
                 imageURL: '',
                 isExpired: false
             }
-            await serverSetDoc('expert/' + uid, expertAdminConverter.toFirestore(expert)) // create expert record
+            await serverInsertNewExpert(expert, uid)
         }
 
         const boardNoti: UserNoti = {
             title: '',
             dateTime: (new Date()).getTime(),
-            content: 'Chào mừng ' + newName + ' đã đăng ký làm chuyên gia ' + expertType,
+            content: 'Chúc mừng mừng ' + newName + ' đã trở thành chuyên gia ' + expertType,
             urlPath: '/expert/details/' + uid
         }
 
         await sendNotificationToBoard(boardNoti)
+
+
+        const noti: UserNoti = {
+            title: '',
+            dateTime: (new Date()).getTime(),
+            content: 'Chúc mừng mừng bạn đã trở thành chuyên gia ',
+            urlPath: '/advisor'
+        }
+
+        await sendNotificationToUser(uid, noti)
         
 
         // revalidatePath('/advisor/register')
@@ -233,7 +239,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
 
     } else {
         // edit expert
-        if (!curUser.isExpert ) {
+        if (!userData.isExpert ) {
             // conflict data
             return {
                 errors: {},
@@ -253,25 +259,17 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
 
         //  did update expert period
         if (expertPeriod) {
-            if (curUser.expertPeriod == 'perm' || (expertPeriod != 'perm')) {
+            if ((expertPeriod != 'perm')) {
                 return {
                     errors: {},
                     message: 'expert Period is perm already or submiting period which is not perm  : ' + expertPeriod,
                     justDone: false
                 };
-            }
-            // if (curUser.expertPeriod == 'perm') {
-            //   return {
-            //     errors: {},
-            //     message: 'cannot update expert Period while its already perm',
-            //     justDone: false
-            //   };
-            // }    
+            } 
 
-            const fee = curUser.expertType == 'solo' ? Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_PERM) - Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_YEAR) : Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_PERM) - Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_YEAR)
+            const fee = userData.expertType == 'solo' ? Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_PERM) - Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_YEAR) : Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_PERM) - Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_YEAR)
 
 
-            const userData = await serverGetModal<User>('user/' + uid, userAdminConverter)
 
             console.log('expert Type to register ' + expertType + " and fee " + fee)
             if (!userData) {
@@ -295,9 +293,9 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
                 // ok
             }
 
-            const toUid = await getthuquyUID()
+            const thuquyuid = await getthuquyUID()
 
-            if (!toUid) {
+            if (!thuquyuid) {
                 return {
                     errors: {},
                     message: 'Không tìm thấy thủ quỹ ',
@@ -305,31 +303,31 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
                 };
             }
 
-            const tranType: TranType = curUser.expertType == 'rank' ? TranType.upgradeToRankPerm : TranType.upgradeToSoloPerm
+            const tranType: TranType = userData.expertType == 'rank' ? TranType.upgradeToRankPerm : TranType.upgradeToSoloPerm
 
             const tran: Transaction = {
                 tranType: tranType,
-                toUid: toUid,
+                toUid: thuquyuid,
                 fromUid: userData.uid,
                 amount: fee,
-                date: new Date(),
+                date: Date.now(),
                 notebankacc: "",
                 status: "Done"
             }
-            await serverAddNewModal<Transaction>('transaction', tran, tranAdminConverter) // tru tien
 
+            await serverAddANewTransaction(tran)
 
             // const manyyearlater = new Date()
             // manyyearlater.setFullYear(manyyearlater.getFullYear() + 20)
             const manyyearlater = new Date('2050-01-01')
             const expertExpire = manyyearlater.getTime()
 
-            await setClaim(uid, { expertType: curUser.expertType, expertExpire: expertExpire, expertPeriod: expertPeriod }) // set claim tren 
-            await serverUpdateDoc('user/' + uid, {
+            await setClaim(uid, { expertType: userData.expertType, expertExpire: expertExpire, expertPeriod: expertPeriod }) // set claim tren 
+
+            await serverUpdateUserInfo(uid, {
                 expertExpire: expertExpire,
                 expertPeriod: expertPeriod
-            }) // update user record
-
+            })
             const data = newName ? {
                 name: newName,
                 monthlyPrice: newmonthlyPrice,
@@ -343,7 +341,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
                 expertPeriod: expertPeriod,
                 expertExpire: expertExpire
             }
-            await serverUpdateDoc('expert/' + uid, data) // create expert record
+            await serverUpdateExpertInfo(uid, data)
         } else {
 
 
@@ -356,7 +354,8 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
                 monthlyPrice: newmonthlyPrice,
                 permPrice: newPermPrice,
             }
-            await serverUpdateDoc('expert/' + uid, data)
+            await serverUpdateExpertInfo(uid, data)
+            
         }
     }
 
@@ -373,7 +372,8 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         console.log('Uploaded a blob or file! with ref : ' + snapshot.ref.toString() + " pah " +
             snapshot.ref.fullPath);
         const imageURL = await getDownloadURL(snapshot.ref)
-        await serverUpdateDoc('/expert/' + uid, { imageURL: imageURL })
+
+        await serverUpdateExpertInfo(uid, { imageURL: imageURL })
 
         console.log("successful update avatar ref to expert data " + imageURL)
 
@@ -381,6 +381,8 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         // revalidatePath('/(withDrawer)/advisor');
 
         // createNewExpert ? revalidatePath('/advisor/register') : revalidatePath('/advisor/edit')
+
+        revalidatePath('/expert')
         return {
             errors: {},
             message: "Thành công đăng ký chuyên gia",
@@ -388,7 +390,9 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         };
     } else if (createNewExpert) {
         if (currentAvatarURL) {
-            await serverUpdateDoc('/expert/' + uid, { imageURL: currentAvatarURL })
+            await serverUpdateExpertInfo(uid, { imageURL: currentAvatarURL })
+            console.log('revalidatePathrevalidatePathrevalidatePathrevalidatePathrevalidatePath')
+            revalidatePath('/expert')
             // revalidatePath('/advisor')
             return {
                 errors: {},
@@ -413,6 +417,8 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
         // revalidatePath('/advisor');
 
         // revalidatePath('/advisor')
+
+        revalidatePath('/expert')
         return {
             errors: {},
             message: "Thành công đăng ký chuyên gia",

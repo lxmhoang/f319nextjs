@@ -68,26 +68,3 @@ export async function clientFetchObject<ModelType>(path: string, converter: Fire
 	const snap = await getDocFromServer(docRef)
 	return snap.data()
 }
-
-
-
-// export async function updateRefID(userDocID: string, refID: string) {
-// 	let docRef = doc(db, 'user/' + userDocID)
-// 	return updateDoc(docRef, { refID: refID })
-// }
-
-export async function getMyTransHistory(uid: string) {
-	// const user = await getCurrentUser()
-	if (uid) {
-		console.log('uid ' + uid)
-		let q = collection(db, 'user/' + uid + '/trans').withConverter(transConverter)
-		const querySnapshot = await getDocs(q)
-		const array =  querySnapshot.docs.map((doc) => doc.data())
-		array.sort((a,b) => { return a.date.getTime() - b.date.getTime()})
-		return array
-	} else {
-		console.log('not usr')
-		return []
-	}
-
-}

@@ -27,22 +27,22 @@ export function didFollow(user: User, expert: Expert) {
 
   const followInfo = user.following.find((item) => {
     return (
-      item.eid == expert.id) && (item.endDate >= new Date() || item.perm == true)
+      item.eid == expert.id) && (new Date(item.endDate) >= new Date() || item.perm == true)
   })
-  console.log('follow Info ' + JSON.stringify(followInfo))
+  console.log('follow Info ' + JSON.stringify(user.following))
   if (!followInfo) {
     return false
   }
   const today = new Date()
   const endDate = followInfo.endDate
-  return (followInfo.perm == true || followInfo.endDate >= new Date())
+  return (followInfo.perm == true || new Date(followInfo.endDate) >= new Date())
 
 
 }
 
 export function perfConver(per: number) {
   const prefix = per > 1 ? "+" : per == 1 ? "" : "-"
-  const color = per > 1 ? "text-sky-400" : per == 1 ? "text-white" : "text-red-400"
+  const color = per > 1 ? "text-sky-400" : per == 1 ? "dark:text-white text-gray-500" : "text-red-400"
   const distant = per > 1 ? per - 1 : 1 - per
   // console.log('number ' + per + '  color  ' + color)
   const str = prefix + (distant * 100).toFixed(2) + "%"
@@ -55,10 +55,11 @@ export function perfConver(per: number) {
 export async function getPerformanceSince(date: Date, data: Prediction[]) {
 
   let openPreds = data.filter((item) => {
-    return item.status == "Inprogress" && item.dateIn >= date
+    return item.status == "Inprogress" && item.dateIn >= date.getTime()
   })
   let closedPreds = data.filter((item) => {
-    return item.status != "Inprogress" && item.dateIn >= date
+    console.log('pred date in ====== ' + new Date(item.dateIn).toLocaleDateString('vi'))
+    return item.status != "Inprogress" && item.dateIn >= date.getTime()
   })
 
   var perform = 1
@@ -91,7 +92,7 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
       const ratio = pred.priceRelease / pred.priceIn
       const predPerform = true ? ratio : 1 / ratio
       const profit = (predPerform - 1) * pred.portion / 100 + 1
-      message.push('  Perform of close Pred ' + pred.id + ' datein : ' + pred.dateIn.toLocaleDateString('vi') + ' ===== ' + predPerform + '  profit ' + profit + '\n')
+      message.push('  Perform of close Pred ' + pred.id + ' datein : ' + new Date(pred.dateIn).toLocaleDateString('vi') + ' ===== ' + predPerform + '  profit ' + profit + '\n')
       perform = perform * profit
     }
   }
@@ -137,3 +138,44 @@ export const datesGreaterThan = (first: Date, second: Date) => {
   first.setUTCHours(0, 0, 0, 0) > second.setUTCHours(0, 0, 0, 0)
   return first > second
 }
+
+export function arrayFromData<Type>(data:any) {
+
+  console.log('data ' + JSON.stringify(data))
+  if (!data) {
+    return []
+  }
+  let array: Type[] = []
+  Object.keys(data).forEach((key: string) => {
+    const childData = data[key]
+    childData.id = key
+      const val = childData as Type
+     
+      array.push(val)
+
+  });
+
+  return array
+
+}
+
+interface IDwise {
+  id?: string;
+}
+ 
+
+export function dataFromArray<Type extends IDwise>(array: Type[]) {
+
+  let data : any = {}
+  for (const e  of array) {
+      if (e.id) {
+        const subE : Omit<Type, 'id'> = e
+        data[e.id] = subE
+      }
+  }
+
+  return data
+
+}
+
+export const tnc = (<p> ....  <br/> ....</p>)

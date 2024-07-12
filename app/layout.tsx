@@ -22,8 +22,8 @@ export default function RootLayout({
         <link rel="shortcut icon" href="/images/favicon.ico" />
         <ThemeModeScript />
       </head>
-      <body className="{inter.className} h-full" >
-        <Flowbite>
+      <body className="{inter.className} min-h-screen h-full" >
+        <Flowbite  theme={{ mode: 'dark' }}>
           <AppWrapper>
               {children}
           </AppWrapper>

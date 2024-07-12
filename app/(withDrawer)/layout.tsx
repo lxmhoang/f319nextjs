@@ -9,11 +9,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <>
       <TopNav />
 
-      <div className=" mb-[54px]">
+      <div className="">
 
         {children}
       </div>
-      <div className="fixed bottom-0 sm:hidden w-full z-10">
+      <div className="h-[60px]">
+
+      </div>
+      <div className="fixed bottom-0 block sm:hidden w-full z-10">
         <BottomNav />
       </div>
     </>

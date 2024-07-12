@@ -13,7 +13,7 @@ export default async function Page({ params }: { params: { id: string } }) {
       <div className="flex mt-10 mr-4 flex-col gap-2 ">
         <ReviewPrediction doneFetching={async () => {
         'use server'
-      } } wip={false} />
+      } } />
       
       </div>
 

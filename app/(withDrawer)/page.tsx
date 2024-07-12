@@ -1,16 +1,13 @@
 
-import { getPivotDates } from "../lib/statistic";
-import LeaderBoard, { BoardProps } from "../ui/rank";
 import StatsCard from "../ui/statsCard";
 import { unstable_cache } from "next/cache";
-import { addComma, contentOf, convert, perfConver, sortByField } from "../lib/utils";
-import { Carousel } from "flowbite-react";
-import { serverGetStat, serverQueryCollection } from "../lib/firebaseadmin/adminfirestore";
-import { Expert, expertAdminConverter } from "../model/expert";
+import { contentOf, convert } from "../lib/utils";
 import RankView from "../ui/rankView";
-import { getRankData, getRankingInfo } from "../lib/server";
 import { UserNoti } from "../model/noti";
 import { Link } from "@nextui-org/react";
+import { serverGetStat } from "../lib/server";
+import BoardNotificationView from "../ui/boardNotiView";
+import QuickIntro from "../ui/quickIntro";
 
 
 // const spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0"
@@ -21,52 +18,26 @@ export default async function Home() {
 
   const stats = await unstable_cache(async () => serverGetStat(), ['getStatsOnHomePage'], { revalidate: cacheTime })()
   const rankData = stats.rankData
-  
 
+  console.log('rank Data ' + JSON.stringify(rankData))
+  
   const boardContent = stats.notifies ? stats.notifies.map((noti: UserNoti) => {
 
     return (<Link key={noti.dateTime} showAnchorIcon={noti.urlPath != undefined} color="foreground" className="ml-20" href={noti.urlPath ?? ""}>{noti.content}</Link>)
   }) : undefined
-
-  const charSpace = 8
-  const dismissX = 400
-  const speedPXPerSec = 60
-  const rawtext = stats.notifies ? contentOf(stats.notifies.map((noti : UserNoti) => { return noti.content}), ) : ""
-  const space = stats.notifies ? stats.notifies.length * 20 : 0
-  const lengthOfTextInPx = rawtext.length * charSpace + space + dismissX  
-  const time = Math.round(lengthOfTextInPx / speedPXPerSec)
-  const css = `
-        #wrapper {
-          overflow: hidden;
-        }
-
-        div#sliding {
-          animation: marquee ` + time + `s linear infinite;
-         white-space: nowrap;
-        }
-
-        @keyframes marquee {
-         from {transform: translateX(-100%); }
-          to {transform: translateX(`+ dismissX + `px); }
-        }
-        `
   
-
-
   return (
     <>
-      <style>
-        {css}
-      </style>
-      {boardContent && (<div className="flex">
-        
-        <div className="flex mx-auto mt-2 w-3/4 h-[50px] rounded-lg border-solid border-1 border-sky-500" id="wrapper" >
-          <div id="sliding" className="my-auto ">{boardContent}</div>
-        </div>
-      </div>)}
-      {rankData && (<div className="mt-4 sm:flex sm:justify-center">
-        <RankView rankData={rankData} />
-      </div>)}
+     
+     <BoardNotificationView  />
+     <div className="sm:flex sm:p-6 sm:gap-8 sm:justify-center">
+       
+        {rankData && (<div className="mt-4 sm:flex sm:justify-center">
+          <RankView rankData={rankData} />
+        </div>)}
+        <QuickIntro />
+       
+     </div>
 
       <div className="grid grid-cols-2 sm:grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 ">
         <Link href="/expert"><StatsCard num={stats.numOfAllExpert} infos={["chuyên gia đang hoạt động"]} /></Link>

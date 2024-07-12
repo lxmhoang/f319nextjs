@@ -9,11 +9,12 @@ import {
 
 import { auth } from "./firebase";
 import { APIResponse } from "../definitions";
-import { User } from "@/app/model/user";
-import { addUser, verifyAccessID } from "../server";
+import { User, userAdminConverter } from "@/app/model/user";
+import { getUIDfromRefID, serverAddUser, verifyAccessID } from "../server";
+import { expertAdminConverter } from "@/app/model/expert";
 
 
-export async function postIdToken(idToken:string) {
+export async function postIdToken(idToken: string) {
   const response = await fetch("/api/auth/sign-in", {
     method: "POST",
     headers: {
@@ -29,34 +30,34 @@ export async function postIdToken(idToken:string) {
 
 }
 
-async function doSomeThingIfNewUser(userCreds:UserCredential, refID: string | null, name?:string) {
+async function doSomeThingIfNewUser(userCreds: UserCredential, refID: string | null, name?: string) {
   const addUInfo = getAdditionalUserInfo(userCreds)
   if (addUInfo && addUInfo.isNewUser) {
     const data: User = JSON.parse(JSON.stringify(userCreds.user))
-    
-    console.log('user data : ' + JSON.stringify(userCreds.user))
+
+    console.log('new user data : ' + JSON.stringify(userCreds.user))
     data.amount = 0
     let stop = false
-    
+
     while (stop == false) {
-      var accessId = Math.random().toString(36).substring(2,8)
-      stop = await verifyAccessID(accessId)    
+      var accessId = Math.random().toString(36).substring(2, 8)
+      stop = await verifyAccessID(accessId)
       if (stop) {
         data.accessId = accessId
-      }    
+      }
     }
     if (refID) {
-      data.refID = refID
+      const result = await getUIDfromRefID(refID)
+      data.refID = result
     }
     if (name) {
       data.displayName = name
     }
-    await addUser(JSON.stringify(data))// await serverAddNewModal('user/' + userCreds.user.uid, data, userAdminConverter)
+    await serverAddUser(JSON.stringify(data))
     console.log(' did add new user to db ')
-    // getFirestore().collection('user').doc(user.uid).set(data)
   }
   console.log('user cred ' + JSON.stringify(userCreds))
-  
+
 }
 // http://localhost:3000?ref=6nh973
 export async function superSignIn(email: string, pass: string) {
@@ -67,7 +68,7 @@ export async function superSignIn(email: string, pass: string) {
   return await postIdToken(idToken)
 }
 
-export async function superSignUp(email: string, pass: string, refID: string | null, name:string) {
+export async function superSignUp(email: string, pass: string, refID: string | null, name: string) {
   console.log('sign up  ' + email + pass + name)
   const userCreds = await createUserWithEmailAndPassword(auth, email, pass)
   await doSomeThingIfNewUser(userCreds, refID, name)
@@ -84,7 +85,7 @@ export async function signInWithGoogle(refID: string | null) {
     await doSomeThingIfNewUser(userCreds, refID)
     const idToken = await userCreds.user.getIdToken(true);
     return await postIdToken(idToken)
-    
+
   } catch (error) {
     console.error("Error signing in with Google", error);
     return false;
@@ -102,10 +103,10 @@ export async function signOut() {
     });
     const resBody = (await response.json()) as unknown as APIResponse<string>;
     if (response.ok && resBody.success) {
-      
+
       return true;
-    } else 
-    return false;
+    } else
+      return false;
   } catch (error) {
     console.error("Error signing out with Google", error);
     return false;

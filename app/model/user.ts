@@ -6,14 +6,10 @@ import {
 } from "firebase-admin/firestore";
 import { DocumentData, FirestoreDataConverter, QueryDocumentSnapshot, SnapshotOptions, WithFieldValue } from "firebase/firestore";
 import { UserNoti } from "./noti";
-
-type Following = {
-    eid: string,
-    endDate: Date,
-    startDate: Date,
-    perm: boolean,
-    subDocID: string,
-}
+import { Subscription } from "./subscription";
+import { DataSnapshot } from "firebase/database";
+import { arrayFromData, dataFromArray } from "../lib/utils";
+import { Transaction } from "./transaction";
 
 export type User = {
     uid: string;
@@ -23,39 +19,45 @@ export type User = {
     amount: number;
     disabled: boolean;
     email?: string;
-    customClaims: {
-        isAdmin: boolean,
-        expertExpire: boolean
-    };
-    notifies: UserNoti[],
 
-    following: Following[];
     metadata?: {};
     phoneNumber?: string
-    isAdmin?: boolean,
-    isExpert?: boolean,
-    expertExpire?: number,
-    expertType?: string,
     refID?: string,
+
+    transaction: Transaction[],
+    notifies: UserNoti[],
+    follower: Subscription[],
+    following: Subscription[];
+
+
+    isAdmin?: boolean,
+
+    
+    expertType?: string,
+    expertExpire?: number,
+    isExpert?: boolean,
+
+    rankExpire?: number,
     joinRank: boolean,
-    rankExpire?: Date
 }
 
 export const userConverter: FirestoreDataConverter<User> = {
     toFirestore(user: WithFieldValue<User>): DocumentData {
-        const data =  {
-            following: user.following,
+        const data = {
             accessId: user.accessId,
             uid: user.uid,
             displayName: user.displayName,
             amount: user.amount,
             disabled: user.disabled,
             email: user.email,
-            customClaims: user.customClaims,
             metadata: user.metadata,
             phoneNumber: user.phoneNumber,
             refID: user.refID,
-            notifies: user.notifies
+            
+            notifies: user.notifies,
+            transaction: [],
+            follower: user.follower,
+            following: user.following,
         }
         return data
     },
@@ -64,52 +66,16 @@ export const userConverter: FirestoreDataConverter<User> = {
         options: SnapshotOptions
     ): User {
         const data = snapshot.data(options);
-
-    //   console.log('check notifies' + JSON.stringify(data.notifies))
-        const notifies = data.notifies ? data.notifies.map((item: 
-            {   title: string; 
-                dateTime: number; 
-                content: string; 
-                urlPath? :string 
-            }) => {
-                const noti : UserNoti = {
-                    title: item.title,
-                    dateTime: item.dateTime,
-                    content: item.content,
-                    urlPath: item.urlPath
-                }
-
-                console.log('check notifies' + JSON.stringify(noti))
-
-                return noti
-
-        }) : []
-        const following : Following[] = data.following ? (data.following as {
-            eid: string;
-            uid: string;
-            startDate: FirebaseFirestore.Timestamp;
-            endDate: FirebaseFirestore.Timestamp;
-            perm: boolean;
-            subDocID: string;
-        }[]).map((item) => {
-            return {
-                eid: item.eid,
-                perm: item.perm,
-                subDocID: item.subDocID,
-                endDate: new Date((item.endDate as FirebaseFirestore.Timestamp).toDate()),
-                startDate: new Date((item.startDate as FirebaseFirestore.Timestamp).toDate()),
-            }
-        }) : []
-        // console.log('kkk ' + data.expertExpire)
-        const isExpert = data.expertExpire ? 
-        new Date(Number(data.expertExpire)) > new Date()
-        : 
-        false 
+        
+        const isExpert = data.expertExpire ?
+           data.expertExpire > Date.now()
+            :
+            false
         console.log('is Expert ? ' + new Date(Number(data.expertExpire)))
 
-        const joinRank = data.rankExpire ? ((data.rankExpire as  FirebaseFirestore.Timestamp).toDate() > new Date()) : false
+        const joinRank = data.rankExpire ? (data.rankExpire  > Date.now()) : false
 
-        return {
+        const user: User = {
             uid: snapshot.id,
             accessId: data.accessId,
             displayName: data.displayName,
@@ -118,26 +84,62 @@ export const userConverter: FirestoreDataConverter<User> = {
             disabled: data.disabled,
             email: data.email,
             metadata: data.metadata,
-            customClaims: data.customClaims,
             phoneNumber: data.phoneNumber,
             isAdmin: data.email == 'lxmhoang@gmail.com' ? true : data.isAdmin ?? false,
             expertExpire: data.expertExpire,
             expertType: data.expertType,
             isExpert: isExpert,
-            following: following,
+            following: data.following ?? [],
             refID: data.refID,
             joinRank: joinRank,
-            rankExpire: data.rankExpire ? (data.rankExpire as  FirebaseFirestore.Timestamp).toDate() : undefined,
-            notifies: notifies
+            rankExpire: data.rankExpire,
+            notifies:  data.notifies ?? [],
+            transaction: [],
+            follower: data.follower ?? []
         };
+        return user
     },
 };
 
+export const userRTDBConverter = {
+    fromRTDB: (snapshot: DataSnapshot) => {
+        const data = snapshot.val()
 
-export const userAdminConverter: AdminFirestoreDataConverter<User> = {
-    toFirestore(user: AdminWithFieldValue<User>): AdminDocumentData {
-       
-        const obj : any = {
+
+        const joinRank = data.rankExpire ? (data.rankExpire > Date.now()) : false
+        const isExpert = data.expertExpire ?
+            data.expertExpire > Date.now()
+            :
+            false
+        const user: User = {
+            uid: snapshot.ref.key ?? "",
+            accessId: data.accessId,
+            displayName: data.displayName,
+            photoURL: data.photoURL,
+            amount: data.amount,
+            refID: data.refID,
+            disabled: data.disabled,
+            email: data.email,
+            metadata: data.metadata,
+            phoneNumber: data.phoneNumber,
+            expertExpire: data.expertExpire,
+            expertType: data.expertType,
+            isExpert: isExpert,
+            joinRank: joinRank,
+            rankExpire: data.rankExpert,
+            notifies: arrayFromData<UserNoti>(data.notifies).sort((a,b) => { 
+                return b.dateTime - a.dateTime}) ,
+            transaction: arrayFromData<Transaction>(data.trans).sort((a,b) => { 
+                return b.date - a.date})  ,
+            follower: arrayFromData<Subscription>(data.follower) ,
+            following: arrayFromData<Subscription>(data.following) ,
+        };
+        return user
+
+    },
+    toRTDB: (user: User) => {
+
+        const obj: any = {
             uid: user.uid,
             accessId: user.accessId,
             photoURL: user.photoURL,
@@ -145,8 +147,34 @@ export const userAdminConverter: AdminFirestoreDataConverter<User> = {
             amount: user.amount,
             disabled: user.disabled ?? false,
             email: user.email,
-            customClaims: user.customClaims,
-            following: user.following ?? [],
+            following: dataFromArray<Subscription>(user.following),
+            follower: dataFromArray<Subscription>(user.follower),
+            transaction: dataFromArray<Transaction>(user.transaction),
+            metadata: user.metadata ?? {},
+            expertExpire: user.expertExpire,
+            expertType: user.expertType,
+            phoneNumber: user.phoneNumber,
+            refID: user.refID,
+            notifies: dataFromArray<UserNoti>(user.notifies)
+        }
+
+        Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
+        return obj;
+
+    }
+}
+
+
+export const userAdminConverter: AdminFirestoreDataConverter<User> = {
+    toFirestore(user: AdminWithFieldValue<User>): AdminDocumentData {
+        const obj: any = {
+            uid: user.uid,
+            accessId: user.accessId,
+            photoURL: user.photoURL,
+            displayName: user.displayName,
+            amount: user.amount,
+            disabled: user.disabled ?? false,
+            email: user.email,
             metadata: user.metadata ?? {},
             expertExpire: user.expertExpire,
             expertType: user.expertType,
@@ -154,7 +182,9 @@ export const userAdminConverter: AdminFirestoreDataConverter<User> = {
             refID: user.refID,
 
 
-            notifies: user.notifies
+            notifies: user.notifies ?? [],
+            following: user.following ?? [],
+            follower: user.follower ?? [],
         }
         Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
         return obj;
@@ -163,47 +193,35 @@ export const userAdminConverter: AdminFirestoreDataConverter<User> = {
         snapshot: AdminQueryDocumentSnapshot
     ): User {
         const data = snapshot.data();
-        const joinRank = data.rankExpire ? ((data.rankExpire as  FirebaseFirestore.Timestamp).toDate() > new Date()) : false
+        const joinRank = data.rankExpire ? (data.rankExpire  > Date.now()) : false
 
-     
-        const following : Following[] = data.following ? (data.following as {
-            eid: string;
-            uid: string;
-            startDate: FirebaseFirestore.Timestamp;
-            endDate: FirebaseFirestore.Timestamp;
-            perm: boolean;
-            subDocID: string;
-        }[]).map((item) => {
-            return {
-                eid: item.eid,
-                perm: item.perm,
-                subDocID: item.subDocID,
-                endDate: new Date((item.endDate as FirebaseFirestore.Timestamp).toDate()),
-                startDate: new Date((item.startDate as FirebaseFirestore.Timestamp).toDate()),
-            }
-        }) : []
-        const isExpert = data.expertExpire ? 
-        new Date(Number(data.expertExpire)) > new Date()
-        : 
-        false 
+
+        const following = data.following ? data.following : []
+        const follower = data.follower ? data.follower : []
+        const isExpert = data.expertExpire ?
+            new Date(Number(data.expertExpire)) > new Date()
+            :
+            false
         return {
             uid: snapshot.id,
             accessId: data.accessId,
             displayName: data.displayName,
             photoURL: data.photoURL,
             amount: data.amount,
+            refID: data.refID,
             disabled: data.disabled,
             email: data.email,
             following: following,
             metadata: data.metadata,
-            customClaims: data.customClaims,
             phoneNumber: data.phoneNumber,
             expertExpire: data.expertExpire,
             expertType: data.expertType,
             isExpert: isExpert,
             joinRank: joinRank,
-            rankExpire: data.rankExpert ? (data.rankExpire as  FirebaseFirestore.Timestamp).toDate() : undefined,
-            notifies: data.notifies
+            rankExpire: data.rankExpert,
+            follower: data.follower,
+            notifies: data.notifies,
+            transaction: []
         };
     },
 };
@@ -211,8 +229,8 @@ export const userAdminConverter: AdminFirestoreDataConverter<User> = {
 
 export const userRawConverter: AdminFirestoreDataConverter<any> = {
     toFirestore(user: AdminWithFieldValue<User>): AdminDocumentData {
-       
-        const obj : any = {
+
+        const obj: any = {
             uid: user.uid,
             accessId: user.accessId,
             photoURL: user.photoURL,
@@ -220,14 +238,15 @@ export const userRawConverter: AdminFirestoreDataConverter<any> = {
             amount: user.amount,
             disabled: user.disabled ?? false,
             email: user.email,
-            customClaims: user.customClaims,
             following: user.following ?? [],
+            follower: user.follower ?? [],
             metadata: user.metadata ?? {},
             expertExpire: user.expertExpire,
             expertType: user.expertType,
             phoneNumber: user.phoneNumber,
             refID: user.refID,
-            notifies: user.notifies
+            notifies: user.notifies,
+            transaction: []
         }
         Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
         return obj;
@@ -237,29 +256,6 @@ export const userRawConverter: AdminFirestoreDataConverter<any> = {
     ): any {
         const data = snapshot.data();
         data.id = snapshot.id
-        // const joinRank = data.rankExpire ? ((data.rankExpire as  FirebaseFirestore.Timestamp).toDate() > new Date()) : false
-
-     
-        // const following : Following[] = data.following ? (data.following as {
-        //     eid: string;
-        //     uid: string;
-        //     startDate: FirebaseFirestore.Timestamp;
-        //     endDate: FirebaseFirestore.Timestamp;
-        //     perm: boolean;
-        //     subDocID: string;
-        // }[]).map((item) => {
-        //     return {
-        //         eid: item.eid,
-        //         perm: item.perm,
-        //         subDocID: item.subDocID,
-        //         endDate: new Date((item.endDate as FirebaseFirestore.Timestamp).toDate()),
-        //         startDate: new Date((item.startDate as FirebaseFirestore.Timestamp).toDate()),
-        //     }
-        // }) : []
-        // const isExpert = data.expertExpire ? 
-        // new Date(Number(data.expertExpire)) > new Date()
-        // : 
-        // false 
         return data;
     },
 };

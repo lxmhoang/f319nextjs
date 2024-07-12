@@ -232,11 +232,7 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
                         </div>)}
                         <div className='mb-4 mr-4 max-w-full'>
                             {(remainPortion != undefined && remainPortion < 100) && (<div className='mb-4 mt-4 '> <p>{100 - remainPortion}% vốn đang ngâm trong các khuyến nghị đang tiếp diễn, cân nhắc <Link href="/advisor">kết thúc một vài cái </Link> để tăng tỷ lệ cho khuyến nghị đang tạo</p> </div>)}
-                            {/* <div className="">
-                                    <ReviewPrediction doneFetching={(total) => {
-                                        setRemainPortion(100 - total);
-                                    }} wip={true} />
-                                </div> */}
+
                         </div>
                         <Button type="submit" color='primary' >Tạo khuyến nghị </Button>
 

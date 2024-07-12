@@ -1,7 +1,6 @@
 'use client'
 
 import { useSearchParams } from "next/navigation";
-import Breadcrumbs from "../../ui/breadcrumbs";
 import { Divider } from "@nextui-org/react";
 
 

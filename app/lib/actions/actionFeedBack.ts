@@ -1,10 +1,11 @@
 
 "use server"
 // khong dung firebase client o day vi nhu the request.auth se bi null
-import { serverAddNewModal } from './../firebaseadmin/adminfirestore';
+import { firestoreAddNewModal } from './../firebaseadmin/adminfirestore';
 
 import { getUserInfoFromSession } from './../firebaseadmin/adminauth';
 import { FeedBack, feedBackAdminConverter } from '@/app/model/feedback';
+import { serverAddANewPred, serverAddFeedback } from '../server';
 
 
 export async function actionFeedback(prevState: any, formData: FormData) {
@@ -54,7 +55,7 @@ export async function actionFeedback(prevState: any, formData: FormData) {
         }
 
         console.log("transaction to be added : " + JSON.stringify(feedBack))
-        await serverAddNewModal('feedBack', feedBack, feedBackAdminConverter)
+        serverAddFeedback(feedBack)
         return {
             message: "Chan thanh cam on feedback của bạn, đội ngũ admin sẽ xem xét và phản hồi asap",
             success: true,

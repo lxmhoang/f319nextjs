@@ -20,7 +20,7 @@ import Link from 'next/link';
 import clsx from 'clsx';
 import { signInWithGoogle, signOut } from "../lib/firebase/auth";
 import { useAppContext } from "../lib/context";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { convert } from "../lib/utils";
 import { Badge } from "@nextui-org/badge";
 import { DarkThemeToggle, Label } from "flowbite-react";
@@ -41,16 +41,27 @@ export default function TopNav() {
   const searchParams = useSearchParams()
   const refID = searchParams ? searchParams.get('ref')?.toString() : undefined
 
+
   try {
-    if (refID && (typeof window !== "undefined")) {
-      localStorage.setItem("referalID", refID)
-      console.log(' refID saved ' + refID)
+
+    if (refID) {
+      const existingCache = localStorage.getItem("referalID")
+      if (!existingCache) {
+        localStorage.setItem("referalID", refID)
+      }
     }
 
   } catch (e) {
 
+    console.log('error saving referalID to local storage ' + JSON.stringify(e) )
   }
 
+
+  useEffect(() => {
+
+  localStorage.setItem('flowbite-theme-mode', 'dark')
+
+  }, [])
   const pathname = usePathname() ?? ""
 
   const expertBarMenuList = [
@@ -58,7 +69,6 @@ export default function TopNav() {
     { key: "expert", href: "/expert", label: "Chuyên gia", activated: true },
     { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: true },
     { key: "myexpert", href: "/advisor", label: "Hồ sơ chuyên gia của tôi", activated: true },
-    // { key: "signout", href: "", label: "Sign out", activated: true }
   ]
 
   const userBarMenuList = [
@@ -73,10 +83,9 @@ export default function TopNav() {
       { key: "home", href: "/", label: "Home", activated: true },
       { key: "expert", href: "/expert", label: "Chuyên gia", activated: true },
       { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: false },
-      // { key: "signin", href: "", label: "Sign in", activated: true }
+      { key: "login", href: "/login", label: "Login", activated: true },
     ]
 
-  // const isAdvisor = pathname.startsWith('/advisor')
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const { user, firebaseUser } = useAppContext()
