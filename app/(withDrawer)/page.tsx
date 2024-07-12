@@ -19,7 +19,7 @@ export default async function Home() {
   const stats = await unstable_cache(async () => serverGetStat(), ['getStatsOnHomePage'], { revalidate: cacheTime })()
   const rankData = stats.rankData
 
-  console.log('rank Data ' + JSON.stringify(rankData))
+  // console.log('rank Data ' + JSON.stringify(rankData))
   
   const boardContent = stats.notifies ? stats.notifies.map((noti: UserNoti) => {
 
