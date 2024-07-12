@@ -9,7 +9,7 @@ const cacheTime = 1
 
 export default async function Page() {
   
-    const res = await unstable_cache(async () =>  clientGetExperts([{key: "status", operator: "==", value: "activated"}], true), ['getExpertsListing'], {revalidate: cacheTime})()
+    const res = await unstable_cache(async () =>  clientGetExperts([{key: "status", operator: "==", value: "activated"}]), ['getExpertsListing'], {revalidate: cacheTime})()
     const experts: Expert[] = JSON.parse(res)
     return (
       <>
