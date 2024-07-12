@@ -1,6 +1,6 @@
 'use client'
 import { useAppContext } from "@/app/lib/context";
-import { getExperts, getFollowExpertByIDList } from "@/app/lib/server";
+import { clientGetExperts, getExperts, getFollowExpertByIDList } from "@/app/lib/server";
 import { Expert } from "@/app/model/expert";
 import ExpertCard from "@/app/ui/expertcard";
 import { useEffect, useState } from "react";
@@ -19,7 +19,8 @@ export default function Page() {
         const experts = await getFollowExpertByIDList(ids)
         var result = experts
         if (joinRank) {
-          const rankExpert =  await getExperts( [{ key: "status", operator: "==", value: "activated" },{ key: "expertType", operator: "==", value: "rank" }])
+          const res =  await clientGetExperts( [{ key: "status", operator: "==", value: "activated" },{ key: "expertType", operator: "==", value: "rank" }])
+          const rankExpert: Expert[] = JSON.parse(res)
           result = [...result, ...rankExpert]
 
         }
