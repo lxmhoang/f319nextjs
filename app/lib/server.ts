@@ -49,7 +49,7 @@ export async function getExpert(eid: string) {
     return firestoreGetModal<Expert>('expert/' + eid, expertAdminConverter)
 }
 
-export async function clientGetExperts(filters: {key:string, operator: WhereFilterOp, value:any }[], stringfy?: boolean = false) {
+export async function clientGetExperts(filters: {key:string, operator: WhereFilterOp, value:any }[]) {
     const exps = await firestoreQueryCollection('expert',filters,
         // [
         //     { key: "status", operator: "==", value: "activated" }
@@ -60,7 +60,7 @@ export async function clientGetExperts(filters: {key:string, operator: WhereFilt
     return JSON.stringify(exps)
 }
 
-export async function getExperts(filters: {key:string, operator: WhereFilterOp, value:any }[], stringfy?: boolean = false) {
+export async function getExperts(filters: {key:string, operator: WhereFilterOp, value:any }[]) {
     return firestoreQueryCollection('expert',filters,
         // [
         //     { key: "status", operator: "==", value: "activated" }
