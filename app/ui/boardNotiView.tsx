@@ -19,7 +19,7 @@ export default function BoardNotificationView() {
 
     useEffect(() => {
         var unsubscrible = onValue(ref(rtDB, 'boardNoti'), (snapshot) => {
-            console.log('onValue Realtime Database onSnapshot get board noti ')
+            // console.log('onValue Realtime Database onSnapshot get board noti ' + JSON.stringify(snapshot.val()))
             const notifies: UserNoti[] = arrayFromData(snapshot.val())
 
 

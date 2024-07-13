@@ -998,13 +998,15 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
 }
 
 export async function getPredsSince(date: Date, inProgress: boolean, eid: string) {
-    return firestoreQueryCollection<Prediction>('expert/' + eid + '/preds',
+    const preds = await firestoreQueryCollection<Prediction>('expert/' + eid + '/preds',
         [
-            { key: 'dateIn', operator: '>=', value: date.getTime() },
+            // { key: 'dateIn', operator: '>=', value: date.getTime() },
             { key: 'status', operator: inProgress ? '==' : '!=', value: 'Inprogress' }
 
-        ],
-        predAdminConverter)
+        ], predAdminConverter)
+
+    const result = preds.filter((item) => { return item.dateIn >= date.getTime()})
+    return result
 }
 
 export async function serverMarkPredCutLoss(pred: Prediction) {
