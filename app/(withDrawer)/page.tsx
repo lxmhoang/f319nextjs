@@ -30,7 +30,7 @@ export default async function Home() {
     <>
      
      <BoardNotificationView  />
-     <div className="sm:flex sm:p-6 sm:gap-8 sm:justify-center">
+     <div className="sm:flex sm:p-6 sm:gap-8 sm:justify-start sm:ml-24">
        
         {rankData && (<div className="mt-4 sm:flex sm:justify-center">
           <RankView rankData={rankData} />

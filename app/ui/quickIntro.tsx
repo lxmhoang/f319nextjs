@@ -23,7 +23,7 @@ export default function QuickIntro() {
 
   return (
     <>
-      <div className="p-4 ">
+      <div className="p-4 mt-12 ">
         <div>
           <div className="flex mb-2 max-w-sm justify-between" onClick={() => {
               setExpendRealInfo(!expandRealInfo)
@@ -43,7 +43,7 @@ export default function QuickIntro() {
               </List.Item>
               <List.Item> Theo dõi khuyến nghị
                 <List ordered nested>
-                  <List.Item className="text-sm p-2">  Hệ thống sẽ theo dõi liên tục giá cổ phiếu và xác định khuyến nghị chạm điểm chốt lời / cắt lỗ  dựa theo giá trị từ phiên giao dịch thực, nếu đúng sẽ chốt kết quả khuyến nghị là LỜI / LỖ ngay lập tức và tính vào thành tích chuyên gia, việc này chuyên gia không thể can thiệp
+                  <List.Item className="text-sm p-2">  Hệ thống liên tục theo dõi giá cổ phiếu để xác định khuyến nghị chạm điểm chốt lời / cắt lỗ  dựa theo giá trị từ phiên giao dịch thực, nếu đúng sẽ chốt kết quả khuyến nghị là LỜI / LỖ ngay lập tức và tính vào thành tích chuyên gia, việc này chuyên gia không thể can thiệp
                   </List.Item>
                   <List.Item className="text-sm p-2"> Nếu chưa chạm điểm chốt lời, cắt lỗ, nhưng quá deadline nắm giữ, hệ thống cũng sẽ tự động chốt giá cuối của khuyến nghị dựa theo giá thị trường và tính thành tích cho chuyên gia
                   </List.Item>
