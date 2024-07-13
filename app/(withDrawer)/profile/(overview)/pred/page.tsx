@@ -3,6 +3,7 @@ import { useAppContext } from "@/app/lib/context";
 import { clientGetExperts, getExperts, getFollowExpertByIDList } from "@/app/lib/server";
 import { Expert } from "@/app/model/expert";
 import ExpertCard from "@/app/ui/expertcard";
+import { Link } from "@nextui-org/react";
 import { useEffect, useState } from "react";
 
 export default function Page() {
@@ -54,7 +55,7 @@ export default function Page() {
                 </div>
               })}
             </div>
-          </>) : (<>Chưa theo dõi chuyên gia nào</>)
+          </>) : (<>Chưa theo dõi chuyên gia nào <Link href="/expert">Vào đây </Link> để chọn 1 chuyên gia theo dõi</>)
         }
         { }
       </div>

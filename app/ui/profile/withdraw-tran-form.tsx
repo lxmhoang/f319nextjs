@@ -95,9 +95,9 @@ export default function WithDrawTransCreationForm(Props: TransCreationProps) {
           </div>
           <div className="mb-4">
             <label htmlFor="notebankacc" className="mb-2 block text-sm font-medium">
-              Nhập thông tin chuyển khoản
+              Nhập thông tin chuyển khoản và SĐT Liên lạc nếu cần
             </label>
-            <TextInput id="notebankacc" name="notebankacc" type="text"  placeholder="Thông tin tài khoản ngân hàng" required className='max-w-sm' />
+            <TextInput id="notebankacc" name="notebankacc" type="text"  placeholder="Thông tin tài khoản ngân hàng và SĐT Liên lạc nếu cần " required className='max-w-sm' />
 
           </div>
         <div className="mt-6 flex justify-start gap-4">
