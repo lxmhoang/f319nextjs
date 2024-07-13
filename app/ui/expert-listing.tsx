@@ -2,16 +2,15 @@
 import ExpertCard from "./expertcard";
 import { User } from "@nextui-org/user";
 import { Expert } from "../model/expert";
-import { ToggleSwitch } from "flowbite-react";
+import { Button, ToggleSwitch } from "flowbite-react";
 import { useState } from "react";
 import { Divider } from "@nextui-org/react";
 import { useAppContext } from "../lib/context";
-import { Button } from "./button";
 import { AlertModal, ConfirmationModal, initAlertState } from "./confirm";
 import { addComma } from "../lib/utils";
 import { useRouter } from "next/navigation";
 import { joinRankUser } from "../lib/server";
-import { refreshToken } from "../lib/client";
+import { login, refreshToken } from "../lib/client";
 
 export default function ExpertListing({ expertList }: { expertList: Expert[] }) {
 
@@ -83,8 +82,9 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
 
       <p className="mx-auto p-4"> Chuyên gia đua rank </p>
        <div className="ml-4">
-         {user && user.joinRank ? <p>  Bạn đã tài trợ, có thể xem được hết các chuyên gia rank </p> : <Button onClick={() => {
-            setAlertState({
+
+         {user && user.joinRank ? <p>  Bạn đã tài trợ, có thể xem được hết các chuyên gia rank </p> : <Button className='w-[280px]' onClick={() => {
+            const state = user ? {
               isShown: true,
               title: 'Đây là chuyên gia rank, bạn cần tài trợ rank để xem',
               message: 'Được theo dõi chuyên gia này và TẤT CẢ chuyên gia rank khác. Tổng tiền tài trợ sẽ dùng để trả thưởng rank',
@@ -92,8 +92,17 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
               leftBtnClick: () => { handleJoinRankSponsor(false) },
               rightBtntitle: "Tham gia vĩnh viễn " + addComma(feeRankSponsorPerm),
               rightBtnClick: () => { handleJoinRankSponsor(true) }
-            })
-         }}> Mua gói tài trợ rank để xem được Tất cả </Button>}
+            } : 
+            {
+              isShown: true,
+              title: 'Chưa đăng nhập ',
+              message: 'Bạn cần đăng nhập trước để mua gói tài trợ rank ',
+              leftBtnTitle: 'Đăng nhập ',
+              leftBtnClick: () => { login() }
+            }
+
+            setAlertState(state)
+         }}> Mua gói tài trợ rank để theo dõi tất cả chuyên gia rank </Button>}
        </div>
       {/* <ToggleSwitch className="ml-4 mb-4" checked={toggleRank} label={toggleRank ? "Ẩn" : "Xem"} onChange={setToggleRank} /> */}
       {(true && soloExpert.length > 0) && (<div className="flex flex-wrap mb-4">
