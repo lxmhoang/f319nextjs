@@ -320,7 +320,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             const manyyearlater = new Date('2050-01-01')
             const expertExpire = manyyearlater.getTime()
 
-            await setClaim(uid, {  expertExpire, expertPeriod }) // set claim tren 
+            await setClaim(uid, { expertType: userData.expertType, expertExpire: expertExpire, expertPeriod: expertPeriod }) // set claim tren 
 
             await serverUpdateUserInfo(uid, {
                 expertExpire: expertExpire,
