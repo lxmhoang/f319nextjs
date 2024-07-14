@@ -1,17 +1,7 @@
 'use server'
-import { FieldValue, FirestoreDataConverter, WhereFilterOp, getFirestore } from "firebase-admin/firestore"
-import { getCurrentUser, getUserInfoFromSession, getthuquyUID, setClaim } from "./adminauth"
+import { FirestoreDataConverter, WhereFilterOp, getFirestore } from "firebase-admin/firestore"
 // import { getas adminDB } from "./firebaseadmin"
-import { didFollow } from "../utils"
 
-import admin, { auth } from "firebase-admin"
-import { getApps } from "firebase-admin/app"
-import { Expert, ExpertStatus, expertAdminConverter } from "@/app/model/expert"
-import { User, userAdminConverter } from "@/app/model/user"
-import { TranType, Transaction } from "@/app/model/transaction"
-import { Subscription, subscriptionAdminConverter } from "@/app/model/subscription"
-import { Prediction, predAdminConverter } from "@/app/model/prediction"
-import { getDatabase } from "firebase-admin/database"
 import { createFirebaseAdminApp } from "./adminApp"
 
 

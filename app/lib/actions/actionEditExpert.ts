@@ -2,14 +2,12 @@
 'server only'
 import { z } from 'zod';
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
-import { getUserInfoFromSession, getthuquyUID, setClaim } from '@/app/lib/firebaseadmin/adminauth';
-import { User, userAdminConverter } from '@/app/model/user';
-import { firestoreAddNewModal, firestoreGetModal, firestoreSetDoc, firestoreUpdateDoc } from '@/app/lib/firebaseadmin/adminfirestore';
-import { TranType, Transaction, tranAdminConverter } from '@/app/model/transaction';
+import { getthuquyUID, setClaim } from '@/app/lib/firebaseadmin/adminauth';
+import { TranType, Transaction } from '@/app/model/transaction';
 import { storage } from '../firebase/firebase';
 import { revalidatePath } from 'next/cache';
 import { addComma } from '../utils';
-import { Expert, ExpertStatus, expertAdminConverter } from '@/app/model/expert';
+import { Expert, ExpertStatus } from '@/app/model/expert';
 import { UserNoti } from '@/app/model/noti';
 import { getUserDBInfo, sendNotificationToBoard, sendNotificationToUser, serverAddANewTransaction, serverInsertNewExpert, serverUpdateExpertInfo, serverUpdateUserInfo } from '../server';
 
@@ -322,7 +320,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
             const manyyearlater = new Date('2050-01-01')
             const expertExpire = manyyearlater.getTime()
 
-            await setClaim(uid, { expertType: userData.expertType, expertExpire: expertExpire, expertPeriod: expertPeriod }) // set claim tren 
+            await setClaim(uid, {  expertExpire, expertPeriod }) // set claim tren 
 
             await serverUpdateUserInfo(uid, {
                 expertExpire: expertExpire,

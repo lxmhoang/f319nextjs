@@ -51,10 +51,22 @@ export async function getthuquyUID() {
     }
 }
 
-export async function setClaim(uid: string, data: {}) {
-    const auth = getAuth(adminApp)
+export async function setClaim(uid: string, data: any) {
 
-    await auth.setCustomUserClaims(uid, data)
+    const _session = await getSession();
+    if (_session) {
+
+        const decodedIdToken = await getAuth(adminApp).verifySessionCookie(_session);
+        data.expertType = data.expertType ?? decodedIdToken["expertType"]
+        data.expertPeriod = data.expertPeriod ?? decodedIdToken["expertPeriod"]
+        data.expertExpire = data.expertExpire ?? decodedIdToken["expertExpire"]
+        data.rankExpire = data.rankExpire ?? decodedIdToken["rankExpire"]
+        await getAuth(adminApp).setCustomUserClaims(uid, data)
+    } else {
+        throw new Error('_session not found while setClaims')
+    }
+
+
 }
 
 
@@ -68,14 +80,13 @@ export async function getUserInfoFromSession(session: string | undefined = undef
         const expertPeriod = decodedIdToken["expertPeriod"]
         const expertExpire = decodedIdToken["expertExpire"]
         const rankExpire = decodedIdToken["rankExpire"]
-        console.log(' ==== rank expire ==== ' + rankExpire)
-        const isExpert = expertExpire ? 
-            new Date(Number(expertExpire)) > new Date()
-            : 
+        const isExpert = expertExpire ?
+           Number(expertExpire) > Date.now()
+            :
             false
-        const isRank = rankExpire ? 
-         rankExpire > new Date()
-            : 
+        const isRank = rankExpire ?
+            rankExpire > Date.now()
+            :
             false
         const data = {
             authenticated: true,
@@ -125,8 +136,8 @@ export async function getCurrentUser() {
 }
 
 export async function createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions) {
-    console.log('zzzzz ' )
-    const cookie =  getAuth(adminApp).createSessionCookie(idToken, sessionCookieOptions);
+    console.log('zzzzz ')
+    const cookie = getAuth(adminApp).createSessionCookie(idToken, sessionCookieOptions);
     return cookie
 }
 

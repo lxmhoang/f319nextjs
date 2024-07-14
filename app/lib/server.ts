@@ -472,15 +472,7 @@ export async function joinRankUser(perm: boolean) {
 
     const newSubRef = await firestoreAddNewModal<Subscription>('subscription', subRank, subscriptionAdminConverter)
 
-    const cusClaim = {
-        expertType: userInfo.expertType,   // 3 dong nay la de neu lo user nay la expert thi ko bi overwrite
-        expertPeriod: userInfo.expertPeriod,
-        expertExpire: userInfo.expertExpire,
-
-        rankExpire: endDateSubWithPerm(perm)// set dong nay la chu yeu
-    }
-
-    await setClaim(userInfo.uid, cusClaim)
+    await setClaim(userInfo.uid, {rankExpire: endDateSubWithPerm(perm)})
 
     await firestoreUpdateDoc('user/' + userInfo.uid, { rankExpire: endDateSubWithPerm(perm) })
     await databaseUpdateDoc('user/' + userInfo.uid, { rankExpire: endDateSubWithPerm(perm) })
