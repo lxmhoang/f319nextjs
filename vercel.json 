@@ -2,11 +2,15 @@
   "crons": [
     {
       "path": "/api/reward",
-      "schedule": "0 23 31,30,29 * 5"
+      "schedule": "59 23 31,30,29 * 0"
     },
     {
       "path": "/api/thongke",
       "schedule": "0 17 * * *"
+    },
+    {
+      "path": "/api/thongke",
+      "schedule": "0 0 1 * 1"
     },
     {
       "path": "/api/updatePredStats",

@@ -3,6 +3,8 @@
 import { User } from "firebase/auth"
 import Cookies from "js-cookie"
 import { postIdToken, signInWithGoogle, superSignIn, superSignUp } from "./firebase/auth"
+import { rtDB } from "./firebase/firebase"
+import { DatabaseReference, ref, update } from "firebase/database"
 
 
 export function login() {
@@ -35,27 +37,28 @@ export function emailSignUp(email: string, pass: string, name: string) {
   }
 };
 
-export function getTapNotificationKeys() {
+// export function getTapNotificationKeys() {
 
-  let value = Cookies.get('tapNotificationKeys')
-  if (value) {
-    const currentKeys: string[] = JSON.parse(value)
-    return currentKeys
-  } else {
-    return []
-  }
+//   let value = Cookies.get('tapNotificationKeys')
+//   if (value) {
+//     const currentKeys: string[] = JSON.parse(value)
+//     return currentKeys
+//   } else {
+//     return []
+//   }
 
-}
+// }
 
-export function didTapNotificationWithKey(key: string) {
-  var curKeys = getTapNotificationKeys()
-  if (!curKeys.includes(key)) {
-    curKeys.push(key)
+export function didTapNotificationWithKey(uid: string, key: string) {
+  const notiRef :DatabaseReference = ref(rtDB, 'user/' + uid + '/notifies/' + key  )
+  update(notiRef,  {tapTime: Date.now()})
+  // var curKeys = getTapNotificationKeys()
+  // if (!curKeys.includes(key)) {
+  //   curKeys.push(key)
 
-    Cookies.set('tapNotificationKeys', JSON.stringify(curKeys))
+  //   Cookies.set('tapNotificationKeys', JSON.stringify(curKeys))
    
-  } 
- 
+  // } 
 }
 
 export async function refreshToken(firebaseUser: User | null | undefined) {

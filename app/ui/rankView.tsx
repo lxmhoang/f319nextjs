@@ -14,7 +14,7 @@ export default function RankView({ rankData }: { rankData: BoardProps[] }) {
                                 <div className="mx-auto justify-center mb-0">
                                     <div className="mt-0 mx-auto w-[350px]">
                                         <Label value="* không bao gồm chuyên gia solo" className="text-xs " /></div>
-                                    <LeaderBoard title={item.title} since={item.since} to={item.to} total={item.total} rewards={[]} data={item.data} />
+                                    <LeaderBoard title={item.title} since={item.since} to={item.to} perPax={item.perPax} rewards={[]} data={item.data} />
                                 </div>
                             </TabItem>
                         )

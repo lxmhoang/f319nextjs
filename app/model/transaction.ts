@@ -8,13 +8,15 @@ import { DocumentData, FirestoreDataConverter, QueryDocumentSnapshot, SnapshotOp
 
 export enum TranType{
   deposit, withDraw, 
-  registerSoloPerm, registerSoloYearly, followSolo, 
-  registerRankPerm, registerRankYearly, followRank,  
+  registerSoloPerm, registerSoloYearly, followSoloMonth, 
+  registerRankPerm, registerRankYearly, followRankMonth,  
   upgradeToSoloPerm, upgradeToRankPerm,
   referReward, // only from registerExpert, registerRank, followRank 
   rankReward,
   unknown,
-  newFollower
+  newFollower,
+  followRankPerm,
+  followSoloPerm
 }
 
 
@@ -31,16 +33,18 @@ export function tranTypeText (num: Number) {
     case TranType.withDraw: return "Rút tiền"
     case TranType.registerSoloPerm: return "Dky solo vĩnh viễn"
     case TranType.registerSoloYearly: return "Dky solo 1 năm"
-    case TranType.followSolo: return "Theo dõi chuyên gia"
+    case TranType.followSoloMonth: return "Theo dõi 1 tháng chuyên gia "
     case TranType.registerRankPerm: return "Dky rank vĩnh viễn"
     case TranType.registerRankYearly: return "Dky rank 1 năm"
-    case TranType.followRank: return "Theo dõi rank"
+    case TranType.followRankMonth: return "Theo dõi rank 1 tháng"
     case TranType.upgradeToSoloPerm: return "Nâng cấp lên solo vĩnh viễn"
     case TranType.upgradeToRankPerm: return "Nâng cấp lên rank vĩnh viễn"
     case TranType.referReward: return "Thưởng refer"
     case TranType.rankReward: return "Thưởng rank"
     case TranType.unknown: return "unknown"
     case TranType.newFollower: return "Thêm follower"
+    case TranType.followSoloPerm: return "Theo dõi vĩnh viễn chuyên gia "
+    case TranType.followRankPerm: return "Theo dõi rank vĩnh viễn "
     default: "..."
 
   }

@@ -12,6 +12,7 @@ export type UserNoti = {
     dateTime: number
     content: string
     urlPath?: string
+    tapTime?: number
 }
 
 export const notiAdminConverter: AdminFirestoreDataConverter<UserNoti> = {
@@ -32,7 +33,8 @@ export const notiAdminConverter: AdminFirestoreDataConverter<UserNoti> = {
           dateTime: data.dateTime,
           content: data.content,
           title: data.title,
-          urlPath: data.urlPath
+          urlPath: data.urlPath,
+          tapTime: data.tapTime
         };
     },
   };

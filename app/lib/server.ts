@@ -14,7 +14,7 @@ import { cookies } from "next/headers";
 import { addComma, didFollow, perfConver, sortByField } from "./utils";
 import { UserNoti, notiAdminConverter } from "../model/noti";
 import { TranType, Transaction, tranAdminConverter, tranTypeText } from "../model/transaction";
-import { getPivotDates } from "./statistic";
+import { getNextMonthMileStone, getNextQuarterMileStone, getNextWeekMileStone, getNextYearMileStone, getPivotDates } from "./statistic";
 import { BoardProps } from "../ui/rank";
 import { databaseAddDoc, databaseGetDoc, databaseSetDoc, databaseUpdateDoc } from "./firebaseadmin/adminRealTimeDatabase";
 import { FeedBack, feedBackAdminConverter } from "../model/feedback";
@@ -440,7 +440,7 @@ export async function joinRankUser(perm: boolean) {
     }
 
     const tran: Transaction = {
-        tranType: TranType.followRank,
+        tranType: perm ? TranType.followRankPerm : TranType.followRankMonth,
         toUid: thuquyUid,
         fromUid: user.uid,
         amount: fee,
@@ -604,7 +604,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
 
 
     const tranUserPay: Transaction = {
-        tranType: TranType.followSolo,
+        tranType: perm ? TranType.followSoloPerm : TranType.followRankMonth,
         toUid: thuquyid,
         fromUid: user.uid,
         amount: Number(fee),
@@ -732,15 +732,37 @@ export async function getRankData() {
     const yearTo = yearEnd.toLocaleDateString('vi')
 
     const numOfWinner = Number(process.env.RANK_NUM_WINNER)
-    const weeklyReward = Number(process.env.RANK_WEEK_REWARD) / numOfWinner
-    const monthlyReward = Number(process.env.RANK_MONTH_REWARD) / numOfWinner
-    const quarterlyReward = Number(process.env.RANK_QUARTER_REWARD) / numOfWinner
-    const yearlyReward = Number(process.env.RANK_YEAR_REWARD)
+
+    var nextMS = getNextWeekMileStone().toString()
+    var rewardTotal = await databaseGetDoc('reward/week/' + nextMS + '/amount' ) ?? 0//rewardInfo.week["nextWeekMS"].amount
+    const weeklyReward = Math.round(rewardTotal / numOfWinner)
+    // const weeklyReward = Number(process.env.RANK_WEEK_REWARD) / numOfWinner
+
+    nextMS = getNextMonthMileStone().toString()
+    rewardTotal = await databaseGetDoc('reward/month/' + nextMS + '/amount' ) ?? 0//rewardInfo.week["nextWeekMS"].amount
+    const monthlyReward = Math.round(rewardTotal / numOfWinner)
+    // const weeklyReward = Number(process.env.RANK_WEEK_REWARD) / numOfWinner
+
+    nextMS = getNextQuarterMileStone().toString()
+    rewardTotal = await databaseGetDoc('reward/quarter/' + nextMS + '/amount' ) ?? 0//rewardInfo.week["nextWeekMS"].amount
+    const quarterlyReward = Math.round(rewardTotal / numOfWinner)
+    // const weeklyReward = Number(process.env.RANK_WEEK_REWARD) / numOfWinner
+
+    nextMS = getNextYearMileStone().toString()
+    rewardTotal = await databaseGetDoc('reward/year/' + nextMS + '/amount' ) ?? 0//rewardInfo.week["nextWeekMS"].amount
+    const yearlyReward = Math.round(rewardTotal / numOfWinner)
+    // const weeklyReward = Number(process.env.RANK_WEEK_REWARD) / numOfWinner
+
+
+
+    // const monthlyReward = Number(process.env.RANK_MONTH_REWARD) / numOfWinner
+    // const quarterlyReward = Number(process.env.RANK_QUARTER_REWARD) / numOfWinner
+    // const yearlyReward = Number(process.env.RANK_YEAR_REWARD)
     const rankData: BoardProps[] = [
-        { title: 'Top Tuần', since: weekDate, to: weekTo, total: addComma(weeklyReward), rewards: [], data: weekly },
-        { title: 'Top Tháng', since: monthDate, to: monthTo, total: addComma(monthlyReward), rewards: [], data: monthly },
-        { title: 'Top Quý', since: quarterDate, to: quarterTo, total: addComma(quarterlyReward), rewards: [], data: quarter },
-        { title: 'Top Năm', since: yearDate, to: yearTo, total: addComma(yearlyReward), rewards: [], data: yearly }
+        { title: 'Top Tuần', since: weekDate, to: weekTo, perPax: Math.round(weeklyReward), rewards: [], data: weekly },
+        { title: 'Top Tháng', since: monthDate, to: monthTo, perPax: Math.round(monthlyReward), rewards: [], data: monthly },
+        { title: 'Top Quý', since: quarterDate, to: quarterTo, perPax: Math.round(quarterlyReward), rewards: [], data: quarter },
+        { title: 'Top Năm', since: yearDate, to: yearTo, perPax: Math.round(yearlyReward), rewards: [], data: yearly }
     ]
     return rankData
 
@@ -787,10 +809,10 @@ export async function serverCount(name: string) {
 
 export async function serverUpdateStats(data: {}) {
 
-    await firestoreSetDoc('stats/' + Date.now(), data)
+    // await firestoreSetDoc('stats/' + Date.now(), data)
     await firestoreSetDoc('stats/latest', data, true)
 
-    await databaseSetDoc('stats/' + Date.now(), data)
+    // await databaseSetDoc('stats/' + Date.now(), data)
     await databaseUpdateDoc('stats/latest', data)
 }
 
@@ -873,25 +895,29 @@ export async function serverAddANewTransaction(tran: Transaction) {
     await firestoreUpdateDoc('user/' + paidUid, { amount: FieldValue.increment(-tran.amount) })
     await firestoreSetDoc('user/' + paidUid + '/trans/' + newRef.id, tran)
     console.log('============check if trantype ' + tran.tranType + ' is in array ' + [
-        TranType.followRank,
-        TranType.followSolo,
+        TranType.followRankMonth,
+        TranType.followSoloMonth,
         TranType.registerSoloYearly,
         TranType.upgradeToSoloPerm,
         TranType.registerSoloPerm,
         TranType.registerRankYearly,
         TranType.upgradeToRankPerm,
         TranType.registerRankPerm,
+        TranType.followRankPerm,
+        TranType.followSoloPerm
     ])
 
     if ([
-        TranType.followRank,
-        TranType.followSolo,
+        TranType.followRankMonth,
+        TranType.followSoloMonth,
         TranType.registerSoloYearly,
         TranType.upgradeToSoloPerm,
         TranType.registerSoloPerm,
         TranType.registerRankYearly,
         TranType.upgradeToRankPerm,
         TranType.registerRankPerm,
+        TranType.followRankPerm,
+        TranType.followSoloPerm
     ].includes(tran.tranType)) {
 
         // kiem tra ref ID
@@ -901,7 +927,7 @@ export async function serverAddANewTransaction(tran: Transaction) {
 
         if (refID) {
             // chia tien cho ref
-            const ratio = tran.tranType == TranType.followSolo ? 0.1 : 0.2
+            const ratio = (tran.tranType == TranType.followSoloPerm || tran.tranType == TranType.followSoloMonth) ? 0.1 : 0.2
             const displayName = paidUser.displayName
 
             const amountForReference = tran.amount * ratio
@@ -925,6 +951,100 @@ export async function serverAddANewTransaction(tran: Transaction) {
 
                 await serverAddANewTransaction(refTran)
             }
+        }
+
+        console.log(' ===== check add fund')
+        if (tran.tranType == TranType.followRankMonth || tran.tranType == TranType.followRankPerm) {
+
+        console.log(' ===== check add fund222')
+            const startTime = tran.date
+            const endDate = new Date(startTime)
+            
+            if (tran.tranType === TranType.followRankMonth) {
+                endDate.setMonth(endDate.getMonth() + 1)
+            } else if (tran.tranType === TranType.followRankPerm) {
+                endDate.setFullYear(endDate.getFullYear() + 2)
+            }
+            const endTime = endDate.getTime()
+
+            console.log(' ===== check add 3333')
+
+            const amountForReward = tran.amount * 0.8
+
+
+            console.log('  ==== bat dau them tien vao quy ====== startTime: ' + new Date(tran.date).toLocaleDateString('vi') + '  end date  ' + endDate.toLocaleDateString('vi') + '  amount  ' +  amountForReward )
+
+            // ====== week funds ===================
+            const amountForWeekReward = amountForReward / 4
+            const sharedWeeks : number[] = []
+            var weekMileStone = getNextWeekMileStone()
+            while (weekMileStone <= endTime) {
+                sharedWeeks.push(weekMileStone)
+                weekMileStone += 1000*3600*24*7 // add 7 days
+            }
+
+            console.log('weeks mile stones : ' + sharedWeeks)
+
+            const amountPerWeek = amountForWeekReward / sharedWeeks.length
+
+            // ====== month funds ===================
+            const amountForMonthReward = amountForReward / 4
+            const sharedMonths : number[] = []
+            var monthMileStone = getNextMonthMileStone()
+            while (monthMileStone <= endTime) {
+                sharedMonths.push(monthMileStone)
+                const date = new Date(monthMileStone)
+                date.setMonth(date.getMonth() + 1)
+                monthMileStone = date.getTime()
+            }
+
+            console.log('moonth mile stones : ' + sharedMonths)
+            const amountPerMonth = amountForMonthReward / sharedMonths.length
+
+            // ====== quarter funds ===================
+            const amountForQuarterReward = amountForReward / 4
+            const sharedQuarters : number[] = []
+            var quarterMileStone = getNextQuarterMileStone()
+            while (quarterMileStone <= endTime) {
+                sharedQuarters.push(quarterMileStone)
+                const date = new Date(quarterMileStone)
+                date.setMonth(date.getMonth() + 3)
+                quarterMileStone = date.getTime()
+            }
+            console.log('quarter mile stones : ' + sharedQuarters)
+
+            const amountPerQuarter = amountForQuarterReward / sharedQuarters.length
+
+            // ====== year funds ===================
+            const amountForYearReward = amountForReward / 4
+            const sharedYear: number[] = []
+            var yearMileStone = getNextYearMileStone()
+            while (yearMileStone <= endTime) {
+                sharedYear.push(yearMileStone)
+                const date = new Date(yearMileStone)
+                date.setFullYear(date.getFullYear() + 1)
+                yearMileStone = date.getTime()
+            }
+
+            console.log('year mile stones : ' + sharedYear)
+
+
+            const amountPerYear = amountForYearReward / sharedYear.length
+
+            for (const weekTime of sharedWeeks) {
+                await databaseUpdateDoc('reward/week/' + weekTime.toString() , {amount : increment(amountPerWeek) })
+            }
+            for (const monthTime of sharedMonths) {
+                await databaseUpdateDoc('reward/month/' + monthTime.toString() , {amount : increment(amountPerMonth) })
+            }
+            for (const quartertime of sharedQuarters) {
+                await databaseUpdateDoc('reward/quarter/' + quartertime.toString() , {amount : increment(amountPerQuarter) })
+            }
+            for (const yearTime of sharedYear) {
+                await databaseUpdateDoc('reward/year/' + yearTime.toString() , {amount : increment(amountPerYear) })
+            }
+
+
         }
     } else if (tran.tranType == TranType.referReward) {
 

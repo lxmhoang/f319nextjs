@@ -3,11 +3,13 @@ import { Label } from "flowbite-react";
 import { List, ListItem } from "flowbite-react";
 import Image from 'next/image'
 import Link from "next/link";
+import { addComma } from "../lib/utils";
+
 export type BoardProps = {
     title: string,
     since: string,
     to: string,
-    total: string,
+    perPax: number,
     rewards: number[],
     data: { name: string, perf: { info: string, color: string }, avatar: string, id: string }[]
 }
@@ -17,7 +19,7 @@ export default function LeaderBoard(props: BoardProps) {
     return (
         <div className="m-2 w-[300px] h-[300px] mx-auto border-gray-400 border-2 rounded-md   ">
             <div className="flex justify-center  h-[30px] mb-2">
-                <Label className="m-2 text-md " value={props.total + " / người"} />
+                <Label className="m-2 text-md " value={addComma(props.perPax) + " / người"} />
             </div>
             <div className="flex justify-center  h-[30px]">
                 <Label className="m-2" value={range} />

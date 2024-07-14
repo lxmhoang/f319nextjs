@@ -4,7 +4,7 @@
 // At 11:00 PM, on day 31, 30, and 29 of the month, and on Friday
 
 import { getthuquyUID } from "@/app/lib/firebaseadmin/adminauth"
-import { getRankingInfo, sendNotificationToUser, serverAddANewTransaction } from "@/app/lib/server"
+import { getRankData, getRankingInfo, sendNotificationToUser, serverAddANewTransaction } from "@/app/lib/server"
 import { getPivotDates } from "@/app/lib/statistic"
 import { contentOf } from "@/app/lib/utils"
 import { UserNoti } from "@/app/model/noti"
@@ -12,10 +12,9 @@ import { TranType, Transaction } from "@/app/model/transaction"
 
 export async function GET(request: Request) {
   const message: string[] = []
-  let rankInfo = undefined
   let thuquyid = undefined
 
-  const numOfWinner =  Number(process.env.NEXT_PUBLIC_NUM_WINNER)
+  const numOfWinner =  Number(process.env.RANK_NUM_WINNER)
 
   if (!numOfWinner) {
     return new Response('Khong tim duoc numOfWinner', {
@@ -28,9 +27,9 @@ export async function GET(request: Request) {
     const toDayStr = toDay.toLocaleDateString()
     const pivots = await getPivotDates(new Date())
     const weekEndStr = pivots.weekEnd.toLocaleDateString()
-    const monthEndStr = pivots.weekEnd.toLocaleDateString()
-    const quarterEndStr = pivots.weekEnd.toLocaleDateString()
-    const yearEndStr = pivots.weekEnd.toLocaleDateString()
+    const monthEndStr = pivots.monthEnd.toLocaleDateString()
+    const quarterEndStr = pivots.quarterEnd.toLocaleDateString()
+    const yearEndStr = pivots.yearEnd.toLocaleDateString()
 
     message.push(toDayStr)
     message.push(weekEndStr)
@@ -38,11 +37,13 @@ export async function GET(request: Request) {
     message.push(quarterEndStr)
     message.push(yearEndStr)
 
-    if (toDayStr in [weekEndStr, monthEndStr, quarterEndStr, yearEndStr]) {
+    const rankData = await getRankData()
+    // return new Response(contentOf(message), {
+    //   status: 200
+    // })
+    if ([weekEndStr, monthEndStr, quarterEndStr, yearEndStr].includes(toDayStr)) {
       message.push('ok to day is ngay chia tien ')
 
-      if (!rankInfo) {
-        rankInfo = await getRankingInfo()
         if (!thuquyid) {
           thuquyid = await getthuquyUID()
         }
@@ -51,20 +52,20 @@ export async function GET(request: Request) {
             status: 400,
           })
         }
-        if (!rankInfo) {
+        if (!rankData) {
           return new Response('Khong data rank', {
             status: 400,
           })
         }
 
 
-        message.push(' Rank Info ' + JSON.stringify(rankInfo))
+        message.push(' Rank Data ' + JSON.stringify(rankData))
 
 
         // *************************************
         if (toDayStr == weekEndStr) {
-          const winners = rankInfo.weekly
-          const reward = Number(process.env.NEXT_PUBLIC_WEEK_REWARD)
+          const winners = rankData[0].data
+          const reward = rankData[0].perPax
           message.push('hom nay la cuoi tuan, chuan bi thuong tuan cho ' + winners.length + ' chuyen gia với số tiền mỗi người là ' + reward.toString())
           for (const winner of winners) {
             const tran: Transaction = {
@@ -80,9 +81,12 @@ export async function GET(request: Request) {
             await serverAddANewTransaction(tran)
             // notify user
             const noti : UserNoti = {
-              title: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top tuần',
+              title: 'Thưởng tuần ',
+              content: 'Xin chúc mừng chuyên gia rank, bạn đã được thưởng ' + reward.toString() + ' vì đạt top tuần',
               dateTime: toDay.getTime(),
-              content: ""
+              urlPath: '/profile/transactions'
+
+              
             }
 
             await sendNotificationToUser(winner.id, noti)
@@ -92,15 +96,15 @@ export async function GET(request: Request) {
         }
         // *************************************
         if (toDayStr == monthEndStr) {
-          const winners = rankInfo.monthly
-          const reward = Number(process.env.NEXT_PUBLIC_MONTH_REWARD)
+          const winners = rankData[1].data
+          const reward = rankData[1].perPax
           message.push('hom nay la cuoi thang, chuan bi thuong tuan cho ' + winners.length + ' chuyen gia với số tiền mỗi người là ' + reward.toString())
           for (const winner of winners) {
             const tran: Transaction = {
               tranType: TranType.rankReward,
               toUid: winner.id,
               fromUid: thuquyid,
-              amount: reward / numOfWinner,
+              amount: reward,
               date: toDay.getTime(),
               note: 'thuong thang ' + monthEndStr,
               status: "Done"
@@ -108,9 +112,10 @@ export async function GET(request: Request) {
             await serverAddANewTransaction(tran)
             // notify user
             const noti : UserNoti = {
-              title: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top tháng',
+              title: 'Thưởng tháng ',
+              content: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top tháng',
               dateTime: toDay.getTime(),
-              content: ""
+              urlPath: '/profile/transactions'
             }
 
             await sendNotificationToUser(winner.id, noti)
@@ -119,15 +124,15 @@ export async function GET(request: Request) {
         }
         // *************************************
         if (toDayStr == quarterEndStr) {
-          const winners = rankInfo.quarter.slice(0, numOfWinner)
-          const reward = Number(process.env.NEXT_PUBLIC_QUARTER_REWARD)
+          const winners = rankData[2].data
+          const reward = rankData[2].perPax
           message.push('hom nay la cuoi quy, chuan bi thuong tuan cho ' + winners.length + ' chuyen gia với số tiền mỗi người là ' + reward.toString())
           for (const winner of winners) {
             const tran: Transaction = {
               tranType: TranType.rankReward,
               toUid: winner.id,
               fromUid: thuquyid,
-              amount: reward / numOfWinner,
+              amount: reward,
               date: toDay.getTime(),
               note: 'thuong quy '+ quarterEndStr,
               status: "Done"
@@ -135,9 +140,10 @@ export async function GET(request: Request) {
             await serverAddANewTransaction(tran)
             // notify user
             const noti : UserNoti = {
-              title: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top quý',
+              title: 'Thưởng quý ',
               dateTime: toDay.getTime(),
-              content: ""
+              content: 'Xin chúc mừng chuyên gia rank, bạn đã được thưởng ' + reward.toString() + ' vì đạt top quý',
+              urlPath: '/profile/transactions'
             }
 
             await sendNotificationToUser(winner.id, noti)
@@ -146,15 +152,15 @@ export async function GET(request: Request) {
         }
         // *************************************
         if (toDayStr == yearEndStr) {
-          const winners = rankInfo.yearly.slice(0, numOfWinner)
-          const reward = Number(process.env.NEXT_PUBLIC_YEAR_REWARD)
+          const winners = rankData[3].data
+          const reward = rankData[3].perPax
           message.push('hom nay la cuoi nam, chuan bi thuong nam cho ' + winners.length + ' chuyen gia với số tiền mỗi người là ' + reward.toString())
           for (const winner of winners) {
             const tran: Transaction = {
               tranType: TranType.rankReward,
               toUid: winner.id,
               fromUid: thuquyid,
-              amount: reward / numOfWinner,
+              amount: reward,
               date: toDay.getTime(),
               note: 'thuong nam ' + yearEndStr,                                         
               status: "Done"
@@ -162,15 +168,16 @@ export async function GET(request: Request) {
             await serverAddANewTransaction(tran)
             // notify user
             const noti : UserNoti = {
-              title: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top năm',
+              title: 'Thưởng năm ',
               dateTime: toDay.getTime(),
-              content: ""
+              content: "Xin chúc mừng chuyên gia rank, bạn đã được thưởng " + reward.toString() + ' vì đạt top năm',
+              urlPath: '/profile/transactions'
             }
 
             await sendNotificationToUser(winner.id, noti)
           }
           message.push(" xong thuong nam ")
-        }
+        
 
       }
     } else {

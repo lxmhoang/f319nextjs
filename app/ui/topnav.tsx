@@ -25,15 +25,17 @@ import { convert } from "../lib/utils";
 import { Badge } from "@nextui-org/badge";
 import { DarkThemeToggle, Label } from "flowbite-react";
 import { redirect, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { didTapNotificationWithKey, getTapNotificationKeys, login } from "../lib/client";
+import { didTapNotificationWithKey, login } from "../lib/client";
+import { UserNoti } from "../model/noti";
 
 type MenuDropDownItem = {
   key: string,
   href?: string,
   type: string,
-  //  pathName: string,
-  title: string, description?: string, activated: boolean,
-  // hash?: string
+  title: string, 
+  description?: string, 
+  activated: boolean,
+  highlighted?: boolean 
 }
 
 
@@ -53,13 +55,13 @@ export default function TopNav() {
 
   } catch (e) {
 
-    console.log('error saving referalID to local storage ' + JSON.stringify(e) )
+    console.log('error saving referalID to local storage ' + JSON.stringify(e))
   }
 
 
   useEffect(() => {
 
-  localStorage.setItem('flowbite-theme-mode', 'dark')
+    localStorage.setItem('flowbite-theme-mode', 'dark')
 
   }, [])
   const pathname = usePathname() ?? ""
@@ -94,7 +96,15 @@ export default function TopNav() {
       :
       user ? userBarMenuList : guessBarMenuList
 
-  const userNotifies: MenuDropDownItem[] = user?.notifies ? user.notifies.map((item, index) => {
+  const displayNoti : UserNoti[] = user?.notifies ? user.notifies.filter((item) => {
+    return (item.dateTime > Date.now() - 1000 * 3600 * 24 * 5) 
+   }) : []
+
+   const countNoti = displayNoti.filter((item) => {
+    return  (!item.tapTime) 
+   })
+
+  const notifyItem: MenuDropDownItem[] = displayNoti.map((item, index) => {
     console.log('urlpath ' + item.urlPath)
     // const pathName = item.urlPath?.split('#')[0] ?? ""
     // const hash = item.urlPath?.split('#')[1]
@@ -104,39 +114,24 @@ export default function TopNav() {
       title: item.title,
       href: item.urlPath ?? "",
       description: item.content,
-      key: item.dateTime.toString(),
+      key: item.id ?? item.dateTime.toString(),
       activated: true,
-      // hash: hash
-
+      highlighted: !item.tapTime
     }
-  }) : []
-
-  const readKeys = getTapNotificationKeys()
-  const badgeNum = userNotifies.map((item) => item.key).filter((el) => {
-    return !readKeys.includes(el)
-  }).length
+  })
+  const badgeNum = countNoti.length
 
   const dropDownInfo: MenuDropDownItem[] =
     user ?
       [
 
-        ...userNotifies,
-        // { key: "home", href: "/", label: "Home", activated: true },
-        // { key: "expert", href: "/expert", label: "Chuyên gia", activated: true },
-        // { key: "divider", href: "#", label: "", activated: true },
-        // { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: true },
-        // { key: "myexpert", href: "/advisor", label: "Hồ sơ chuyên gia của tôi", activated: true },
+        ...notifyItem,
         { key: "morenoti", href: "/profile/activities", title: "Xem tất cả thông báo ", activated: true, type: 'notification' },
         { key: "signout", href: "", title: "Sign out", activated: true, type: 'signout' }
       ]
       :
       [
-        // { key: "home", href: "/", label: "Home", activated: true },
-        // { key: "expert", href: "/expert", label: "Expert List", activated: true },
-        // { key: "divider", href: "#", label: "", activated: true },
-        // { key: "myexpert", href: "/advisor", label: "Hồ sơ chuyên gia của tôi", activated: false },
-        // { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: user != undefined },
-          { key: "signin", href: "", title: "Sign in", activated: true, type: 'signin' }
+        { key: "signin", href: "", title: "Sign in", activated: true, type: 'signin' }
       ]
   const MenuButton = ({ title, menuInfo, avatarURL }: { title: string, menuInfo: { key: string }[], avatarURL: string | null | undefined }) => {
     return (
@@ -145,8 +140,8 @@ export default function TopNav() {
         <Badge content={badgeNum} color="secondary" className={badgeNum == 0 ? "invisible" : "visible"}>
           <DropdownTrigger>
             <Button variant="flat" className="capitalize flex" >
-              {avatarURL && 
-              <Image className="rounded-full" src={avatarURL} priority={true} alt="Thumb" height={30} width={30} />
+              {avatarURL &&
+                <Image className="rounded-full" src={avatarURL} priority={true} alt="Thumb" height={30} width={30} />
               }
               {title}
             </Button>
@@ -154,48 +149,44 @@ export default function TopNav() {
         </Badge>
         <DropdownMenu
           aria-label="Dropdown Variants" items={dropDownInfo}
-          onAction = {(key) => {
+          onAction={(key) => {
             console.log(key)
-            if (!['morenoti','signout','signin'].includes(key as string)) {
-              didTapNotificationWithKey(key as string)
+            if (!['morenoti', 'signout', 'signin'].includes(key as string)) {
+              if (user) {
+                const notiTapped = displayNoti.find((item) => { return item.id == key})
+                if (notiTapped && !notiTapped.tapTime) {
+                  didTapNotificationWithKey(user.uid, key as string)
+                }
+              }
             }
           }
           }
         >
           {
             (item) => (
-              // <DropdownItem key={item.key} href={item.href}>{item.label}</DropdownItem>
-
               <DropdownItem
-              // onClick={(e) => {
-              //   console.log('zzzz')
-              // }}
                 key={item.key}
                 title={item.title}
                 description={item.description}
                 href={item.href}
                 color={item.type === "signout" ? "danger" : "default"}
-                className={clsx('max-w-sm', 
-                { 
-                  "text-danger " : item.type === "signout",
-                  // "bg-sky-500 text-black" : item.type === 'notification'
-                }
-              )}
+                className={clsx('max-w-xs',
+                  {
+                    "text-danger ": item.type === "signout",
+                    "dark:bg-blue-800 bg-amber-200" : item.highlighted
+                    // "bg-sky-500 text-black" : item.type === 'notification'
+                  }
+                )}
 
                 onClick={
-                  item.key === "signout" ? () => { signOut().then((result) => {
-                    router.push('/')
-                    
-                  }) } : item.key === 'signin' ? () => { login() } : () => { }}
+                  item.key === "signout" ? () => {
+                    signOut().then((result) => {
+                      router.push('/')
+
+                    })
+                  } : item.key === 'signin' ? () => { login() } : () => { }}
               >
-                <div>
-                  {/* <Link href={{ pathname: item.pathName, hash: item.hash }}> */}
-                  {/* <p className="break-word">{item.label}</p>
-                      <p className="break-word">{item.label}</p> */}
-                  {/* {item.label} */}
-                  {/* <Label value={item.label} /> */}
-                  {/* </Link> */}
-                </div>
+
 
               </DropdownItem>
             )
@@ -242,10 +233,10 @@ export default function TopNav() {
                   login()
                 }
                 if (item.key == 'signout') {
-                  
+
                   signOut().then((result) => {
                     router.push('/')
-                    
+
                   })
                 }
                 setIsMenuOpen(false)
@@ -302,7 +293,7 @@ export default function TopNav() {
                     if (item.key == 'signout') {
                       signOut().then((result) => {
                         router.push('/')
-                        
+
                       })
                     }
                   } else {
@@ -335,7 +326,6 @@ export default function TopNav() {
             })}
 
             <div className="profile">
-              {/* {getTapNotificationKeys()} */}
               <MenuButton title={menuLabel} menuInfo={dropDownInfo} avatarURL={firebaseUser?.photoURL} />
             </div>
             <DarkThemeToggle className="hidden sm:block" />
