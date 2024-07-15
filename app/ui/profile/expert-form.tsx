@@ -110,7 +110,6 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                     }
                 } else {
                     console.log('just done editing expert')
-                    revalidatePath('/expert')
                     // just done editing expert
                     // show popup
                     setShowModal(true)
