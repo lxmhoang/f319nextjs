@@ -19,6 +19,7 @@ export type Expert = {
     id: string;
     imageURL: string;
     name: string;
+    phone?: string;
     follower: Subscription[];
     permPrice?: number;
     monthlyPrice?: number;

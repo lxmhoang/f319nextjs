@@ -14,7 +14,7 @@ import { useEffect, useState } from 'react';
 import { ConfirmationModal } from '../confirm';
 import { DocumentTextIcon } from '@heroicons/react/24/solid';
 import { RegisterExpertFormState, editExpert } from '../../lib/actions/actionEditExpert';
-import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button as ButtonReact, useDisclosure } from '@nextui-org/react';
+import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button as ButtonReact } from '@nextui-org/react';
 import React from 'react';
 
 import { Expert } from '@/app/model/expert';
@@ -23,7 +23,7 @@ import { Blockquote, Checkbox, Label, Radio, Spinner, TextInput } from 'flowbite
 import { useAppContext } from '@/app/lib/context';
 import { redirect } from 'next/navigation';
 import { refreshToken } from '@/app/lib/client';
-import { revalidatePath } from 'next/cache';
+import { PhoneIcon } from '@heroicons/react/16/solid';
 
 export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undefined }) {
 
@@ -131,12 +131,10 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
             if (expert) {
                 console.log('handleTapOkey edit expert done 222')
                 // tap okey after edit expert info
-                // revalidatePath('/advisor')
                 router.replace('/advisor')
                 // done 
             } else {
                 // tap okey after register expert and update token
-                // revalidatePath('/advisor')
                 console.log('handleTapOkey  createe expert done ')
                 router.replace('/advisor')
 
@@ -204,7 +202,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                 :
                 (user?.isExpert && !expert) ? <>Đã là chuyên gia rồi </> : 
 
-                <div className='pl-10 pr-10 mx-auto'>
+                <div className='pl-3 pr-3 sm:pl-10 sm:pr-10 mx-auto'>
                     {/* {JSON.stringify(state)} */}
                     {/* {userInfo.user?.expertType} */}
                     <ConfirmationModal
@@ -219,6 +217,8 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                         <Blockquote>
                             {expert ? "Cập nhật thông tin chuyên gia" : "Đăng ký chuyên gia"}
                         </Blockquote>
+                        <p className='mt-2 text-xs'> * Để tránh 1 số chuyên gia lôi kéo nhà đầu tư, thông tin đăng ký (ảnh, giới thiệu ngắn) <span className='text-rose-400 font-bold dark:text-amber-500'>không được</span> bao gồm thông tin cá nhân, sdt, group tele, zalo ... dưới mọi hình thức  </p>
+                        {/* <p className='text-xs'>Để tránh việc 1 số chuyên gia sau khi có uy tín đã mời gọi nhà đầu tư sang các group zalo, telegram riêng không đảm bảo đồng nhất khuyến nghị, từ 01/07/2023, group chat của mỗi chuyên gia sẽ bị disable, thông tin chuyên gia sẽ không được gợi ý sđt, zalo, tele ... hay bất kỳ thông tin riêng dưới mọi hình thức </p> */}
                     </div>
                     <Divider />
                     <form action={dispatch} className='mt-5' onChange={(e) => {
@@ -229,7 +229,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                         <div className="rounded-md bg-black-50">
                             {/* <input type="hidden" id="uid" name="uid" value={userInfo.uid} /> */}
                             {/* Name */}
-                            <div className="mb-4 max-w-sm">
+                            <div className="mb-4 max-w-md">
                                 <label htmlFor="name" className="mb-2 block text-sm font-medium">
                                     Tên hiển thị
                                 </label>
@@ -244,11 +244,37 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                             defaultValue={expert ? expert.name : defaultName ?? ""}
                                             className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
                                             required
-
-
-
                                         />
                                         <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
+                                    </div>
+                                </div>
+                                <div id="customer-error" aria-live="polite" aria-atomic="true">
+                                    {state.errors?.name &&
+                                        state.errors.name.map((error: string) => (
+                                            <p className="mt-2 text-sm text-red-500" key={error}>
+                                                {error}
+                                            </p>
+                                        ))}
+                                </div>
+                            </div>
+                            <div className="mb-4 max-w-md">
+                                <label htmlFor="phong" className="mb-2 block text-sm font-medium">
+                                    Số điện thoại <span className='text-xs'>  (chỉ dùng cho dịch vụ trợ giúp, sẽ không hiển thị với người dùng) </span>
+                                </label>
+                                <div className="relative mt-2 rounded-md ">
+                                    <div className="relative">
+                                        <TextInput
+                                            // id="name"
+                                            disabled={expert != undefined}
+                                            name="phone"
+                                            type="number"
+                                            placeholder="0912345678"
+                                            defaultValue={expert ? expert.phone : ""}
+                                            className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
+                                            
+
+                                        />
+                                        <PhoneIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
                                     </div>
                                 </div>
                                 <div id="customer-error" aria-live="polite" aria-atomic="true">
@@ -263,7 +289,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                             {
                                 (expert) && (
                                     <>
-                                        <div className="mb-4 max-w-sm">
+                                        <div className="mb-4 max-w-md">
                                             <div className='block'>
                                                 <div>
                                                     <Label className='text-md'>{"Loại tài khoản: " + expert.expertType}</Label>
@@ -276,7 +302,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                         </div>
 
                                         {expert.expertPeriod == 'yearly' && (
-                                            <div className="ml-8 mb-4 max-w-sm">
+                                            <div className="ml-8 mb-4 max-w-md">
                                                 <fieldset className="flex max-w-md flex-col gap-4">
                                                     {/* <legend className="mb-4">Upgrade thời hạn </legend> */}
                                                     <div className="flex items-center gap-2">
@@ -301,7 +327,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 
 
                             {!expert && (
-                                <div className="mb-4 mt-8 max-w-sm">
+                                <div className="mb-4 mt-8 max-w-md">
                                     {/* <Label className='text-lg' value={"Chi phí mở tài khoản " + process.env.NEXT_PUBLIC_EXPERT_REG_FEE} /> */}
                                     <fieldset className="flex max-w-md flex-col gap-4">
                                         <legend className="mb-4">Chọn loại tài khoản </legend>
@@ -341,7 +367,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 
                                             </>
                                         }
-                                        <Divider className='mb-4 mt-4' />
+                                        <Divider className='mb-2 mt-2' />
                                         <div className="flex items-center gap-2">
                                             <Radio id="expertRankType" name="expertType" defaultChecked={type == "rank"} value="rank" onChange={(e) => {
                                                 if (e.target.checked) {
@@ -378,14 +404,14 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                         }
                                     </fieldset>
 
-                                    {(!type || !period) && <span className='text-amber-300 text-xs'>Hãy chọn loại tư vấn và thời hạn tư vấn</span>}
+                                    {(!type || !period) && <span className='text-amber-300 text-xs'>Hãy chọn loại chuyên gia và thời hạn </span>}
                                 </div>)}
 
 
 
 
                             {/* Short intro */}
-                            <div className="mb-4 mt-8 max-w-sm">
+                            <div className="mb-4 mt-8 max-w-md">
                                 <label htmlFor="name" className="mb-2 block text-sm font-medium">
                                     Giới thiệu ngắn
                                 </label>
@@ -417,7 +443,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                             {/* {expert?.avatar} */}
 
                             {/* {avatarURL} */}
-                            <div className='mb-4 max-w-sm mt-8'>
+                            <div className='mb-4 max-w-md mt-8'>
                                 <label htmlFor="avatarInfo" className="mb-2 block text-sm font-medium">
                                     Ảnh đại diện
                                 </label>
@@ -551,7 +577,7 @@ function PlanSection({ period, expert, state , upgradeSelected }: { period: "per
             <p className='text-sm'>Chọn các gói theo dõi, đây sẽ là thu nhập của bạn</p>
             {/* monthly  price */}
             
-            <div className="mb-4 max-w-sm mt-4">
+            <div className="mb-4 max-w-md mt-4">
                 <label htmlFor="customer" className="mb-2 block text-sm font-medium">
                     Ra giá gói theo dõi theo tháng
                 </label>
@@ -588,7 +614,7 @@ function PlanSection({ period, expert, state , upgradeSelected }: { period: "per
 
             {/* Perm price */}
             {(
-                <div className="mb-4 max-w-sm">
+                <div className="mb-4 max-w-md">
                     {period == 'yearly' && (<p className='mb-2 text-xs text-amber-500'>Chuyên gia chu kỳ 1 năm không thể cung cấp gói theo dõi vĩnh viễn, chọn chu kỳ trọn đời để kích hoạt gói này </p>)}
                     <label htmlFor="permPrice" className={clsx("mb-2 block text-sm font-medium", {
                         'text-zinc-500': disableInputPermPerice,

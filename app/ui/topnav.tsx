@@ -77,7 +77,7 @@ export default function TopNav() {
     { key: "home", href: "/", label: "Home", activated: true },
     { key: "expert", href: "/expert", label: "Chuyên gia", activated: true },
     { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: true },
-    { key: "myexpert", href: "/register", label: "Đăng ký chuyên gia", activated: true },
+    { key: "regexpert", href: "/register", label: "Đăng ký chuyên gia", activated: true },
   ]
 
   const guessBarMenuList =
@@ -330,24 +330,6 @@ export default function TopNav() {
             </div>
             <DarkThemeToggle className="hidden sm:block" />
 
-            {/* <NavbarItem className="flex">
-          {user ? (
-            <>
-              <></>
-              <div className="profile p-2">
-                <MenuButton title={menuLabel} menuInfo={dropDownInfo} />
-              </div>
-            </>
-          ) :
-
-            (
-              <>
-                <Button onClick={() => login()} >Login By Google</Button>
-              </>
-            )
-
-          }
-        </NavbarItem> */}
           </NavbarContent>
         )
       }
