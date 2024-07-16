@@ -110,7 +110,6 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                     }
                 } else {
                     console.log('just done editing expert')
-                    revalidatePath('/expert')
                     // just done editing expert
                     // show popup
                     setShowModal(true)
@@ -538,7 +537,7 @@ function PlanSection({ period, expert, state , upgradeSelected }: { period: "per
     ) && 
     !upgradeSelected)
 
-    const defaultValueForPermPrice = expert && expert.expertType == 'perm' ? 
+    const defaultValueForPermPrice = (expert && expert.expertPeriod == 'perm') ? 
     expert.permPrice : 
         !expert ? 5000000 : 
          expert.monthlyPrice ? expert.monthlyPrice * 10 : 5000000
@@ -596,7 +595,7 @@ function PlanSection({ period, expert, state , upgradeSelected }: { period: "per
                         'text-zinc-200': !disableInputPermPerice,
 
                     })}>
-                        Ra giá cho gói theo dõi vĩnh viễn {period}
+                        Ra giá cho gói theo dõi vĩnh viễn
                     </label>
                     <div className="relative">
                         <TextInput

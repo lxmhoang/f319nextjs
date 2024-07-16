@@ -45,7 +45,7 @@ if (false) {
   connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true })
 }
 
-if (useEmulator) {
+if (false) {
   console.log(' firebase connecting to emulator')
   connectDatabaseEmulator(rtDB, '127.0.0.1', 9000 )
   connectFirestoreEmulator(db, '127.0.0.1', 8080)

@@ -1,4 +1,0 @@
-13:42:51.050 [NamespaceSystem-akka.actor.default-dispatcher-4] INFO akka.event.slf4j.Slf4jLogger - Slf4jLogger started
-13:42:51.128 [main] INFO com.firebase.server.forge.App$ - Listening at 127.0.0.1:9000
-13:43:08.009 [NamespaceSystem-akka.actor.default-dispatcher-5] INFO com.firebase.core.namespace.NamespaceActor - stock319-f3905 successfully activated FBKV (SurveyIdle(0)) wait: 59ms, init: 0ms
-13:43:08.061 [NamespaceSystem-blocking-namespace-operation-dispatcher-8] INFO com.firebase.core.namespace.StateManager - Namespace stock319-f3905 status Active to Active
