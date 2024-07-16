@@ -17,7 +17,7 @@ export default function ExpertCard({ expertInfo }: { expertInfo: string }) {
       {/* {expert.avatar} */}
       <Link className="justify-center" href={{ pathname: `/expert/details/${expert.id}` }}>
         <div className="p-2 rounded-sm">
-          <Card className="w-[180px] m-1 dark:bg-gray-500 bg-gray-100">
+          <Card className="w-full sm:w-[180px] m-1 dark:bg-gray-500 bg-gray-100">
             <CardHeader className=" gap-3 flex h-[50px]">
               {expert.imageURL && <Image priority={true} src={expert.imageURL} width={30} height={30} className="rounded-full" alt={""} />}
               <Label value={expert.name} />
