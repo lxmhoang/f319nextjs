@@ -22,13 +22,18 @@ export async function getRealTimeStockData(stocks: string[]) {
     })
     const result = await data.json()
     let object : {[key: string] : {high: number, low: number}} = {}
+
     result.map((d: { a: string, v: number,w : number }) => {
       const key = d.a as string
       const value = {
-        high :d.v ,// hight, d.w is low,
+        high :d.v ,// d.v is hight, d.w is low,
         low: d.w
       }
-      object[key] = value
+      if (d.v == 0 || d.w == 0) {
+        console.log(' khong lay duoc gia cua co phieu ' + d.a + '  api ngoai tra ve 0  ' + d.a )
+      } else {
+        object[key] = value
+      }
     })
     console.log("getRealTimeStockData " + JSON.stringify(object))
 

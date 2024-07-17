@@ -185,6 +185,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
             (formProps.expertPeriod && formProps.expertPeriod != expert.expertPeriod)
             || (Number(formProps.monthlyPrice) != expert.monthlyPrice)
             || (Number(formProps.permPrice) != expert.permPrice)
+            || (Number(formProps.phoneNumber).toString() != expert.phoneNumber)
             :
             true
 
@@ -231,7 +232,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                             {/* Name */}
                             <div className="mb-4 max-w-md">
                                 <label htmlFor="name" className="mb-2 block text-sm font-medium">
-                                    Tên hiển thị
+                                    Tên hiển thị <span className='text-rose-500'>*</span>
                                 </label>
                                 <div className="relative mt-2 rounded-md ">
                                     <div className="relative">
@@ -265,11 +266,11 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                     <div className="relative">
                                         <TextInput
                                             // id="name"
-                                            disabled={expert != undefined}
-                                            name="phone"
+                                            // disabled={expert != undefined}
+                                            name="phoneNumber"
                                             type="number"
                                             placeholder="0912345678"
-                                            defaultValue={expert ? expert.phone : ""}
+                                            defaultValue={expert ? expert.phoneNumber : ""}
                                             className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
                                             
 
@@ -330,7 +331,8 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                 <div className="mb-4 mt-8 max-w-md">
                                     {/* <Label className='text-lg' value={"Chi phí mở tài khoản " + process.env.NEXT_PUBLIC_EXPERT_REG_FEE} /> */}
                                     <fieldset className="flex max-w-md flex-col gap-4">
-                                        <legend className="mb-4">Chọn loại tài khoản </legend>
+                                        <legend className="mb-4">Chọn loại tài khoản <span className='text-rose-500'>*</span> </legend>
+                                        
                                         <div className="flex items-center gap-2">
                                             <Radio id="expertSoloType" name="expertType" defaultChecked={type == "solo"} value="solo" onChange={(e) => {
                                                 if (e.target.checked) {
@@ -496,10 +498,10 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 
                                     }} />
                                     <Label htmlFor="accept" className="flex">
-                                        Tôi đã đọc và đồng ý với <span onClick={() => {
+                                        Tôi đã đọc và đồng ý với  <span onClick={() => {
                                         setShowTNC(true)
                                         // alert('kkk')
-                                    }} className='text-cyan-500'>điều khoản và điền kiện</span> của trang web
+                                    }} className='text-cyan-500 ml-1 mr-1'>điều khoản và điền kiện</span> của trang web
                                         
                                     </Label>
                                 </div>

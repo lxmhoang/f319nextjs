@@ -19,7 +19,7 @@ export type Expert = {
     id: string;
     imageURL: string;
     name: string;
-    phone?: string;
+    phoneNumber?: string;
     follower: Subscription[];
     permPrice?: number;
     monthlyPrice?: number;
@@ -59,6 +59,7 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
         return {
             imageURL: expert.imageURL,
             name: expert.name,
+            phoneNumber: expert.phoneNumber,
             follower: expert.follower ?? [],
             permPrice: expert.permPrice,
             monthlyPrice: expert.monthlyPrice,
@@ -82,6 +83,7 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
             id: snapshot.id,
             imageURL: data.imageURL,
             name: data.name,
+            phoneNumber: data.phoneNumber,
             follower: follower,
             permPrice: data.permPrice,
             monthlyPrice: data.monthlyPrice,
@@ -107,6 +109,7 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
         return {
             imageURL: expert.imageURL,
             name: expert.name,
+            phoneNumber: expert.phoneNumber,
             follower: expert.follower ?? [],
             permPrice: expert.permPrice,
             monthlyPrice: expert.monthlyPrice,
@@ -128,6 +131,7 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
             id: snapshot.id,
             imageURL: data.imageURL,
             name: data.name,
+            phoneNumber: data.phoneNumber,
             follower: follower,
             permPrice: data.permPrice,
             monthlyPrice: data.monthlyPrice,

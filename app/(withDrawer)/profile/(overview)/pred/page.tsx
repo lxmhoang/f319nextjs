@@ -28,7 +28,7 @@ export default function Page() {
         setExperts(result)
       }
 
-      const expertIDs = user.following.map((item) => { return item.eid })
+      const expertIDs = user.following.filter((item) => { return item.endDate > Date.now()}).map((item) => { return item.eid })
 
       if (expertIDs.length > 0 || user.joinRank) {
         fetchExperts(expertIDs, user.joinRank)

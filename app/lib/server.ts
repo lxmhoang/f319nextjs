@@ -11,7 +11,7 @@ import { FieldValue, WhereFilterOp } from "firebase-admin/firestore";
 import { User, userAdminConverter } from "../model/user";
 import { Subscription, subscriptionAdminConverter } from "../model/subscription";
 import { cookies } from "next/headers";
-import { addComma, didFollow, perfConver, sortByField } from "./utils";
+import { addComma, arrayFromData, didFollow, perfConver, sortByField } from "./utils";
 import { UserNoti, notiAdminConverter } from "../model/noti";
 import { TranType, Transaction, tranAdminConverter, tranTypeText } from "../model/transaction";
 import { getNextMonthMileStone, getNextQuarterMileStone, getNextWeekMileStone, getNextYearMileStone, getPivotDates } from "./statistic";
@@ -44,18 +44,27 @@ export async function sendNotificationToUser(userID: string, noti: UserNoti) {
     console.log(' ref Path ' + refPath.toString())
 }
 
+export async function updateProfilePhone(formData: FormData) {
+    const phoneNumber = formData.get('phoneNumber') as string
+    const userInfo = await getUserInfoFromSession()
+    if (userInfo && phoneNumber) {
+        await serverUpdateUserInfo(userInfo.uid, {phoneNumber: phoneNumber})
+    }
+}
 
 export async function getExpert(eid: string) {
     return firestoreGetModal<Expert>('expert/' + eid, expertAdminConverter)
 }
 
+export async function getAllActivatedExpert() {
+    const expertsData = await databaseGetDoc('expert')
+    const result : Expert[] = arrayFromData<Expert>(expertsData)
+    return result
+
+}
+
 export async function clientGetExperts(filters: {key:string, operator: WhereFilterOp, value:any }[]) {
-    const exps = await firestoreQueryCollection('expert',filters,
-        // [
-        //     { key: "status", operator: "==", value: "activated" }
-        // ],
-        expertAdminConverter,
-    )
+    const exps = await firestoreQueryCollection('expert',filters,expertAdminConverter)
 
     return JSON.stringify(exps)
 }
@@ -84,9 +93,9 @@ export async function getUserDBInfo() {
     }
 }
 
-export async function getAdvisor() {
+export async function getMyAdvisorProfile() {
     const info = await getUserInfoFromSession()
-    // console.log('getUserInfoFromSession ' + JSON.stringify(info))
+
     if (info == undefined) {
         return {
             expert: undefined,
@@ -118,26 +127,35 @@ export async function clientGetAllMyPreds() {
 
 }
 
-export async function getAllMypreds(filters: { key: string, operator: WhereFilterOp, value: any }[] = []) {
+export async function getAllMypreds(
+    // filters: { key: string, operator: WhereFilterOp, value: any }[] = []
+
+) {
 
     const info = await getUserInfoFromSession()
+
     if (!(info != undefined && info.isExpert)) {
         // throw new Error('bạn không phải chuyên gia' + JSON.stringify(info))
         return []
     }
-    const result = await firestoreQueryCollection('expert/' + info.uid + '/preds', filters, predAdminConverter)
+    // const result = await firestoreQueryCollection('expert/' + info.uid + '/preds', filters, predAdminConverter)
+    const result = arrayFromData<Prediction>(await databaseGetDoc('expert/' + info.uid + '/preds'))
     const wrongPred = result.find((it) => it.ownerId != info.uid)
     if (wrongPred) {
         throw new Error('Thông tin data bị lệch ')
     }
-
     return result
-
 }
 
 export async function getMyWIPPreds() {
 
-    return getAllMypreds([{ key: 'status', operator: '==', value: 'Inprogress' }])
+    const allpreds = await getAllMypreds()
+
+    return allpreds.filter((item) => {
+        return item.status == 'Inprogress'
+    })
+
+    // return getAllMypreds([{ key: 'status', operator: '==', value: 'Inprogress' }])
 }
 
 export async function verifyAccessID(accessId: string) {
@@ -223,9 +241,11 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
             }
 
             await firestoreUpdateDoc('expert/' + pred.ownerId + '/preds/' + pred.id, payload)
-            if (expertInfo.expertType == 'rank') {
-                await firestoreUpdateDoc('rankPred/' + pred.id, payload)
-            }
+            await databaseUpdateDoc('expert/' + pred.ownerId + '/preds/' + pred.id, payload)
+
+            // if (expertInfo.expertType == 'rank') {
+            //     await firestoreUpdateDoc('rankPred/' + pred.id, payload)
+            // }
 
             // notify  user 
 
@@ -237,19 +257,6 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
             }
 
             await notifyObserverOfExpert(noti, expertInfo)
-
-            // let notifiedUsersIds: string[] = []
-
-            // if (expertInfo.expertType == 'rank') {
-            //     notifiedUsersIds = (await firestoreQueryCollection<User>('user', [{ key: 'rankExpire', operator: '>=', value: toDay }], userAdminConverter)).map((item) => item.uid)
-            // } else {
-            //     notifiedUsersIds = expertInfo.follower.filter((item) => { item.endDate > Date.now() }).map((item) => item.uid)
-            // }
-
-            // for (const userID of notifiedUsersIds) {
-            //     await sendNotificationToUser(userID, noti)
-            // }
-
 
         }
     }
@@ -273,64 +280,64 @@ export async function persistUserInfo(payload: string | undefined) {
 
 }
 
-const key = "keyaaa"
-export async function encrypt(text: string) {
+// const key = "keyaaa"
+// export async function encrypt(text: string) {
 
-    const keyUtf8 = new TextEncoder().encode(key)
-    const keyHash = await crypto.subtle.digest('SHA-256', keyUtf8)
-
-
-    const iv = crypto.getRandomValues(new Uint8Array(12))
-    const alg = { name: 'AES-GCM', iv: iv }
-
-    const encrpytKey = await crypto.subtle.importKey('raw', keyHash, alg, false, [
-        'encrypt',
-    ])
-
-    const textUtf8 = new TextEncoder().encode(text)
-    const encrypted = await crypto.subtle.encrypt(alg, encrpytKey, textUtf8)
-    // const encryptedText = new TextDecoder('utf-8').decode(encrypted)
-    const encryptedText = ab2str(encrypted)
-    const b64 = btoa(encryptedText)
-    // console.log('hoang beo encrypt ' + encryptedText + ' base64 : ' + b64)
-    const ivHex = Array.from(iv).map(b => ('00' + b.toString(16)).slice(-2)).join('')
-    console.log('iv Hex ' + ivHex)
-    const payload = ivHex + b64
-    console.log('did encrypt userInfo ' + payload)
-    return payload
-
-}
-
-function ab2str(buf: ArrayBuffer) {
-
-    const uintArr = new Uint8Array(buf);
-    return String.fromCharCode.apply(null, Array.from(uintArr));
-}
-
-export async function decrypt(enText: string) {
-    // console.log('enText ' + enText)
-
-    const iv = enText.slice(0, 24)!.match(/.{2}/g)!.map(byte => parseInt(byte, 16))
-
-    // console.log('vi extracted from payload ' + iv)
-    const alg = { name: 'AES-GCM', iv: new Uint8Array(iv) }
-    const keyUtf8 = new TextEncoder().encode(key)
-    const keyHash = await crypto.subtle.digest('SHA-256', keyUtf8)
-    const decryptKey = await crypto.subtle.importKey('raw', keyHash, alg, false, ['decrypt'])
-
-    const bodycontent = atob(enText.slice(24))
-    // console.log('body content extracted from payload ' + bodycontent)
-    const bodyasArrayNumber = new Uint8Array(bodycontent.match(/[\s\S]/g)!.map(ch => ch.charCodeAt(0)))
-    // begin to decrupt
+//     const keyUtf8 = new TextEncoder().encode(key)
+//     const keyHash = await crypto.subtle.digest('SHA-256', keyUtf8)
 
 
-    // const enTextUtf8 = new TextEncoder().encode(enText)
-    const textBuffer = await crypto.subtle.decrypt(alg, decryptKey, bodyasArrayNumber)
-    const decryptedText = new TextDecoder().decode(textBuffer)
-    console.log('did decrypt userInfo ' + decryptedText)
-    return decryptedText
+//     const iv = crypto.getRandomValues(new Uint8Array(12))
+//     const alg = { name: 'AES-GCM', iv: iv }
 
-}
+//     const encrpytKey = await crypto.subtle.importKey('raw', keyHash, alg, false, [
+//         'encrypt',
+//     ])
+
+//     const textUtf8 = new TextEncoder().encode(text)
+//     const encrypted = await crypto.subtle.encrypt(alg, encrpytKey, textUtf8)
+//     // const encryptedText = new TextDecoder('utf-8').decode(encrypted)
+//     const encryptedText = ab2str(encrypted)
+//     const b64 = btoa(encryptedText)
+//     // console.log('hoang beo encrypt ' + encryptedText + ' base64 : ' + b64)
+//     const ivHex = Array.from(iv).map(b => ('00' + b.toString(16)).slice(-2)).join('')
+//     console.log('iv Hex ' + ivHex)
+//     const payload = ivHex + b64
+//     console.log('did encrypt userInfo ' + payload)
+//     return payload
+
+// }
+
+// function ab2str(buf: ArrayBuffer) {
+
+//     const uintArr = new Uint8Array(buf);
+//     return String.fromCharCode.apply(null, Array.from(uintArr));
+// }
+
+// export async function decrypt(enText: string) {
+//     // console.log('enText ' + enText)
+
+//     const iv = enText.slice(0, 24)!.match(/.{2}/g)!.map(byte => parseInt(byte, 16))
+
+//     // console.log('vi extracted from payload ' + iv)
+//     const alg = { name: 'AES-GCM', iv: new Uint8Array(iv) }
+//     const keyUtf8 = new TextEncoder().encode(key)
+//     const keyHash = await crypto.subtle.digest('SHA-256', keyUtf8)
+//     const decryptKey = await crypto.subtle.importKey('raw', keyHash, alg, false, ['decrypt'])
+
+//     const bodycontent = atob(enText.slice(24))
+//     // console.log('body content extracted from payload ' + bodycontent)
+//     const bodyasArrayNumber = new Uint8Array(bodycontent.match(/[\s\S]/g)!.map(ch => ch.charCodeAt(0)))
+//     // begin to decrupt
+
+
+//     // const enTextUtf8 = new TextEncoder().encode(enText)
+//     const textBuffer = await crypto.subtle.decrypt(alg, decryptKey, bodyasArrayNumber)
+//     const decryptedText = new TextDecoder().decode(textBuffer)
+//     console.log('did decrypt userInfo ' + decryptedText)
+//     return decryptedText
+
+// }
 
 export async function getUIDfromRefID(refID: string) {
     const result = await firestoreQueryCollection('user', [{ key: 'accessId', operator: '==', value: refID }], userAdminConverter)
@@ -396,12 +403,6 @@ export async function getRankingInfo() {
 
     return { weekly, monthly, quarter, yearly }
 }
-
-//   export async function getMyTransHistory() {
-// wip.....
-//     const myInfo = await getUserInfoFromSession()
-//   }
-
 
 
 export async function joinRankUser(perm: boolean) {
@@ -471,6 +472,7 @@ export async function joinRankUser(perm: boolean) {
     console.log(' subRank ' + JSON.stringify(subRank))
 
     const newSubRef = await firestoreAddNewModal<Subscription>('subscription', subRank, subscriptionAdminConverter)
+    await databaseSetDoc('subscription/' + newSubRef.id , subRank)
 
     await setClaim(userInfo.uid, {rankExpire: endDateSubWithPerm(perm)})
 
@@ -483,6 +485,8 @@ export async function joinRankUser(perm: boolean) {
 
     await firestoreUpdateDoc('user/' + userInfo.uid, { following: FieldValue.arrayUnion(subInfo) })
     await firestoreSetDoc('user/' + userInfo.uid + '/subHistory/' + newSubRef.id, subInfo)
+
+    await databaseSetDoc('user/' + userInfo.uid + '/following/' + newSubRef.id, subInfo)
 
     // notify user
 
@@ -573,8 +577,12 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
         })
     }
 
+    const myFollowingData = await databaseGetDoc('user/' + user.uid + '/following')
+    const myFollowing = arrayFromData<Subscription>(myFollowingData)
+    const existingSub = myFollowing.filter((item) => { return item.endDate >= Date.now()})
 
-    const existingSub = await firestoreQueryCollection('subscription', [{ key: 'eid', operator: '==', value: eid }, { key: 'uid', operator: '==', value: user.uid }, { key: 'endDate', operator: '>=', value: Date.now() }], subscriptionAdminConverter)
+
+    // const existingSub = await firestoreQueryCollection('subscription', [{ key: 'eid', operator: '==', value: eid }, { key: 'uid', operator: '==', value: user.uid }, { key: 'endDate', operator: '>=', value: Date.now() }], subscriptionAdminConverter)
     if (existingSub.length > 0) {
         return Promise.resolve({
             success: false,
@@ -651,6 +659,7 @@ export async function subcribleToAnExpert(eid: string, perm: boolean) {
         await databaseUpdateDoc('user/' + userInfo.uid + '/following/' + subInfo.id, newSub)
 
         await databaseUpdateDoc('user/' + expertToSub.id + '/follower/' + subInfo.id, newSub)
+        await databaseUpdateDoc('expert/' + expertToSub.id + '/follower/' + subInfo.id, newSub)
 
 
         await firestoreUpdateDoc('user/' + userInfo.uid, { following: FieldValue.arrayUnion(subInfo) })
@@ -760,26 +769,26 @@ export async function getRankData() {
 
 }
 
-export async function getMyTransHistory() {
+// export async function getMyTransHistory() {
 
-    const userInfo = await getUserInfoFromSession()
+//     const userInfo = await getUserInfoFromSession()
 
-    // const user = await getCurrentUser()
-    if (userInfo && userInfo.uid) {
-        console.log('path ' + 'user/' + userInfo.uid + '/trans')
-        const result = await firestoreQueryCollection('user/' + userInfo.uid + '/trans', [], tranAdminConverter)
-        console.log('result 3333' + JSON.stringify(result))
-        // let q = collection(db, 'user/' + uid + '/trans').withConverter(transConverter)
-        // const querySnapshot = await getDocs(q)
-        // const array =  querySnapshot.docs.map((doc) => doc.data())
-        result.sort((a, b) => { return a.date - b.date })
-        return result
-    } else {
-        console.log('not usr')
-        return []
-    }
+//     // const user = await getCurrentUser()
+//     if (userInfo && userInfo.uid) {
+//         console.log('path ' + 'user/' + userInfo.uid + '/trans')
+//         const result = await firestoreQueryCollection('user/' + userInfo.uid + '/trans', [], tranAdminConverter)
+//         console.log('result 3333' + JSON.stringify(result))
+//         // let q = collection(db, 'user/' + uid + '/trans').withConverter(transConverter)
+//         // const querySnapshot = await getDocs(q)
+//         // const array =  querySnapshot.docs.map((doc) => doc.data())
+//         result.sort((a, b) => { return a.date - b.date })
+//         return result
+//     } else {
+//         console.log('not usr')
+//         return []
+//     }
 
-}
+// }
 
 export async function getFollowExpertByIDList(idList: string[]) {
     var result: Expert[] = []
@@ -790,7 +799,6 @@ export async function getFollowExpertByIDList(idList: string[]) {
             result.push(info)
         }
     }
-
     
     return result
 }
@@ -827,7 +835,8 @@ export async function serverAddANewPred(pred: Prediction, expertInfo: Expert) {
 
 
     const result = await firestoreAddNewModal<Prediction>('expert/' + expertInfo.id + '/preds', pred, predAdminConverter)
-    const resultDB = await databaseSetDoc('user/' + expertInfo.id + '/preds/' + result.id, pred)
+
+    await databaseSetDoc('expert/' + expertInfo.id + '/preds/' + result.id, pred)
 
 
     if (result) {
@@ -1069,12 +1078,12 @@ export async function serverAddANewTransaction(tran: Transaction) {
 }
 
 export async function banExpert(docId: string) {
-    await firestoreUpdateDoc('expert/' + docId, { status: ExpertStatus.banned })
+    await serverUpdateExpertInfo(docId, { status: ExpertStatus.banned })
 }
 
 
 export async function activateExpert(docId: string) {
-    await firestoreUpdateDoc('expert/' + docId, { status: ExpertStatus.activated })
+    await serverUpdateExpertInfo(docId, { status: ExpertStatus.banned })
 }
 
 
@@ -1092,8 +1101,9 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
     }
     const getDonePredOnly = !(user && didFollow(user, expert) || (user && user.uid == expert.id))
     console.log('getDonePredOnly ' + getDonePredOnly + '  user ' + user)
-    let response = await firestoreQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
-    let allPreds: Prediction[] = response// JSON.parse(response)
+    // let response = await firestoreQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
+    let response = await databaseGetDoc('expert/' + expert.id + '/preds')
+    let allPreds: Prediction[] = arrayFromData<Prediction>(response)// JSON.parse(response)
     const inProgressPreds = allPreds.filter((item) => { return item.status == 'Inprogress' })
     const donePreds = allPreds.filter((item) => { return item.status != 'Inprogress' }).sort((a, b) => { return (b.dateIn - a.dateIn) })
     const result = {
@@ -1130,7 +1140,7 @@ export async function serverMarkPredCutLoss(pred: Prediction) {
     }
     await firestoreUpdateDoc(path, payload)
 
-    await databaseUpdateDoc('user/' + pred.ownerId + '/preds/' + pred.id, payload)
+    await databaseUpdateDoc(path, payload)
 
     // notify user
     const expertInfo = await firestoreGetModal('expert/' + pred.ownerId, expertAdminConverter)
@@ -1162,7 +1172,7 @@ export async function serverMarkPredExpired(pred: Prediction, priceRelease: numb
     }
 
     await firestoreUpdateDoc(path, payload)
-    await databaseUpdateDoc('user/' + pred.ownerId + '/preds/' + pred.id, payload)
+    await databaseUpdateDoc(path, payload)
 
 
     // notify user
@@ -1196,7 +1206,7 @@ export async function serverMarkPredWin(pred: Prediction) {
     }
 
     await firestoreUpdateDoc(path, payload)
-    await databaseUpdateDoc('user/' + pred.ownerId + '/preds/' + pred.id, payload)
+    await databaseUpdateDoc(path, payload)
 
     // notify user
     const expertInfo = await firestoreGetModal('expert/' + pred.ownerId, expertAdminConverter)
@@ -1238,14 +1248,16 @@ async function notifyObserverOfExpert(noti: UserNoti, expertInfo: Expert) {
 }
 
 export async function serverMarkExpertExpired(eid: string) {
-    await firestoreUpdateDoc('expert/' + eid, { status: ExpertStatus.expired })
+    await serverUpdateExpertInfo(eid,{ status: ExpertStatus.expired } )
 }
 
 export async function serverInsertNewExpert(expert: Expert, uid: string) {
     await firestoreSetDoc('expert/' + uid, expertAdminConverter.toFirestore(expert)) // create expert record
+    await databaseSetDoc('expert/' + uid, expert)
 }
 export async function serverUpdateExpertInfo(eid: string, data: {}) {
     await firestoreUpdateDoc('expert/' + eid, data)
+    await databaseUpdateDoc('expert/' + eid, data)
 }
 
 export async function serverUpdateUserInfo(eid: string, data: {}) {

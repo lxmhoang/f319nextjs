@@ -68,10 +68,11 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
     const expertType = formData.get('expertType')
     const expertPeriod = formData.get('expertPeriod')
     const newshortIntro = formData.get('shortIntro')
+    const phoneNumber = Number(formData.get('phoneNumber'))
     const newmonthlyPrice = Number(formData.get('monthlyPrice'))
     const newPermPrice = Number(formData.get('permPrice'))
 
-    console.log(' ================ editExpert formData ' + uid + newName + expertType + expertPeriod + newshortIntro + newmonthlyPrice + newPermPrice)
+    console.log(' ================ editExpert formData ' + uid + newName  + phoneNumber + expertType + expertPeriod + newshortIntro + newmonthlyPrice + newPermPrice)
     // return {
     //     errors: {
     //         'expertType': 'chưa chọn loại tài khoản chuyên gia'
@@ -177,7 +178,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
                 id: '',
                 name: newName as string,
                 shortIntro: newshortIntro as string,
-
+                phoneNumber: phoneNumber.toString(),
                 monthlyPrice: newmonthlyPrice,
                 permPrice: newPermPrice,
 
@@ -197,6 +198,7 @@ export async function editExpert(fileWrapper: FormData | undefined, currentAvata
                 id: '',
                 name: newName as string,
                 shortIntro: newshortIntro as string,
+                phoneNumber: phoneNumber.toString(),
 
                 follower: [],
                 expertPeriod: expertPeriod,

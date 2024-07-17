@@ -1,15 +1,12 @@
 "use client"
 
 
-import Cookies from "js-cookie";
 import React, { createContext, useContext, useEffect, useState } from "react";
-import { auth, db, rtDB } from "../firebase/firebase";
+import { auth, rtDB } from "../firebase/firebase";
 import { User as FireBaseUser, getAuth } from "firebase/auth";
-import { doc, onSnapshot, setDoc } from "firebase/firestore";
-import { User, userConverter, userRTDBConverter } from "@/app/model/user";
-import { decrypt , encrypt, persistUserInfo} from "../server";
+import { User, userRTDBConverter } from "@/app/model/user";
+import { persistUserInfo} from "../server";
 import { onValue, ref } from "firebase/database";
-import { UserNoti } from "@/app/model/noti";
 
 
 const AppContext = createContext<{ user: User | undefined, firebaseUser: FireBaseUser | null | undefined }>({ user: undefined, firebaseUser: null });

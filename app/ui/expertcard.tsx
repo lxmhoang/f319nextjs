@@ -25,7 +25,7 @@ export default function ExpertCard({ expertInfo }: { expertInfo: string }) {
             <CardBody>
               <div className="block">
                 <div className="text-small">
-                  {expert.expertType == 'solo' &&  <p>{expert.follower.length} follower</p>}
+                  {expert.expertType == 'solo' && expert.follower &&  <p>{expert.follower.length} follower</p>}
                   {expert.expertType == 'rank' &&  (
                   <p>Ranking</p>
                   )}

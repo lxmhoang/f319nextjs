@@ -2,14 +2,18 @@
 
 import { useAppContext } from "@/app/lib/context"
 import { addComma, convert } from "@/app/lib/utils"
-import { Button, List } from "flowbite-react"
+import { List, TextInput } from "flowbite-react"
 import Image from "next/image";
 import { Clipboard } from "flowbite-react"
-import { Divider } from "@nextui-org/react";
+import { Button, Divider, Input } from "@nextui-org/react";
+import { updateProfilePhone } from "@/app/lib/server";
+import { useState } from "react";
 
 
 export default function MyProfileOverView({ domain }: { domain: string }) {
+
     const { user, firebaseUser } = useAppContext()
+    const [ inputPhoneNumber, setInputPhoneNumber] = useState<string>(user?.phoneNumber ?? "")
 
     if (user == undefined) {
         return (
@@ -25,8 +29,22 @@ export default function MyProfileOverView({ domain }: { domain: string }) {
             {/* {user.uid} */}
             <div>
 
-                <div>{user.displayName}</div>
-                <div>{user.email}</div>
+                <div className="mb-2">{user.displayName}</div>
+                <div className="mb-2">{user.email}</div>
+                <div className="mb-1">Số điện thoại</div>
+                <div className="mb-2 flex">
+                    <form className="flex" action={updateProfilePhone}>
+                    <TextInput 
+                    
+                    
+                    className="max-w-xs mr-3 dark:text-rose-400" type="number" name="phoneNumber"  onChange={(e) => {
+                        setInputPhoneNumber(e.target.value)
+
+                    }} defaultValue={user.phoneNumber ?? ""} />
+                    {inputPhoneNumber != user.phoneNumber && <Button color="success" type="submit">Cập nhật</Button>}
+                    </form>
+
+                </div>
 
                 {firebaseUser && firebaseUser.photoURL && <div><Image className="rounded-full w-[160px] h-[160px] mt-4 mb-4" width={100} height={100} src={firebaseUser.photoURL} priority={true} alt={""}
                 /></div>}
@@ -70,24 +88,6 @@ export default function MyProfileOverView({ domain }: { domain: string }) {
                         <p>20% gói theo dõi chuyên gia rank</p>
                     </div>
                 </div>
-
-
-                <div className="">
-                    {/* <p className="text-2xl mb-4 mt-2">{url}</p> */}
-                    {/* <input
-          id="npm-install"
-          type="text"
-          className="col-span-6 block w-full rounded-lg border border-gray-300 bg-gray-50 px-2.5 py-4 text-sm text-gray-500 focus:border-blue-500 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400 dark:placeholder:text-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500"
-          value={url}
-          disabled
-          readOnly
-        /> */}
-                    {/* <Clipboard.WithIconText valueToCopy="npm install flowbite-react" /> */}
-                    {/* <Button onClick={() => {
-                        navigator.clipboard.writeText(url)
-                    }}>Copy URL</Button> */}
-                </div>
-
             </div>
 
         </div>
