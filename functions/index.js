@@ -86,32 +86,32 @@ initializeApp();
 
 
 
-  exports.updateTransaction = onDocumentUpdated({document: "transaction/{documentId}", region: 'asia-southeast1'}, (event) => {
+//   exports.updateTransaction = onDocumentUpdated({document: "transaction/{documentId}", region: 'asia-southeast1'}, (event) => {
 
-    const after = event.data.after.data();
-    const before = event.data.before.data();
-    const type = before.tranType
-    logger.log("a transaction updated", event.params.documentId);
-    const toUid = after.toUid
-    const fromUid = after.fromUid
-    if (!(toUid && fromUid)) {
+//     const after = event.data.after.data();
+//     const before = event.data.before.data();
+//     const type = before.tranType
+//     logger.log("a transaction updated", event.params.documentId);
+//     const toUid = after.toUid
+//     const fromUid = after.fromUid
+//     if (!(toUid && fromUid)) {
 
-         logger.log("khong co from hoac to UID", after);
-        return
-    }
+//          logger.log("khong co from hoac to UID", after);
+//         return
+//     }
 
-    if (type != TranType.withDraw) {
-        logger.log("Sth wrong, only update deposit type");
-       return
-    }
+//     if (type != TranType.withDraw) {
+//         logger.log("Sth wrong, only update deposit type");
+//        return
+//     }
     
-    // if (after.status == 'done' && before.status == 'pending') {
+//     // if (after.status == 'done' && before.status == 'pending') {
 
-        logger.log("update status from pending to done" + event.params.documentId);
-        getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).update(after)
-        getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).update(after)
-    // }
-});
+//         logger.log("update status from pending to done" + event.params.documentId);
+//         getFirestore().collection('user/' + toUid + '/trans').doc(event.params.documentId).update(after)
+//         getFirestore().collection('user/' + fromUid + '/trans').doc(event.params.documentId).update(after)
+//     // }
+// });
 
 // exports.createTransaction = onDocumentCreated({document: "transaction/{documentId}", region: 'asia-southeast1'}, async (event) => {
 

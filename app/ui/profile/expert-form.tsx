@@ -197,6 +197,10 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
         redirect('/')
     }
 
+    if (!expert && user && user.isExpert) {
+        router.replace('/advisor')
+    }
+
     return (
         <div className="p-4">
             {firebaseUser === undefined  ? <>Loading</>

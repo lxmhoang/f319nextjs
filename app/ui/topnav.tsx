@@ -105,7 +105,7 @@ export default function TopNav() {
    })
 
   const notifyItem: MenuDropDownItem[] = displayNoti.map((item, index) => {
-    console.log('urlpath ' + item.urlPath)
+    // console.log('urlpath ' + item.urlPath)
     // const pathName = item.urlPath?.split('#')[0] ?? ""
     // const hash = item.urlPath?.split('#')[1]
     return {
@@ -217,7 +217,7 @@ export default function TopNav() {
       />
 
       <DarkThemeToggle className="sm:hidden" />
-      <NavbarMenu>
+      {/* <NavbarMenu>
 
         {dropDownInfo.map((item, index) => {
           if (item.key == 'divider') {
@@ -227,7 +227,8 @@ export default function TopNav() {
 
           return (
             <NavbarMenuItem key={`${item}-${index}`} onClick={(e) => {
-              e.preventDefault()
+            
+              // e.preventDefault()
               if (item.activated) {
                 if (item.key == 'signin') {
                   login()
@@ -266,7 +267,7 @@ export default function TopNav() {
             </NavbarMenuItem>
           )
         })}
-      </NavbarMenu>
+      </NavbarMenu> */}
       <NavbarBrand className="">
       </NavbarBrand>
 
@@ -285,7 +286,8 @@ export default function TopNav() {
               return (
                 <NavbarItem className="hidden sm:flex" key={`${item}-${index}`} onClick={(e) => {
                   // console.log('eeee')
-                  e.preventDefault()
+                  console.log('clicked with key ' + JSON.stringify(item))
+                  // e.preventDefault()
                   if (item.activated) {
                     if (item.key == 'signin') {
                       login()
