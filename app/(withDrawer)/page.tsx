@@ -7,21 +7,31 @@ import { Link } from "@nextui-org/react";
 import { serverGetStat } from "../lib/server";
 import BoardNotificationView from "../ui/boardNotiView";
 import QuickIntro from "../ui/quickIntro";
+import { getPivotDates } from "../lib/statistic";
 
 
 // const spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0"
-const cacheTime = 1
+const cacheTime = 300
 
 export default async function Home() {
 
 
-  // const testRank = await getRankData()
+  // const { pivotWeek, pivotMonth, pivotQuarter, pivotYear, weekEnd, monthEnd, quarterEnd, yearEnd } = await getPivotDates(new Date())
   const stats = await unstable_cache(async () => serverGetStat(), ['getStatsOnHomePage'], { revalidate: cacheTime })()
   const rankData = stats.rankData
 
   return (
     <>
-    {/* {JSON.stringify(testRank)} */}
+    {/* {JSON.stringify(pivotWeek.toLocaleString('vi'))}
+    {JSON.stringify(weekEnd.toLocaleString('vi'))}
+    {JSON.stringify(pivotMonth.toLocaleString('vi'))}
+    {JSON.stringify(monthEnd.toLocaleString('vi'))}
+    {JSON.stringify(pivotQuarter.toLocaleString('vi'))}
+    {JSON.stringify(quarterEnd.toLocaleString('vi'))}
+    {JSON.stringify(pivotYear.toLocaleString('vi'))}
+    {JSON.stringify(yearEnd.toLocaleString('vi'))} */}
+    {/* {JSON.stringify(rankData)} */}
+
       <BoardNotificationView />
       <div className="sm:flex sm:p-6 sm:gap-8 sm:justify-start sm:ml-24">
 

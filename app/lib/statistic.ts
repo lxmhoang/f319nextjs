@@ -7,7 +7,7 @@ export function getPivotDates(date: Date | undefined) {
 
     var weekEnd = new Date(pivotWeek)
     weekEnd.setDate(pivotWeek.getDate() + 7)
-    weekEnd.setUTCHours(16, 55, 0, 0)
+    weekEnd.setUTCHours(16, 59, 59, 0)
 
     var pivotMonth = new Date(d)
     pivotMonth.setDate(1)
@@ -15,7 +15,7 @@ export function getPivotDates(date: Date | undefined) {
 
     var monthEnd = new Date(pivotMonth)
     monthEnd.setMonth(pivotMonth.getMonth() + 1)
-    monthEnd.setUTCHours(16, 55, 0, 0)
+    monthEnd.setUTCHours(16, 59, 59, 0)
     // monthTo.setDate(0)
     // monthTo.setUTCHours(-7,0,0,0)
 
@@ -35,7 +35,7 @@ export function getPivotDates(date: Date | undefined) {
     var quarterEnd = new Date(pivotQuarter)
     quarterEnd.setMonth(firstMonth + 3)
     // quarterTo.setDate(0)
-    quarterEnd.setUTCHours(16, 55, 0, 0)
+    quarterEnd.setUTCHours(16, 59, 59, 0)
 
     var pivotYear = new Date(d)
     pivotYear.setDate(1)
@@ -46,7 +46,7 @@ export function getPivotDates(date: Date | undefined) {
     // yearTo.setDate(0)
     // yearTo.setMonth(0)
     yearEnd.setFullYear(pivotYear.getFullYear() + 1)
-    yearEnd.setUTCHours(16, 55, 0, 0)
+    yearEnd.setUTCHours(16, 59, 59, 0)
     // yearTo.setUTCHours(-7,0,0,0)
 
     return { pivotWeek, pivotMonth, pivotQuarter, pivotYear, weekEnd, monthEnd, quarterEnd, yearEnd }

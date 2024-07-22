@@ -29,7 +29,7 @@ export default function DepositForm() {
       </p>
 
       <Blockquote className='mb-4'>
-        DEPOSIT {user.accessId.toUpperCase()}
+        f319nap {user.accessId}
       </Blockquote>
       
       Dựa theo số tiền chuyển khoản, bộ phận kế toán trực 24/7 sẽ cộng số tiền tương đương vào số dư tài khoản cho quý nhà đầu tư, mọi thắc mắc xin liên hệ <Link className='dark:text-cyan-500 text-violet-600' href = 'https://t.me/f319mod'> t.me/f319mod</Link> 
