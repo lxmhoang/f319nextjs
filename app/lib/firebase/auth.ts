@@ -53,6 +53,7 @@ async function doSomeThingIfNewUser(userCreds: UserCredential, refID: string | n
     if (name) {
       data.displayName = name
     }
+    data.joinDate = Date.now()
     await serverAddUser(JSON.stringify(data))
     console.log(' did add new user to db ')
   }

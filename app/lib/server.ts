@@ -174,7 +174,8 @@ export async function serverAddUser(payload: string) {
     const noti: UserNoti = {
         title: "Welcome",
         dateTime: Date.now(),
-        content: "Chào mừng quý nhà đầu tư "
+        content: "Chào mừng quý nhà đầu tư ",
+        urlPath : '/intro'
     }
     await sendNotificationToUser(user.uid, noti)
 

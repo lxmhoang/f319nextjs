@@ -36,6 +36,7 @@ export type User = {
     expertType?: string,
     expertExpire?: number,
     isExpert?: boolean,
+    joinDate: number,
 
     rankExpire?: number,
     joinRank: boolean,
@@ -58,6 +59,7 @@ export const userConverter: FirestoreDataConverter<User> = {
             transaction: [],
             follower: user.follower,
             following: user.following,
+            joinDate: user.joinDate
         }
         return data
     },
@@ -95,7 +97,8 @@ export const userConverter: FirestoreDataConverter<User> = {
             rankExpire: data.rankExpire,
             notifies:  data.notifies ?? [],
             transaction: [],
-            follower: data.follower ?? []
+            follower: data.follower ?? [],
+            joinDate: data.joinDate,
         };
         return user
     },
@@ -133,6 +136,7 @@ export const userRTDBConverter = {
                 return b.date - a.date})  ,
             follower: arrayFromData<Subscription>(data.follower) ,
             following: arrayFromData<Subscription>(data.following) ,
+            joinDate: data.joinDate,
         };
         return user
 
@@ -155,7 +159,8 @@ export const userRTDBConverter = {
             expertType: user.expertType,
             phoneNumber: user.phoneNumber,
             refID: user.refID,
-            notifies: dataFromArray<UserNoti>(user.notifies)
+            notifies: dataFromArray<UserNoti>(user.notifies),
+            joinDate: user.joinDate
         }
 
         Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
@@ -185,6 +190,7 @@ export const userAdminConverter: AdminFirestoreDataConverter<User> = {
             notifies: user.notifies ?? [],
             following: user.following ?? [],
             follower: user.follower ?? [],
+            joinDate: user.joinDate
         }
         Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
         return obj;
@@ -221,7 +227,8 @@ export const userAdminConverter: AdminFirestoreDataConverter<User> = {
             rankExpire: data.rankExpert,
             follower: data.follower,
             notifies: data.notifies,
-            transaction: []
+            transaction: [],
+            joinDate: data.joinDate,
         };
     },
 };
@@ -246,7 +253,8 @@ export const userRawConverter: AdminFirestoreDataConverter<any> = {
             phoneNumber: user.phoneNumber,
             refID: user.refID,
             notifies: user.notifies,
-            transaction: []
+            transaction: [],
+            joinDate: user.joinDate,
         }
         Object.keys(obj).forEach(key => obj[key] === undefined && delete obj[key])
         return obj;
