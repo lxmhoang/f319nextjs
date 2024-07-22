@@ -803,11 +803,11 @@ export async function serverCount(name: string) {
 
 export async function serverUpdateStats(data: {}) {
 
-    // await firestoreSetDoc('stats/' + Date.now(), data)
+    await firestoreSetDoc('stats/' + Date.now(), data)
     await firestoreSetDoc('stats/latest', data, true)
 
-    // await databaseSetDoc('stats/' + Date.now(), data)
-    await databaseUpdateDoc('stats/latest', data)
+    await databaseSetDoc('stats/' + Date.now(), data)
+    await databaseSetDoc('stats/latest', data)
 }
 
 export async function serverGetAllInprogressPred() {

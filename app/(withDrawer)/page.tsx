@@ -1,14 +1,12 @@
 
 import StatsCard from "../ui/statsCard";
 import { unstable_cache } from "next/cache";
-import { contentOf, convert } from "../lib/utils";
+import { convert } from "../lib/utils";
 import RankView from "../ui/rankView";
-import { UserNoti } from "../model/noti";
-import { Divider, Link } from "@nextui-org/react";
-import { getRankData, serverGetStat } from "../lib/server";
+import { Link } from "@nextui-org/react";
+import { serverGetStat } from "../lib/server";
 import BoardNotificationView from "../ui/boardNotiView";
 import QuickIntro from "../ui/quickIntro";
-import { getNextMonthMileStone, getNextQuarterMileStone, getNextWeekMileStone, getNextYearMileStone, getPivotDates } from "../lib/statistic";
 
 
 // const spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0"
