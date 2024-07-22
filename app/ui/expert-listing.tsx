@@ -105,7 +105,7 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
          }}> Mua gói tài trợ rank để theo dõi tất cả chuyên gia rank </Button>}
        </div>
       {/* <ToggleSwitch className="ml-4 mb-4" checked={toggleRank} label={toggleRank ? "Ẩn" : "Xem"} onChange={setToggleRank} /> */}
-      {(true && soloExpert.length > 0) && (<div className="flex flex-wrap mb-4">
+      {(true && rankExperts.length > 0) && (<div className="flex flex-wrap mb-4">
         {rankExperts.map(
           (expert, index) => {
             return <div key={index}>
