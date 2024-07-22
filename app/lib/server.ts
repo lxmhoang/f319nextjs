@@ -752,21 +752,15 @@ export async function getRankData() {
     nextMS = getNextYearMileStone().toString()
     rewardTotal = await databaseGetDoc('reward/year/' + nextMS + '/amount' ) ?? 0//rewardInfo.week["nextWeekMS"].amount
     const yearlyReward = Math.round(rewardTotal / numOfWinner)
-    // const weeklyReward = Number(process.env.RANK_WEEK_REWARD) / numOfWinner
 
-
-
-    // const monthlyReward = Number(process.env.RANK_MONTH_REWARD) / numOfWinner
-    // const quarterlyReward = Number(process.env.RANK_QUARTER_REWARD) / numOfWinner
-    // const yearlyReward = Number(process.env.RANK_YEAR_REWARD)
     const rankData: BoardProps[] = [
         { title: 'Top Tuần', since: weekDate, to: weekTo, perPax: Math.round(weeklyReward), rewards: [], data: weekly },
         { title: 'Top Tháng', since: monthDate, to: monthTo, perPax: Math.round(monthlyReward), rewards: [], data: monthly },
         { title: 'Top Quý', since: quarterDate, to: quarterTo, perPax: Math.round(quarterlyReward), rewards: [], data: quarter },
         { title: 'Top Năm', since: yearDate, to: yearTo, perPax: Math.round(yearlyReward), rewards: [], data: yearly }
     ]
+    
     return rankData
-
 }
 
 // export async function getMyTransHistory() {
@@ -799,7 +793,7 @@ export async function getFollowExpertByIDList(idList: string[]) {
             result.push(info)
         }
     }
-    
+
     return result
 }
 

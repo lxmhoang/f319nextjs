@@ -67,25 +67,28 @@ export default function TopNav() {
   const pathname = usePathname() ?? ""
 
   const expertBarMenuList = [
-    { key: "home", href: "/", label: "Home", activated: true, highlighted: pathname === '/' },
+    { key: "home", href: "/", label: "Trang chủ", activated: true },
     { key: "expert", href: "/expert", label: "Chuyên gia", activated: true },
     { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: true },
-    { key: "myexpert", href: "/advisor", label: "Hồ sơ chuyên gia của tôi", activated: true },
+    { key: "myexpert", href: "/advisor", label: "Hồ sơ chuyên gia", activated: true },
+    { key: "intro", href: "/intro", label: "Cách vận hành", activated: true },
   ]
 
   const userBarMenuList = [
-    { key: "home", href: "/", label: "Home", activated: true },
+    { key: "home", href: "/", label: "Trang chủ", activated: true },
     { key: "expert", href: "/expert", label: "Chuyên gia", activated: true },
     { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: true },
-    { key: "regexpert", href: "/register", label: "Đăng ký chuyên gia", activated: true },
+    { key: "regexpert", href: "/register", label: "Trở thành chuyên gia", activated: true },
+    { key: "intro", href: "/intro", label: "Cách vận hành", activated: true },
   ]
 
   const guessBarMenuList =
     [
-      { key: "home", href: "/", label: "Home", activated: true },
+      { key: "home", href: "/", label: "Trang chủ", activated: true },
       { key: "expert", href: "/expert", label: "Chuyên gia", activated: true },
       { key: "myprofile", href: "/profile", label: "Hồ sơ của tôi", activated: false },
-      { key: "login", href: "/login", label: "Login", activated: true },
+      // { key: "login", href: "/login", label: "Login", activated: true },
+      { key: "intro", href: "/intro", label: "Cách vận hành", activated: true },
     ]
 
 
@@ -105,11 +108,7 @@ export default function TopNav() {
    })
 
   const notifyItem: MenuDropDownItem[] = displayNoti.map((item, index) => {
-    // console.log('urlpath ' + item.urlPath)
-    // const pathName = item.urlPath?.split('#')[0] ?? ""
-    // const hash = item.urlPath?.split('#')[1]
     return {
-      // pathName: pathName,
       type: 'notification',
       title: item.title,
       href: item.urlPath ?? "",
@@ -216,17 +215,17 @@ export default function TopNav() {
         className="w-[44px] h-[66px] sm:w-[66px] sm:h-[66px] sm:hidden"
       />
 
-      <DarkThemeToggle className="sm:hidden" />
-      {/* <NavbarMenu>
+      {/* <DarkThemeToggle className="sm:hidden" /> */}
+      { <NavbarMenu>
 
-        {dropDownInfo.map((item, index) => {
+        {barInfo.map((item, index) => {
           if (item.key == 'divider') {
             return (<Divider key={`${item}-${index}`} />)
           }
 
 
           return (
-            <NavbarMenuItem key={`${item}-${index}`} onClick={(e) => {
+            <NavbarMenuItem key={`${item.key}`} onClick={(e) => {
             
               // e.preventDefault()
               if (item.activated) {
@@ -257,18 +256,25 @@ export default function TopNav() {
                 className="w-full"
                 href={item.activated ? item.href ?? "" : ""}
               >
-                <p className={clsx({
-                  "text-white-600": item.activated == true,
-                  "text-gray-600": item.activated == false
-                })}>
-                  {item.title}
+                <p className='text-white-600'
+                
+                // {clsx({
+                //   "text-white-600": item.activated == true,
+                //   "text-gray-600": item.activated == false
+                // })}
+                >
+                  {item.label}
                 </p>
               </Link>
             </NavbarMenuItem>
           )
         })}
-      </NavbarMenu> */}
+      </NavbarMenu> }
+     
       <NavbarBrand className="">
+      <Link href={'/intro'}>
+        <p className=""> <span className="sm:ml-10 font-sans  dark:text-cyan-500 text-violet-600 text-md sm:text-2xl"> Cùng nhau thành công </span></p>
+      </Link>
       </NavbarBrand>
 
       {/* <NavbarContent className="hidden sm:flex gap-5" justify="start">
@@ -278,7 +284,7 @@ export default function TopNav() {
       {(firebaseUser === undefined) ? (<>Loading</>) :
         // (firebaseUser === null) ? (<>Null</>) : 
         (
-          <NavbarContent className=" sm:flex gap-4" justify="start">
+          <NavbarContent className=" sm:flex gap-4" justify="end">
             {barInfo.map((item, index) => {
               if (item.key == 'signout') {
                 return (<></>)
@@ -327,10 +333,10 @@ export default function TopNav() {
               )
             })}
 
-            <div className="profile">
+            <div className="">
               <MenuButton title={menuLabel} menuInfo={dropDownInfo} avatarURL={firebaseUser?.photoURL} />
             </div>
-            <DarkThemeToggle className="hidden sm:block" />
+            {/* <DarkThemeToggle className="" /> */}
 
           </NavbarContent>
         )

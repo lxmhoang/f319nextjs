@@ -6,8 +6,8 @@ import { Flowbite, ThemeModeScript } from "flowbite-react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Tư vấn ck",
-  description: "Tư vấn chứng khoán ",
+  title: "F319",
+  description: "Cùng nhau thành công",
 };
 
 export default function RootLayout({

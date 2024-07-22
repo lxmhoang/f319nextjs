@@ -99,7 +99,7 @@ export async function GET(request: Request) {
 
     message.push(' =======================================================    \n')
     message.push(' Theo quá trình trên, tiện tay đếm tổng số chuyên gia, số lượng sub ,tổng giá trị sub va rank Data   \n')
-    console.log('=======================================================')
+    message.push('=======================================================')
 
     const rankData = await getRankData()
 

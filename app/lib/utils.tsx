@@ -1,8 +1,11 @@
+import { List } from "flowbite-react";
 import { Expert } from "../model/expert";
 import { Prediction } from "../model/prediction";
 import { TranType } from "../model/transaction";
 import { User } from "../model/user";
 import { getTodayMatchedVolume } from "./getStockData";
+
+import clsx from 'clsx';
 
 export function convert(num: number) {
   let formatter = Intl.NumberFormat('en', { notation: 'compact' });
@@ -139,7 +142,7 @@ export const datesGreaterThan = (first: Date, second: Date) => {
   return first > second
 }
 
-export function arrayFromData<Type>(data:any) {
+export function arrayFromData<Type>(data: any) {
 
   console.log('data ' + JSON.stringify(data))
   if (!data) {
@@ -149,9 +152,9 @@ export function arrayFromData<Type>(data:any) {
   Object.keys(data).forEach((key: string) => {
     const childData = data[key]
     childData.id = key
-      const val = childData as Type
-     
-      array.push(val)
+    const val = childData as Type
+
+    array.push(val)
 
   });
 
@@ -162,20 +165,18 @@ export function arrayFromData<Type>(data:any) {
 interface IDwise {
   id?: string;
 }
- 
+
 
 export function dataFromArray<Type extends IDwise>(array: Type[]) {
 
-  let data : any = {}
-  for (const e  of array) {
-      if (e.id) {
-        const subE : Omit<Type, 'id'> = e
-        data[e.id] = subE
-      }
+  let data: any = {}
+  for (const e of array) {
+    if (e.id) {
+      const subE: Omit<Type, 'id'> = e
+      data[e.id] = subE
+    }
   }
 
   return data
 
 }
-
-export const tnc = (<p> ....  <br/> ....</p>)

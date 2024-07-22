@@ -37,17 +37,6 @@ export function emailSignUp(email: string, pass: string, name: string) {
   }
 };
 
-// export function getTapNotificationKeys() {
-
-//   let value = Cookies.get('tapNotificationKeys')
-//   if (value) {
-//     const currentKeys: string[] = JSON.parse(value)
-//     return currentKeys
-//   } else {
-//     return []
-//   }
-
-// }
 
 export function didTapNotificationWithKey(uid: string, key: string) {
   const notiRef :DatabaseReference = ref(rtDB, 'user/' + uid + '/notifies/' + key  )

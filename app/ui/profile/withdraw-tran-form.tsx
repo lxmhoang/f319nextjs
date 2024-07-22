@@ -12,6 +12,7 @@ import { TextInput } from 'flowbite-react';
 import { actionWithDraw } from '@/app/lib/actions/actionWithDraw';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { addComma } from '@/app/lib/utils';
 
 
 interface TransCreationProps {
@@ -63,7 +64,7 @@ export default function WithDrawTransCreationForm(Props: TransCreationProps) {
         </ModalContent>
       </Modal>
       {/* <div className='p-1'> */}
-        <p className='mb-8'>Số dư : {user.amount}</p>
+        <p className='mb-8'>Số dư : {addComma(user.amount)}</p>
       {/* </div> */}
 
       {/* <div>{ state.message.length == 0 ? "no error" : "cccc" + Object.keys(JSON.stringify(state.errors)).length}</div> */}

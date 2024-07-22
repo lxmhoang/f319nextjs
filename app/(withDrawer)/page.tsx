@@ -5,7 +5,7 @@ import { contentOf, convert } from "../lib/utils";
 import RankView from "../ui/rankView";
 import { UserNoti } from "../model/noti";
 import { Divider, Link } from "@nextui-org/react";
-import { serverGetStat } from "../lib/server";
+import { getRankData, serverGetStat } from "../lib/server";
 import BoardNotificationView from "../ui/boardNotiView";
 import QuickIntro from "../ui/quickIntro";
 import { getNextMonthMileStone, getNextQuarterMileStone, getNextWeekMileStone, getNextYearMileStone, getPivotDates } from "../lib/statistic";
@@ -16,11 +16,14 @@ const cacheTime = 1
 
 export default async function Home() {
 
+
+  // const testRank = await getRankData()
   const stats = await unstable_cache(async () => serverGetStat(), ['getStatsOnHomePage'], { revalidate: cacheTime })()
   const rankData = stats.rankData
 
   return (
     <>
+    {/* {JSON.stringify(testRank)} */}
       <BoardNotificationView />
       <div className="sm:flex sm:p-6 sm:gap-8 sm:justify-start sm:ml-24">
 

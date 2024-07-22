@@ -17,7 +17,7 @@ export default function ExpertHorView({ expertInfo }: { expertInfo: string }) {
       {/* {expert.avatar} */}
       <Link className="justify-center" href={{ pathname: `/expert/details/${expert.id}` }}>
         <div className="p-2 rounded-sm">
-          <Card className="w-full h-[200px] m-1 dark:bg-gray-500">
+          <Card className="w-full m-1 dark:bg-gray-500">
             <CardBody>
               <div className="flex flex-wrap gap-4" >
                 {/* className="grid grid-cols-6 md:grid-cols-12 gap-6 md:gap-4 items-center justify-center" */}
@@ -32,10 +32,10 @@ export default function ExpertHorView({ expertInfo }: { expertInfo: string }) {
                       <p> Loại chuyên gia </p>
                       <p> Ngày hết hạn </p>
                       {expert.expertType == 'solo' && (<p>{expert.follower.length} người theo dõi</p>)}
-                      {expert.expertType == 'rank' && expert.yearPerform && (<p>Hiệu quả theo năm</p>)}
-                      {expert.expertType == 'rank' && expert.quarterPerform && (<p>Hiệu quả theo quý</p>)}
-                      {expert.expertType == 'rank' && expert.monthPerform && (<p>Hiệu quả theo tháng</p>)}
-                      {expert.expertType == 'rank' && expert.weekPerform && (<p>Hiệu quả theo tuần</p>)}
+                      {expert.expertType == 'rank' && expert.yearPerform && (<p>Hiệu suất năm</p>)}
+                      {expert.expertType == 'rank' && expert.quarterPerform && (<p>Hiệu suất quý</p>)}
+                      {expert.expertType == 'rank' && expert.monthPerform && (<p>Hiệu suất tháng</p>)}
+                      {expert.expertType == 'rank' && expert.weekPerform && (<p>Hiệu suất tuần</p>)}
                     </div>
                     <div>
                       <p> {expert.name} </p>

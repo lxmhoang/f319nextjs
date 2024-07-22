@@ -18,12 +18,13 @@ import { Modal, ModalBody, ModalContent, ModalFooter, ModalHeader, Button as But
 import React from 'react';
 
 import { Expert } from '@/app/model/expert';
-import { addComma, compressFile, convert, tnc } from '@/app/lib/utils';
+import { addComma, compressFile, convert } from '@/app/lib/utils';
 import { Blockquote, Checkbox, Label, Radio, Spinner, TextInput } from 'flowbite-react';
 import { useAppContext } from '@/app/lib/context';
 import { redirect } from 'next/navigation';
 import { refreshToken } from '@/app/lib/client';
 import { PhoneIcon } from '@heroicons/react/16/solid';
+import { explainExpert, tncExpertType } from '../tnc/explain';
 
 export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undefined }) {
 
@@ -35,6 +36,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 
     const router = useRouter()
     const [showTNC, setShowTNC] = useState<boolean>(false)
+    const [showExpertTypeExplain, setShowExpertTypeExplain] = useState<boolean>(false)
     const [type, setType] = useState<"rank" | "solo" | undefined>()
     const [period, setPeriod] = useState<"perm" | "yearly" | undefined>()
     const [upgrade, setUpgrade] = useState<boolean>(false)
@@ -222,7 +224,11 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                         <Blockquote>
                             {expert ? "Cập nhật thông tin chuyên gia" : "Đăng ký chuyên gia"}
                         </Blockquote>
-                        <p className='mt-2 text-xs'> * Để tránh 1 số chuyên gia lôi kéo nhà đầu tư, thông tin đăng ký (ảnh, giới thiệu ngắn) <span className='text-rose-400 font-bold dark:text-amber-500'>không được</span> bao gồm thông tin cá nhân, sdt, group tele, zalo ... dưới mọi hình thức  </p>
+                        {/* <p className='mt-2 text-sm'>Một tài khoản người dùng được đăng ký 1 trong 2 loại chuyên gia là solo hoặc rank. Sau khi chọn rồi sẽ không thể thay đổi, tuy nhiên nếu muốn tham gia tư vấn cả 2 loại thì bạn chỉ cần tạo tài khoản người dùng mới và đăng ký loại chuyên gia thứ 2</p> */}
+                        <p className='mt-2 text-xs'>
+                        Không đưa thông tin có thể gợi ý liên lạc như số điện thoại, facebook ,zalo, telegram ... vào profile chuyên gia, tránh trường hợp lôi kéo người dùng sang nền tảng khác 
+                        </p>
+                        {/* <p className='mt-2 text-xs'> * Để tránh 1 số chuyên gia lôi kéo nhà đầu tư, thông tin đăng ký (ảnh, giới thiệu ngắn) <span className='text-rose-400 font-bold dark:text-amber-500'>không được</span> bao gồm thông tin cá nhân, sdt, group tele, zalo ... dưới mọi hình thức  </p> */}
                         {/* <p className='text-xs'>Để tránh việc 1 số chuyên gia sau khi có uy tín đã mời gọi nhà đầu tư sang các group zalo, telegram riêng không đảm bảo đồng nhất khuyến nghị, từ 01/07/2023, group chat của mỗi chuyên gia sẽ bị disable, thông tin chuyên gia sẽ không được gợi ý sđt, zalo, tele ... hay bất kỳ thông tin riêng dưới mọi hình thức </p> */}
                     </div>
                     <Divider />
@@ -335,8 +341,11 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                 <div className="mb-4 mt-8 max-w-md">
                                     {/* <Label className='text-lg' value={"Chi phí mở tài khoản " + process.env.NEXT_PUBLIC_EXPERT_REG_FEE} /> */}
                                     <fieldset className="flex max-w-md flex-col gap-4">
-                                        <legend className="mb-4">Chọn loại tài khoản <span className='text-rose-500'>*</span> </legend>
-                                        
+                                        <legend className="mb-4">Chọn loại chuyên gia <span className='text-rose-500'>*</span>    <span onClick={() => {
+                                        setShowExpertTypeExplain(true)
+                                        // alert('kkk')
+                                    }} className='text-cyan-500 ml-1 mr-1 text-xs'>Giải thích</span> </legend>
+                                     
                                         <div className="flex items-center gap-2">
                                             <Radio id="expertSoloType" name="expertType" defaultChecked={type == "solo"} value="solo" onChange={(e) => {
                                                 if (e.target.checked) {
@@ -505,7 +514,7 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                                         Tôi đã đọc và đồng ý với  <span onClick={() => {
                                         setShowTNC(true)
                                         // alert('kkk')
-                                    }} className='text-cyan-500 ml-1 mr-1'>điều khoản và điền kiện</span> của trang web
+                                    }} className='text-cyan-500 ml-1 mr-1'>điều khoản và điều kiện</span> của trang web
                                         
                                     </Label>
                                 </div>
@@ -536,14 +545,14 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 
 
       <Modal className='dark' isOpen={showTNC} onOpenChange={undefined}
-        scrollBehavior={"inside"} >
+        scrollBehavior={"inside"} onClose={() => {setShowTNC(!showTNC)}}>
       
         <ModalContent>
           {(onClose) => (
             <>
-              <ModalHeader className="flex flex-col gap-1">Điều khoản và điều kiện</ModalHeader>
+              <ModalHeader className="flex flex-col gap-1">Điều khoản và điều kiện đăng ký chuyên gia </ModalHeader>
               <ModalBody>
-                    {tnc} 
+                    {explainExpert()} 
               </ModalBody>
               <ModalFooter>
                 <ButtonReact color="primary" onPress={() => {
@@ -551,6 +560,28 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
                   
                   }}>
                   OK
+                </ButtonReact>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+      <Modal className='dark' isOpen={showExpertTypeExplain} onOpenChange={undefined}
+        scrollBehavior={"inside"} onClose={() => {setShowExpertTypeExplain(!showExpertTypeExplain)}}>
+      
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex gap-1"> Hai loại chuyên gia   </ModalHeader>
+              <ModalBody>
+                    {tncExpertType(false)} 
+              </ModalBody>
+              <ModalFooter className='flex justify-around'>
+                <ButtonReact color="primary" onPress={() => {
+                  setShowExpertTypeExplain(false)
+                  
+                  }}>
+                  Đã hiểu 
                 </ButtonReact>
               </ModalFooter>
             </>
