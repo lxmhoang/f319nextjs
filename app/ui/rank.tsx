@@ -20,7 +20,7 @@ export type BoardProps = {
 export default function LeaderBoard(props: BoardProps) {
     const range = props.since + ' - ' + props.to
     return (
-        <div className="m-2 w-[300px] h-[300px] mx-auto border-gray-400 border-2 rounded-md   ">
+        <div className="m-2 w-[300px] h-[340px] mx-auto border-gray-400 border-2 rounded-md   ">
             <div className="flex justify-center h-[30px] mb-2 ml-30 mr-30">
             {/* . Mỗi khi có người dùng mua gói tài trợ rank thì tiền sau chiết khấu sẽ chia cho quỹ tuần, tháng, quý, năm (mỗi quỹ 1/4) và chia đều về các mốc trả thưởng nằm trong thời gian tài trợ, tiền từ gói tài trợ rank vĩnh viễn được chia cho các mốc trong 3 năm  */}
             <Tooltip content='Quỹ tăng dần cho đến thời điểm trả thưởng tự động' trigger="hover" className="flex justify-end">

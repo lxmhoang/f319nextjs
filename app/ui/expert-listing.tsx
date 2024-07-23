@@ -69,7 +69,7 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
       {(true && soloExpert.length > 0) && (<div className=" mb-4 flex flex-wrap">
         {soloExpert.map(
           (expert, index) => {
-            return <div key={index}>
+            return <div key={index}  className="w-1/2 sm:w-fit">
 
               <ExpertCard expertInfo={JSON.stringify(expert)} key={index} />
             </div>
@@ -81,7 +81,7 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
       <Divider />
 
       <p className="mx-auto p-4"> Chuyên gia đua rank </p>
-       <div className="ml-4">
+       <div className="ml-4 mb-4">
 
          {user && user.joinRank ? <p>  Bạn đã tài trợ, có thể xem được hết các chuyên gia rank </p> : <Button className='w-[280px]' onClick={() => {
             const state = user ? {
@@ -108,7 +108,7 @@ export default function ExpertListing({ expertList }: { expertList: Expert[] }) 
       {(true && rankExperts.length > 0) && (<div className="flex flex-wrap mb-4">
         {rankExperts.map(
           (expert, index) => {
-            return <div key={index}>
+            return <div key={index} className="w-1/2 sm:w-fit">
 
               <ExpertCard expertInfo={JSON.stringify(expert)} key={index} />
             </div>

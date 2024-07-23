@@ -37,6 +37,8 @@ export type Expert = {
     expertPeriod: string;
     visible: boolean;
 
+    staticFollowerNum?: number;
+
     joinDate: number
 }
 
@@ -76,7 +78,9 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
         snapshot: AdminQueryDocumentSnapshot
     ): Expert {
         const data = snapshot.data();
-        const follower = data.follower ? data.follower : []
+        const followerData = data.follower  as Subscription[] 
+        
+        const follower = followerData ? followerData.filter((item) => { return item.endDate > Date.now()}) : []
 
         // console.log('aaaa ' + JSON.stringify(joinDate))
         const expert : Expert =  {
@@ -98,6 +102,7 @@ export const expertAdminConverter: AdminFirestoreDataConverter<Expert> = {
             yearPerform: data.yearPerform,
             joinDate: data.joinDate,
             visible: data.visible,
+            staticFollowerNum: data.staticFollowerNum,
             isExpired: new Date(data.expertExpire) < new Date()
         };
         return expert
@@ -146,11 +151,46 @@ export const expertConverter: FirestoreDataConverter<Expert> = {
             expertExpire: data.expertExpire,
             expertType: data.expertType,
             joinDate: data.joinDate,
+            staticFollowerNum: data.staticFollowerNum,
             isExpired: new Date(data.expertExpire) < new Date()
         };
         return expert
     },
 };
+
+
+export function expertFromRaw(data:any) : Expert {
+
+   
+    const followerData = data.follower  as Subscription[] 
+        
+    const follower = followerData ? followerData.filter((item) => { return item.endDate > Date.now()}) : []
+    const bottom = data.bottom ?? false
+    // console.log('aaaa ' + JSON.stringify(joinDate))
+    const expert : Expert =  {
+        id: data.id,
+        imageURL: data.imageURL,
+        name: data.name,
+        phoneNumber: data.phoneNumber,
+        follower: follower,
+        permPrice: data.permPrice,
+        monthlyPrice: data.monthlyPrice,
+        shortIntro: data.shortIntro,
+        status: data.status,
+        expertPeriod: data.expertPeriod,
+        expertType: data.expertType,
+        expertExpire: data.expertExpire,
+        weekPerform: data.weekPerform,
+        monthPerform: data.monthPerform,
+        quarterPerform: data.quarterPerform,
+        yearPerform: data.yearPerform,
+        joinDate: data.joinDate,
+        visible: data.visible,
+        staticFollowerNum: data.staticFollowerNum,
+        isExpired: new Date(data.expertExpire) < new Date()
+    };
+    return expert
+}
 
 
 export enum ExpertStatus {

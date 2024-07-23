@@ -1,4 +1,4 @@
 export default function Loading() {
-    return  <div>Loading...</div>;
+    return  <div className="p-5">Loading...</div>;
     // return <DashboardSkeleton />;
   }

@@ -89,8 +89,8 @@ export async function GET(request: Request) {
 
       message.push(' update follower Num')
 
-      const followerNum = expert.follower.filter((item) => { return item.endDate > Date.now()}).length
-      await serverUpdateExpertInfo(expert.id, { followerNum: followerNum })
+      // const followerNum = expert.follower.filter((item) => { return item.endDate > Date.now()}).length
+      // await serverUpdateExpertInfo(expert.id, { followerNum: followerNum })
 
     }
 

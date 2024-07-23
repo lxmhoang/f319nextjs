@@ -17,7 +17,7 @@ export default function ExpertCard({ expertInfo }: { expertInfo: string }) {
       {/* {expert.avatar} */}
       <Link className="justify-center" href={{ pathname: `/expert/details/${expert.id}` }}>
         <div className="p-2 rounded-sm">
-          <Card className="w-full sm:w-[180px] m-1 dark:bg-gray-500 bg-gray-100">
+          <Card className="w-full sm:w-[280px] m-1 dark:bg-gray-500 bg-gray-100">
             <CardHeader className=" gap-3 flex h-[50px]">
               {expert.imageURL && <Image priority={true} src={expert.imageURL} width={30} height={30} className="rounded-full" alt={""} />}
               <Label value={expert.name} />
@@ -25,12 +25,19 @@ export default function ExpertCard({ expertInfo }: { expertInfo: string }) {
             <CardBody>
               <div className="block">
                 <div className="text-small">
-                  {expert.expertType == 'solo' && expert.follower &&  <p>{expert.follower.length} follower</p>}
+                  {expert.expertType == 'solo' && !expert.staticFollowerNum  &&  <p>{expert.follower ? expert.follower.length : 0} người theo dõi</p>}
+                  {expert.expertType == 'solo' && expert.staticFollowerNum &&  <p>{expert.staticFollowerNum} người theo dõi</p>}
                   {expert.expertType == 'rank' &&  (
-                  <p>Ranking</p>
+                  <p>Rank</p>
                   )}
+                  <Divider className="mt-4 mb-4" />
                   
-                  {(expert.expertType == 'rank' && expert.yearPerform) &&  <p className={perfConver(expert.yearPerform).color}>{perfConver(expert.yearPerform).info}</p>}
+                  {(expert.weekPerform) &&  <p className={perfConver(expert.weekPerform).color}>
+                    Tuần {perfConver(expert.weekPerform).info}</p>}
+                  {( expert.monthPerform) &&  <p className={perfConver(expert.monthPerform).color}>Tháng {perfConver(expert.monthPerform).info}</p>}
+                  {(expert.quarterPerform) &&  <p className={perfConver(expert.quarterPerform).color}>Quý {perfConver(expert.quarterPerform).info}</p>}
+                  {(expert.yearPerform) &&  <p className={perfConver(expert.yearPerform).color}>Năm {perfConver(expert.yearPerform).info}</p>}
+                
                 </div>
               </div>
 

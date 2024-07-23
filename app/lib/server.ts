@@ -1,7 +1,7 @@
 
 'server-only'
 'use server'
-import { Expert, ExpertStatus, expertAdminConverter } from "../model/expert";
+import { Expert, ExpertStatus, expertAdminConverter, expertFromRaw } from "../model/expert";
 import { Prediction, predAdminConverter } from "../model/prediction";
 import { firestoreAddNewModal, firestoreBatchUpdate, firestoreCountModal, firestoreGetModal, firestoreGetRaw, firestoreQueryCollection, firestoreQueryCollectionGroup, firestoreSetDoc, firestoreUpdateDoc } from "./firebaseadmin/adminfirestore";
 
@@ -58,7 +58,7 @@ export async function getExpert(eid: string) {
 
 export async function getAllActivatedExpert() {
     const expertsData = await databaseGetDoc('expert')
-    const result : Expert[] = arrayFromData<Expert>(expertsData)
+    const result : Expert[] = arrayFromData<Expert>(expertsData, expertFromRaw)
     return result
 
 }

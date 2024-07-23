@@ -32,6 +32,7 @@ export default function ExpertHorView({ expertInfo }: { expertInfo: string }) {
                       <p> Loại chuyên gia </p>
                       <p> Ngày hết hạn </p>
                       {expert.expertType == 'solo' && (<p>{expert.follower.length} người theo dõi</p>)}
+                      {expert.expertType == 'solo' && expert.staticFollowerNum &&  <p>{expert.staticFollowerNum} người theo dõi</p>}
                       {expert.expertType == 'rank' && expert.yearPerform && (<p>Hiệu suất năm</p>)}
                       {expert.expertType == 'rank' && expert.quarterPerform && (<p>Hiệu suất quý</p>)}
                       {expert.expertType == 'rank' && expert.monthPerform && (<p>Hiệu suất tháng</p>)}

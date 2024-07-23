@@ -30,6 +30,7 @@ export default function ExpertVertView({ expertInfo }: { expertInfo: string }) {
                     <p>Ngày hết hạn</p>
                     {/* {expert.expertPeriod == 'perm' ? (<p>Vĩnh viễn</p>) :  (<p>Ngày hết hạn</p>)} */}
                     {expert.expertType == 'solo' && (<p>{expert.follower.length} người theo dõi</p>)}
+                    {expert.expertType == 'solo' && expert.staticFollowerNum &&  <p>{expert.staticFollowerNum} người theo dõi</p>}
                     {expert.expertType == 'rank' && expert.yearPerform && (<p>Hiệu quả theo năm</p>)}
                     {expert.expertType == 'rank' && expert.quarterPerform && (<p>Hiệu quả theo quý</p>)}
                     {expert.expertType == 'rank' && expert.monthPerform && (<p>Hiệu quả theo tháng</p>)}

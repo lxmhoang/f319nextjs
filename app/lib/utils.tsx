@@ -142,7 +142,7 @@ export const datesGreaterThan = (first: Date, second: Date) => {
   return first > second
 }
 
-export function arrayFromData<Type>(data: any) {
+export function arrayFromData<Type>(data: any, converter?: (data: any) => Type) {
 
   console.log('data ' + JSON.stringify(data))
   if (!data) {
@@ -152,7 +152,7 @@ export function arrayFromData<Type>(data: any) {
   Object.keys(data).forEach((key: string) => {
     const childData = data[key]
     childData.id = key
-    const val = childData as Type
+    const val = converter ? converter(childData) : childData as Type
 
     array.push(val)
 
