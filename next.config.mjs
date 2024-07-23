@@ -21,6 +21,16 @@ const nextConfig = {
           },
           {
             protocol: 'https',
+            hostname: 'scontent.fsgn8-4.fna.fbcdn.net',
+            port: '',
+          },
+          {
+            protocol: 'https',
+            hostname: 'media.licdn.com',
+            port: '',
+          },
+          {
+            protocol: 'https',
             hostname: 'firebasestorage.googleapis.com',
             port: ''
           },
