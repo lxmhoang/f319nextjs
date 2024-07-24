@@ -391,7 +391,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                     "text-sky-400": profit >= 100,
                     "text-red-400": profit < 100
                   }
-                )}> {item.assetName} {profitInfo}  <span className="ml-10 text-gray-800 dark:text-zinc-200 text-sm"> {item.portion}%</span> </p>
+                )}> {item.assetName} {profitInfo}  <span className="ml-10 text-gray-800 dark:text-zinc-200 text-xs">tỷ trọng vốn: {item.portion}%</span> </p>
                 return (<AccordionItem id={item.id} key={item.id} textValue={"content"} title={title}>{content}</AccordionItem>)
               }
 
