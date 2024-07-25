@@ -13,6 +13,33 @@ const urlRealTime = 'https://banggia.cafef.vn/stockhandler.ashx?userlist='
 
 const MIN_VOLUME = 100000
 
+
+export async function getBonusInfo2() {
+  const myHeaders = new Headers();
+myHeaders.append("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+myHeaders.append("Cookie", "language=vi-VN; ASP.NET_SessionId=efwxelr40mit1ztqvddwg2yp; __RequestVerificationToken=63nV_V_fPgrRMCaGk6VfWJ8nwRa_1c0A9X5BSq_JcgxeQSpODI9VpXpuK78PB9rf_xN98OV44aM40IRr2_1hrY16-7t2wyHGSLFSnW0OiKY1; Theme=Light; AnonymousNotification=; _gid=GA1.2.2000859721.1721806345; _pbjs_userid_consent_data=3524755945110770; dable_uid=83947402.1712061204172; isShowLogin=true; finance_viewedstock=A32,BIC,; __qca=I0-928512372-1721911656155; __gads=ID=41a19db9cec3ccdc:T=1721806346:RT=1721917488:S=ALNI_MZMQpPnFfQl2jdz8BQnDEU8jDPdFg; __gpi=UID=00000ea4050226c3:T=1721806346:RT=1721917488:S=ALNI_Mb5RveO4lpCVCZqNcGJYbqlHZpUPA; __eoi=ID=f239fb23539c613a:T=1721806346:RT=1721917488:S=AA-AfjbGfgWuyE485YVtfCc7LkpD; _gat_UA-1460625-2=1; cto_bidid=vjghzF9vQWNNJTJGSXhFa1JnSjFSVUpoZVhteGRxRVRhM2dncmFqTUhjdVpVZmVjbGRHdWNjdG5sakhkaHRxaVh3cld5VXpDWTclMkZ6TEVkcmtNTE9JYUg1dnVaTGhYeHpWSXpJSXBmM2R3cHhPb21KMWxvZE5IaDhncHBQY3BZQU5zYzlITGFOQU40VE43Z3RRSkdnQ21VTnVXY3d3JTNEJTNE; _ga_EXMM0DKVEX=GS1.1.1721917487.7.1.1721917508.39.0.0; _ga=GA1.2.718181391.1721806344; cto_bundle=sY9jFl9iNmdreSUyRlBWc2ZkMkhXVnI1V2x4djlLRHlpUG5HTUhBM3k1TUpEVWN1elVkcXNTSFEycVBFR2VWcWRjOGIzY29PR01XTmFRbzIlMkJ4SW9Kb2hxdGRQQ2RpbmVYMXp5ejJ1cWx6alRsY0h3dzBHT0JCalBFWHM0djdkS1FGM1lNWlVtM2lHdSUyRjV1cFU0b0cySEZkQmszQ3ozZmV2aWV2YktUJTJCeWtYYWZtVWJPQXM2WTQxZE5Nc3VUbFJNRmdNOG9tb0hEVkcxeVp2RlQzR3NZTFRoRXJGektEZDNxQVZrRmVtekQ2cE1SR2xJSWtwRDRXNmlVY1o2U3ZiOUhnejMlMkJPZw; ASP.NET_SessionId=wu5oihbopjdjsuartrtwpyq0; language=vi-VN");
+myHeaders.append("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
+
+const raw = "eventTypeID=1&channelID=13&code=&catID=-1&fDate=2024-01-01&tDate=2024-07-26&page=1&pageSize=20&orderBy=Date1&orderDir=DESC&__RequestVerificationToken=bRaxCMW3TfWugNpoKXmHM8BV5D8yOppv9YDy21YizrgzkCrpF2C3Rdty1fjj-sBdC50ZIA877oT1_lzIn3-5p9QJXDaz_kgw6Temv3puP5k1";
+
+const requestOptions : RequestInit = {
+  method: "POST",
+  headers: myHeaders,
+  body: raw,
+  mode: 'cors',
+  redirect: "follow"
+};
+
+try{
+const res = await fetch("https://finance.vietstock.vn/data/eventstypedata", requestOptions)
+console.log('vvv')
+return 'text' + JSON.stringify(res)
+} catch (err) {
+  return 'zzz' + JSON.stringify(err)
+}
+
+}
+
 export async function getRealTimeStockData(stocks: string[]) {
   try {
     const param = stocks
