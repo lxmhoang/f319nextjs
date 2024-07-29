@@ -79,7 +79,7 @@ export default function FeedbackForm(Props: TransCreationProps) {
               Rất cám ơn bạn gửi feedback, góp ý, thắc mắc cho chúng tôi. <br />
             </label> 
 
-            <div className="mb-4">
+            <div className="mb-8">
               <TextInput
                 name="content"
                 type="text"
@@ -93,9 +93,9 @@ export default function FeedbackForm(Props: TransCreationProps) {
           </div>
           <div className="mb-4">
             <label htmlFor="notebankacc" className="mb-2 block text-sm font-medium">
-            Để nhận phản hồi, xin hãy để lại số điện thoại / thông tin liên lạc <br/> Đội ngũ admin trực 24/7 sẽ nhanh chóng xử lý và phản hồi sớm nhất 
+            (Không bắt buộc) Trong trường hợp bạn muốn để lại thông tin liên lạc để nhận phản hồi, xin hãy để lại  thông tin liên lạc <br/> Đội ngũ admin trực 24/7 sẽ nhanh chóng xử lý và phản hồi sớm nhất 
             </label>
-            <TextInput name="contact" type="text"  placeholder="SĐT / Email / Thông tin liên lạc"  className='max-w-sm' />
+            <TextInput name="contact" type="text"  placeholder="SĐT / Email / Thông tin liên lạc (Không bắt buộc)"  className='max-w-sm' />
           
           </div>
           <div className="mt-6 flex justify-start gap-4">

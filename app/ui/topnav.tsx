@@ -126,7 +126,8 @@ export default function TopNav() {
 
         ...notifyItem,
         { key: "morenoti", href: "/profile/activities", title: "Xem tất cả thông báo ", activated: true, type: 'notification' },
-        { key: "signout", href: "", title: "Sign out", activated: true, type: 'signout' }
+        { key: "signout", href: "", title: "Sign out", activated: true, type: 'signout' },
+        { key: "feedback", href: "/profile/feedback", title: "Khiếu nại, góp ý", activated: true, type: 'feedback' }
       ]
       :
       [

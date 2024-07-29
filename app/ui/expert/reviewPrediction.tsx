@@ -6,8 +6,8 @@ import { useEffect, useState } from "react";
 import { getRealTimeStockData } from "@/app/lib/getStockData";
 import { Prediction, PredictionReview } from "@/app/model/prediction";
 import { Button, Label, Spinner, Toast } from "flowbite-react";
-import { clientGetAllMyPreds, closeWIPPreds, getAllMypreds, getMyWIPPreds } from "@/app/lib/server";
-import { perfConver } from "@/app/lib/utils";
+import { clientGetAllMyPreds, closeWIPPreds } from "@/app/lib/server";
+import { perfConver, valueWithBonus } from "@/app/lib/utils";
 
 
 export default function ReviewPrediction({ doneFetching }: {
@@ -50,12 +50,13 @@ export default function ReviewPrediction({ doneFetching }: {
   const closedPreds = preds?.filter((item) => {
     return item.status !== 'Inprogress'
   }).map((pred) => {
+    const actualPrice = valueWithBonus(pred.priceRelease!, pred.bonus ?? [])
     return {
       id: pred.id,
       assetName: pred.assetName,
       priceIn: pred.priceIn.toFixed(2),
       priceRelease: pred.priceRelease?.toFixed(2),
-      perm: perfConver(pred.priceRelease! / pred.priceIn),
+      perm: perfConver(actualPrice / pred.priceIn),
       priceOut: pred.priceOut.toFixed(2),
       deadLine: new Date(pred.deadLine).toLocaleDateString('vi'),
       dateIn: new Date(pred.dateIn).toLocaleDateString('vi'),
@@ -128,8 +129,10 @@ export default function ReviewPrediction({ doneFetching }: {
           dateIn: new Date(pred.dateIn).toLocaleDateString('vi'),
           cutLoss: pred.cutLoss.toFixed(2),
           status: pred.status,
+          bonus: pred.bonus,
+
           curPrice: curPrice.low.toFixed(2),
-          curStatus: (curPrice.low * 100 / pred.priceIn - 100).toFixed(2) + "%",
+          curStatus: valueWithBonus(curPrice.low, pred.bonus ?? [])  / pred.priceIn ,
           portion: pred.portion.toString() + '%',
           disableClose: predAge < 1000 * 5 * 24 * 3600
         }
@@ -206,6 +209,14 @@ export default function ReviewPrediction({ doneFetching }: {
                     //   const value = new Date(item.dateIn.seconds * 1000).toDateString()
                     //   return (<TableCell>{value.toLocaleString()}</TableCell>)
                     // }
+                    if (columnKey == 'curStatus') {
+                      const profit = getKeyValue(item, columnKey) as number
+                      
+                      return (
+                        //
+                        <TableCell  className={perfConver(profit).color}>{perfConver(profit).info}*</TableCell>
+                      )
+                    }
 
                     return (
                       <TableCell >{getKeyValue(item, columnKey) as string}</TableCell>
@@ -254,7 +265,13 @@ export default function ReviewPrediction({ doneFetching }: {
 
                     if (columnKey == 'perm') {
                       const value = item.perm.info
-                      return (<TableCell className={item.perm.color}>{value}</TableCell>)
+                      return (
+                      <div>
+                      {/* <Tooltip> */}
+                        <TableCell className={item.perm.color}>{value}</TableCell>
+                      {/* </Tooltip> */}
+                      </div>
+                    )
                     }
                     return (
                       <TableCell>{getKeyValue(item, columnKey) as string}</TableCell>
@@ -281,7 +298,7 @@ const masterClosedCols = [
   },
   {
     key: "dateIn",
-    label: "date In",
+    label: "Ngày mua",
   },
   {
     key: "priceIn",
@@ -318,7 +335,7 @@ const masterClosedCols = [
 const masterCols = [
   {
     key: "assetName",
-    label: "St",
+    label: "Mã ",
   },
   {
     key: "portion",
@@ -350,7 +367,7 @@ const masterCols = [
   },
   {
     key: "dateIn",
-    label: "date In",
+    label: "Ngày mua",
   },
 
   // {

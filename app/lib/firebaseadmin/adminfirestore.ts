@@ -50,10 +50,11 @@ export async function firestoreQueryCollectionGroup<ModelType>(name: string, fil
     for (const { key, operator, value } of filters) {
         q = q ? q.where(key, operator, value) : colGroup.where(key, operator, value)
     }
-    console.log('aa333a' + JSON.stringify(q))
-    const snapshot = q ? await q?.withConverter(converter).get() : await colGroup.withConverter(converter).get()
+    console.log('query :    ' + JSON.stringify(q))
+    // const snapshot = q ? await q?.withConverter(converter).get() : await colGroup.withConverter(converter).get()
+    const snapshot = await colGroup.withConverter(converter).get()
     
-    console.log('dddd' + JSON.stringify(snapshot))
+    console.log('snapshot:   ' + JSON.stringify(snapshot) + snapshot.docs.length)
     return snapshot.docs
     
 }

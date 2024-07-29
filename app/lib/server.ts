@@ -2,16 +2,16 @@
 'server-only'
 'use server'
 import { Expert, ExpertStatus, expertAdminConverter, expertFromRaw } from "../model/expert";
-import { Prediction, predAdminConverter } from "../model/prediction";
+import { Prediction, predAdminConverter, predictionFromRaw } from "../model/prediction";
 import { firestoreAddNewModal, firestoreBatchUpdate, firestoreCountModal, firestoreGetModal, firestoreGetRaw, firestoreQueryCollection, firestoreQueryCollectionGroup, firestoreSetDoc, firestoreUpdateDoc } from "./firebaseadmin/adminfirestore";
 
 import { getUserInfoFromSession, getthuquyUID, setClaim } from "@/app/lib/firebaseadmin/adminauth";
-import { getRealTimeStockData } from "./getStockData";
+import { bonusAppliedToPred, getRealTimeStockData } from "./getStockData";
 import { FieldValue, WhereFilterOp } from "firebase-admin/firestore";
 import { User, userAdminConverter } from "../model/user";
 import { Subscription, subscriptionAdminConverter } from "../model/subscription";
 import { cookies } from "next/headers";
-import { addComma, arrayFromData, didFollow, perfConver, sortByField } from "./utils";
+import { addComma, arrayFromData, dataFromArray, didFollow, perfConver, sortByField } from "./utils";
 import { UserNoti, notiAdminConverter } from "../model/noti";
 import { TranType, Transaction, tranAdminConverter, tranTypeText } from "../model/transaction";
 import { getNextMonthMileStone, getNextQuarterMileStone, getNextWeekMileStone, getNextYearMileStone, getPivotDates } from "./statistic";
@@ -139,9 +139,10 @@ export async function getAllMypreds(
         return []
     }
     // const result = await firestoreQueryCollection('expert/' + info.uid + '/preds', filters, predAdminConverter)
-    const result = arrayFromData<Prediction>(await databaseGetDoc('expert/' + info.uid + '/preds'))
-    const wrongPred = result.find((it) => it.ownerId != info.uid)
+    const result = arrayFromData<Prediction>(await databaseGetDoc('user/' + info.uid + '/preds'), predictionFromRaw)
+    const wrongPred = result.find((it) => { return it.ownerId != info.uid})
     if (wrongPred) {
+        console.log('____' + JSON.stringify(wrongPred))
         throw new Error('Thông tin data bị lệch ')
     }
     return result
@@ -242,7 +243,7 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
             }
 
             await firestoreUpdateDoc('expert/' + pred.ownerId + '/preds/' + pred.id, payload)
-            await databaseUpdateDoc('expert/' + pred.ownerId + '/preds/' + pred.id, payload)
+            await databaseUpdateDoc('user/' + pred.ownerId + '/preds/' + pred.id, payload)
 
             // if (expertInfo.expertType == 'rank') {
             //     await firestoreUpdateDoc('rankPred/' + pred.id, payload)
@@ -812,7 +813,10 @@ export async function serverUpdateStats(data: {}) {
 }
 
 export async function serverGetAllInprogressPred() {
-    return firestoreQueryCollectionGroup<Prediction>('preds', [{ key: 'status', operator: '==', value: 'Inprogress' }], predAdminConverter)
+    const res = await firestoreQueryCollectionGroup<Prediction>('preds', [{ key: 'status', operator: '==', value: 'Inprogress' }], predAdminConverter)
+    return res.filter((item) => {
+        return item.data().status == 'Inprogress'
+    })
 
 }
 
@@ -831,7 +835,7 @@ export async function serverAddANewPred(pred: Prediction, expertInfo: Expert) {
 
     const result = await firestoreAddNewModal<Prediction>('expert/' + expertInfo.id + '/preds', pred, predAdminConverter)
 
-    await databaseSetDoc('expert/' + expertInfo.id + '/preds/' + result.id, pred)
+    await databaseSetDoc('user/' + expertInfo.id + '/preds/' + result.id, pred)
 
 
     if (result) {
@@ -1098,9 +1102,13 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
     console.log('getDonePredOnly ' + getDonePredOnly + '  user ' + user)
     // let response = await firestoreQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
     let response = await databaseGetDoc('user/' + expert.id + '/preds')
-    let allPreds: Prediction[] = arrayFromData<Prediction>(response)// JSON.parse(response)
+    let allPreds: Prediction[] = arrayFromData<Prediction>(response, predictionFromRaw)// JSON.parse(response)
     const inProgressPreds = allPreds.filter((item) => { return item.status == 'Inprogress' })
     const donePreds = allPreds.filter((item) => { return item.status != 'Inprogress' }).sort((a, b) => { return (b.dateIn - a.dateIn) })
+
+    console.log('shit ======================= ' + JSON.stringify(inProgressPreds))
+    
+
     const result = {
         needFollow: getDonePredOnly,
         data: {
@@ -1126,16 +1134,29 @@ export async function getPredsSince(date: Date, inProgress: boolean, eid: string
     return result
 }
 
+export async function serverUpdatePredBonus(pred:Prediction, bonus: BonusData[]) {
+
+    const pathFS = 'expert/' + pred.ownerId + '/preds/' + pred.id
+    const pathRT = 'user/' + pred.ownerId + '/preds/' + pred.id + '/bonus'
+    const payloadRT = dataFromArray(bonus)
+    await databaseSetDoc(pathRT, payloadRT)
+    // for (const item of bonus) {
+        await firestoreUpdateDoc(pathFS , {bonus: bonus})
+    // }
+    
+}
+
 export async function serverMarkPredCutLoss(pred: Prediction) {
-    const path = 'expert/' + pred.ownerId + '/preds/' + pred.id
+    const pathFS = 'expert/' + pred.ownerId + '/preds/' + pred.id
+    const pathRT = 'user/' + pred.ownerId + '/preds/' + pred.id
     const payload = {
         priceRelease: pred.cutLoss,
         dateRelease: Date.now(),
         status: "LOSE"
     }
-    await firestoreUpdateDoc(path, payload)
+    await firestoreUpdateDoc(pathFS, payload)
 
-    await databaseUpdateDoc(path, payload)
+    await databaseUpdateDoc(pathRT, payload)
 
     // notify user
     const expertInfo = await firestoreGetModal('expert/' + pred.ownerId, expertAdminConverter)
@@ -1159,15 +1180,16 @@ export async function serverMarkPredCutLoss(pred: Prediction) {
 
 
 export async function serverMarkPredExpired(pred: Prediction, priceRelease: number) {
-    const path = 'expert/' + pred.ownerId + '/preds/' + pred.id
+    const pathFS = 'expert/' + pred.ownerId + '/preds/' + pred.id
+    const pathRT = 'user/' + pred.ownerId + '/preds/' + pred.id
     const payload = {
         priceRelease: priceRelease,
         dateRelease: Date.now(),
         status: "EXPIRED"
     }
 
-    await firestoreUpdateDoc(path, payload)
-    await databaseUpdateDoc(path, payload)
+    await firestoreUpdateDoc(pathFS, payload)
+    await databaseUpdateDoc(pathRT, payload)
 
 
     // notify user
@@ -1192,7 +1214,8 @@ export async function serverMarkPredExpired(pred: Prediction, priceRelease: numb
 
 
 export async function serverMarkPredWin(pred: Prediction) {
-    const path = 'expert/' + pred.ownerId + '/preds/' + pred.id
+    const pathFS = 'expert/' + pred.ownerId + '/preds/' + pred.id
+    const pathRT = 'user/' + pred.ownerId + '/preds/' + pred.id
 
     const payload = {
         priceRelease: pred.priceOut,
@@ -1200,8 +1223,8 @@ export async function serverMarkPredWin(pred: Prediction) {
         status: "WIN"
     }
 
-    await firestoreUpdateDoc(path, payload)
-    await databaseUpdateDoc(path, payload)
+    await firestoreUpdateDoc(pathFS, payload)
+    await databaseUpdateDoc(pathRT, payload)
 
     // notify user
     const expertInfo = await firestoreGetModal('expert/' + pred.ownerId, expertAdminConverter)

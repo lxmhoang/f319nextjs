@@ -17,7 +17,7 @@ const links = [
   { name: 'Overview', href: '/profile', icon: UserIcon },
   { name: 'Theo dõi', href: '/profile/pred', icon: BookmarkIcon},
   {
-    name: 'Ứng tiền', href: '/profile/deposit',
+    name: 'Cộng tiền', href: '/profile/deposit',
     icon: ArrowLeftEndOnRectangleIcon,
   },
   {

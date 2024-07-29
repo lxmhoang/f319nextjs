@@ -5,13 +5,14 @@ import { useAppContext } from "@/app/lib/context";
 import { useEffect, useState } from "react";
 import { AlertModal, ConfirmationModal, initAlertState } from "../confirm";
 import { Button } from "../button";
-import { addComma, perfConver } from "@/app/lib/utils";
+import { addComma, perfConver, valueWithBonus } from "@/app/lib/utils";
 import { Prediction } from "@/app/model/prediction";
 import { Expert } from "@/app/model/expert";
 import { login, refreshToken } from "@/app/lib/client";
 import ExpertVertView from "../expertVertView";
 import { useRouter } from "next/navigation";
 import { joinRankUser, subcribleToAnExpert, viewExpertPreds } from "@/app/lib/server";
+import { getRealTimeStockData } from "@/app/lib/getStockData";
 
 
 export default function ExpertDetail({ expertData }: { expertData: string }) {
@@ -22,6 +23,12 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
 
   const router = useRouter()
   const { user, firebaseUser } = useAppContext()
+  const [curPrices, setCurPrices] = useState<{
+    [key: string]: {
+      high: number;
+      low: number;
+    }
+  }>()
   const [predsInfo, setPredsInfo] = useState<{
     needFollow: boolean;
     data: {
@@ -43,6 +50,25 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
     }
   }, [user]
   )
+
+  useEffect(() => {
+
+    const fetchCurPrice = async (codes: string[]) => {
+      const res = await getRealTimeStockData(codes)
+      setCurPrices(res)
+
+    }
+
+
+    if (predsInfo && predsInfo.data.onTrackPreds.length > 0) {
+      const codes = predsInfo.data.onTrackPreds.map((item) => { return item.assetName })
+      fetchCurPrice(codes)
+
+    }
+
+  }, [predsInfo])
+
+
   const defaultOpen = (typeof window !== 'undefined') ? window.location.hash.slice(1) : "";
   console.log(' default open ' + defaultOpen)
 
@@ -226,9 +252,13 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                     // const content = "Giá vào : " + item.priceIn + " Giá ra  : " + item.priceOut
                     const dateInStr = new Date(item.dateIn).toLocaleDateString('vi')
                     const deadLineStr = new Date(item.deadLine).toLocaleDateString('vi')
-                    const title = <p> {item.assetName}   <span className="ml-10 dark:text-zinc-200 text-sm">  {item.portion}%</span> </p>
+                    const curPrice = curPrices && curPrices[item.assetName] ? curPrices[item.assetName].high.toString() : undefined
+                    const actualPrice = valueWithBonus(Number(curPrice), item.bonus ?? [])
+                    // const bonus = item.bonus ? : 1
+                    // const curProfile = curPrice ? Number(100 * Number(curPrice)  / item.priceIn).toFixed(2) : ''
+                    const title = <p className="ml-7">{item.bonus && item.bonus.length > 0 && (<span className="text-yellow-500 ">* </span>)}{curPrice ? (<><span className={perfConver(Number(actualPrice) / item.priceIn).color}>{perfConver(Number(actualPrice) / item.priceIn).info}</span></>) : <></>}  <span className="ml-10 dark:text-zinc-200 text-sm">  {item.portion}%</span> </p>
                     const content = (
-                      <div className="flex cols-2 gap-8">
+                      <div className="flex cols-2 gap-8 mb-5">
                         <div>
                           <p>
                             Ngày vào :
@@ -236,6 +266,14 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                           <p>
                             Giá vào :
                           </p>
+                          {curPrice &&
+                            (
+                              <p className="text-yellow-500">
+                                Giá hiện tại :
+                              </p>
+
+                            )
+                          }
                           <p>
                             Giá chốt lời :
                           </p>
@@ -248,6 +286,14 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                           <p>
                             Tỷ trọng đầu tư :
                           </p>
+                          {
+                            (item.bonus && item.bonus.length > 0) && (
+                              <>
+                                <Divider className="mt-5 mb-1" />
+                                <p className="text-xs text-yellow-500">Cổ tức</p>
+                              </>
+                            )
+                          }
 
                         </div>
                         <div>
@@ -257,6 +303,14 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                           <p>
                             {item.priceIn}
                           </p>
+                          {curPrice &&
+                            (
+                              <p className="text-yellow-500">
+                                {curPrice}
+                              </p>
+
+                            )
+                          }
                           <p>
                             {item.priceOut}
                           </p>
@@ -269,6 +323,22 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                           <p>
                             {item.portion}%
                           </p>
+
+                          {
+                            (item.bonus && item.bonus.length > 0) ? (
+                              <>
+                                <Divider className="mt-5 mb-1" />
+                                {
+                                  item.bonus.map((bo) => {
+                                    return <p key={bo.id} className="text-xs text-yellow-500">{bo.Note}</p>
+                                  })
+                                  // JSON.stringify(item.bonus)
+                                }
+                              </>
+                            ) : (<>    {
+                              // JSON.stringify(item.bonus)
+                            }</>)
+                          }
 
                         </div>
                       </div>
@@ -327,6 +397,15 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                         Ngày kết thúc:
                       </p>
 
+                      {
+                        (item.bonus && item.bonus.length > 0) && (
+                          <>
+                            <Divider className="mt-5 mb-1" />
+                            <p className="text-xs text-yellow-500">Cổ tức</p>
+                          </>
+                        )
+                      }
+
                     </div>
                     <div>
                       <p>
@@ -358,34 +437,30 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                         {dateReleaseStr}
                       </p>
 
+                      {
+                        (item.bonus && item.bonus.length > 0) ? (
+                          <>
+                            <Divider className="mt-5 mb-1" />
+                            {
+                              item.bonus.map((bo) => {
+                                return <p key={bo.id} className="text-xs text-yellow-500">{bo.Note}</p>
+                              })
+                              // JSON.stringify(item.bonus)
+                            }
+                          </>
+                        ) : (<>    {
+                          // JSON.stringify(item.bonus)
+                        }</>)
+                      }
+
                     </div>
                   </div>
-                  // <div>
-                  //   <p>
-                  //     Ngày vào : {dateInStr}
-                  //   </p>
-                  //   <p>
-                  //     Giá vào : {item.priceIn}
-                  //   </p>
-                  //   <p>
-                  //     Dự đoán chốt lời - cắt lỗ:   {item.priceOut} - {item.cutLoss}
-                  //   </p>
-                  //   <p>
-                  //     Hạn cuối nắm giữ: {deadLineStr}
-                  //   </p>
-                  // <p className="text-yellow-500">
-                  //   Giá kết thúc : {item.priceRelease} ({action})
-                  // </p>
-                  // <p className="text-yellow-500">
-                  //   Ngày kết thúc : {dateReleaseStr}
-                  // </p>
-                  // </div>
                 )
                 const priceRelease = item.priceRelease ?? 0
+                const actualPrice = valueWithBonus(Number(priceRelease), item.bonus ?? [])
 
-                const profit = priceRelease * 100 / item.priceIn
-                const profitPercentage = (Math.round(profit * 100) / 100).toFixed(2);
-                const profitInfo = perfConver(priceRelease / item.priceIn).info
+                const profit = actualPrice * 100 / item.priceIn
+                const profitInfo = perfConver(actualPrice / item.priceIn).info
                 const title = <p className={clsx(
                   {
                     "text-sky-400": profit >= 100,

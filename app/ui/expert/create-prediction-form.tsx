@@ -5,7 +5,7 @@ import { useFormState } from 'react-dom';
 import { createRef, useEffect, useState } from 'react';
 import { Divider, useDisclosure, Autocomplete, AutocompleteItem, Slider, Button, Link } from '@nextui-org/react';
 import { ConfirmationModal } from '../confirm';
-import { getLocalStockList, getRealTimeStockData } from '../../lib/getStockData';
+import { getLocalStockList, getOnlineStockList, getRealTimeStockData } from '../../lib/getStockData';
 import { createNewPrediction } from '@/app/lib/action';
 // import { Button } from '../button';
 import { Datepicker, Label, TextInput } from 'flowbite-react';
@@ -36,7 +36,7 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
 
 
     // const [remainPortion, setRemainPortion] = useState<number>()
-    const [selectedStock, setSelectedStock] = useState<{ code: string, name: string }>()
+    const [selectedStock, setSelectedStock] = useState<{ code: string, name: string } | undefined>()
     const [selectedStockPrice, setSelectedStockPrice] = useState<{ high: number, low: number }>()
     const [stocksData, setStocksData] = useState<{ code: string, name: string }[]>([])
     // const stockCodes = stocksData.map((item) => item.code)
@@ -85,16 +85,24 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
     useEffect(() => {
         console.log(' getting local stock list')
         const fetchData = async () => {
-            const result = await getLocalStockList() as { code: string, name: string }[]
+            // const result = await getLocalStockList() as { code: string, name: string }[]
+            try {
+                const result = await getOnlineStockList()
+                console.log('fetched local stock list' + result)
+                setStocksData(result)
+            } catch (error) {
+                const result = await getLocalStockList()
+                console.log('fetched local stock list' + result)
+                setStocksData(result)
+            }
 
-            // console.log('fetched local stock list' + result)
-            setStocksData(result)
         }
         fetchData()
 
     }, [])
 
     const ref = createRef<HTMLFormElement>();
+    const codeInputRef = createRef<HTMLInputElement>()
     useEffect(() => {
         const fetchData = async () => {
             console.log('aaaa --- selected stock : ' + JSON.stringify(selectedStock))
@@ -106,6 +114,8 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
                 setSelectedStockPrice(undefined)
             }
         }
+
+        console.log('======== update selected stock ' + selectedStock)
 
         ref.current?.reset()
         fetchData()
@@ -122,18 +132,41 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
          price : {queryPrice.error ? "Error" : queryPrice.isLoading ? 'Loading ' : queryPrice.data ? JSON.stringify(queryPrice.data)  : "No data" } 
         {} */}
             </>
-            <div className="relative mb-8 p-4">
+            <div className="relative mb-8 p-4 space-y-2">
                 {/* <Label value="Hãy chọn 1 cổ phiếu" /> */}
-                <div className="relative mb-2"> {!selectedStock ?
-                    (<> Hãy chọn 1 cổ phiếu</>) :
+                <div className=""> {!selectedStock ?
+                    (<> Nhập mã cổ phiếu</>) :
                     selectedStockPrice ?
 
                         (<>{selectedStock.name}</>) :
-                        <>Fetching stock price</>
+                        <>Đang lấy giá cổ phiếu ... </>
 
                 }</div>
+                <div className='flex space-x-4'>
+                    <TextInput ref={codeInputRef} className='w-[140px]' onChange={(e) => {
+                        let onlyChar = e.target.value.replace(/[^a-zA-Z0-9]/gm,"")
+                        let value = onlyChar.toUpperCase()
+                        if (value.length > 3 && !value.startsWith('FUE')) {
+                            value = value.slice(value.length -3, value.length)
+                        } else if (value.length > 8 && value.startsWith('FUE')) {
+                            value = value.slice(value.length -8, value.length)
+                        }
+                        e.target.value = value
+                    }} />
+                    <Button color='primary' onClick={() => {
+                        if (codeInputRef.current) {
+                            const result = stocksData.find((it) => { return it.code == codeInputRef.current!.value})
+                            console.log('result ' + JSON.stringify(result))
+                            // if (result) {
+                                setSelectedStock(result)
 
-                {
+                            // }
+                        }
+
+                    }} > Chọn </Button>
+                </div>
+
+                {/* {
                     (stocksData.length > 0) ?
                         (<div className="flex">
                             <Autocomplete
@@ -164,13 +197,10 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
                                     </AutocompleteItem>
                                 ))}
                             </Autocomplete>
-                            {/* <Button onClick={() => {
-
-                            }}>Submit</Button> */}
                         </div>)
                         :
                         (<>Loading list ... </>)
-                }
+                } */}
             </div>
 
             <Divider />
@@ -179,7 +209,7 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
                     <form ref={ref} action={dispatchAddtran} className='p-4'  >
 
                         <div className="mb-4 mr-8 block max-w-screen-sm">
-                            Giá tại thời điểm khuyến nghị (không thể thay đổi)
+                            Giá mua hiện tại (không thể thay đổi)
                             <TextInput className='w-1/2' type="number" name="tempPriceIn" defaultValue={selectedStockPrice?.high.toString()} disabled />
                         </div>
                         <div className="mb-2 mr-4 block max-w-screen-sm gap-2" >

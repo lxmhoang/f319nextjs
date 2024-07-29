@@ -1,6 +1,6 @@
 
-import { getTodayMatchedVolume } from "@/app/lib/getStockData"
-import { serverCount, serverGetAllInprogressPred, serverMarkPredCutLoss, serverMarkPredExpired, serverMarkPredWin, serverUpdateStats } from "@/app/lib/server"
+import { bonusAppliedToPred, fetchBonusData, getTodayMatchedVolume } from "@/app/lib/getStockData"
+import { serverCount, serverGetAllInprogressPred, serverMarkPredCutLoss, serverMarkPredExpired, serverMarkPredWin, serverUpdatePredBonus, serverUpdateStats } from "@/app/lib/server"
 import { contentOf, datesGreaterThan } from "@/app/lib/utils"
 
 

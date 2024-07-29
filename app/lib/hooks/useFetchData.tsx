@@ -1,24 +1,24 @@
 
 
-import { useState, useEffect } from 'react';
-import getStockData from '../getStockData';
+// import { useState, useEffect } from 'react';
+// import getStockData from '../getStockData';
 
-// Custom hook for fetching data
-export function useFetchData() {
-  const [data, setData] = useState<{[key: string] : number}[]>();
-  // const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+// // Custom hook for fetching data
+// export function useFetchData() {
+//   const [data, setData] = useState<{[key: string] : number}[]>();
+//   // const [loading, setLoading] = useState(true);
+//   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await getStockData()
-      console.log("stock list length : " + data.length)
-      setData(data)
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       const data = await getStockData(1000)
+//       console.log("stock list length : " + data.length)
+//       setData(data)
      
-    };
+//     };
 
-    fetchData();
-  }, []);
+//     fetchData();
+//   }, []);
 
-  return [ data , error];
-}
+//   return [ data , error];
+// }

@@ -4,6 +4,7 @@ import {
   QueryDocumentSnapshot as AdminQueryDocumentSnapshot,
   WithFieldValue as AdminWithFieldValue } from "firebase-admin/firestore";
 import { DocumentData, FirestoreDataConverter, QueryDocumentSnapshot, SnapshotOptions, WithFieldValue } from "firebase/firestore";
+import { arrayFromData } from "../lib/utils";
 
 export type Prediction = {
     id?: string;
@@ -16,12 +17,42 @@ export type Prediction = {
     deadLine: number;
     dateRelease?: number;
     priceRelease?: number;
+    finalResult?: number
+    bonus?: BonusData[]
     status: string;
     note: string;
     portion: number;
-    long?: boolean
+    long?: boolean;
   }
 
+  // export function predictionFromRaw(data:any) : Prediction {
+
+
+    export function predictionFromRaw(data:any) : Prediction {
+
+    
+          
+      const bonus = arrayFromData<BonusData>(data.bonus)
+      const pred : Prediction =  {
+          id: data.id,
+          ownerId: data.ownerId,
+          assetName: data.assetName,
+          dateIn: data.dateIn,
+          priceIn: data.priceIn,
+          priceOut: data.priceOut,
+          cutLoss: data.cutLoss,
+          deadLine: data.deadLine,
+          dateRelease: data.dateRelease,
+          priceRelease: data.priceRelease,
+          finalResult: data.finalResult,
+          bonus: bonus,
+          status: data.status,
+          note: data.note,
+          portion: data.portion,
+          long: data.long
+      };
+      return pred
+  }
 
 export type PredictionReview = {
   id: string | undefined,
@@ -34,8 +65,9 @@ export type PredictionReview = {
   curPrice: string,
   status: string,
   portion: string,
-  curStatus: string
-  disableClose: boolean
+  curStatus: number,
+  disableClose: boolean,
+  bonus?: BonusData[]
 }
 
 export const predAdminConverter: AdminFirestoreDataConverter<Prediction> = {
@@ -54,6 +86,7 @@ export const predAdminConverter: AdminFirestoreDataConverter<Prediction> = {
       status: pred.status,
       portion: pred.portion,
       long: pred.long ?? true,
+      bonus: [],
       dateRelease: pred.dateRelease,
       priceRelease: pred.priceRelease
     } : 
@@ -66,6 +99,7 @@ export const predAdminConverter: AdminFirestoreDataConverter<Prediction> = {
       cutLoss: pred.cutLoss,
       deadLine: pred.deadLine,
       note: pred.note,
+      bonus: [],
       status: pred.status,
       portion: pred.portion,
       long: pred.long ?? true,
@@ -86,6 +120,7 @@ export const predAdminConverter: AdminFirestoreDataConverter<Prediction> = {
       dateRelease: data.dateRelease,
       priceRelease: data.priceRelease,
       id: snapshot.id,
+      bonus: data.bonus as BonusData[],
       note: data.note,
       status: data.status,
       portion: data.portion
@@ -94,45 +129,45 @@ export const predAdminConverter: AdminFirestoreDataConverter<Prediction> = {
 };
 
 
-export const predConverter: FirestoreDataConverter<Prediction> = {
-  toFirestore(pred: WithFieldValue<Prediction>): DocumentData {
-    return {
-      assetName: pred.assetName,
-      dateIn: pred.dateIn,
-      priceIn: pred.priceIn,
-      priceOut: pred.priceOut,
-      cutLoss: pred.cutLoss,
-      deadLine: pred.deadLine,
-      dateRelease: pred.dateRelease,
-      priceRelease: pred.priceRelease,
-      note: pred.note,
-      status: pred.status,
-      portion: pred.portion
-    };
-  },
-  fromFirestore(
-    snapshot: QueryDocumentSnapshot,
-    options: SnapshotOptions
-  ): Prediction {
-    const data = snapshot.data(options);
-    console.log('data from firestore' + JSON.stringify(data))
-    return {
-      assetName: data.assetName,
-      ownerId: data.ownerId,
-      dateIn: data.dateIn,
-      priceIn: data.priceIn,
-      priceOut: data.priceOut,
-      cutLoss: data.cutLoss,
-      deadLine: data.deadLine,
-      dateRelease: data.dateRelease,
-      priceRelease: data.priceRelease,
-      id: snapshot.id,
-      note: data.note,
-      status: data.status ?? "Unknown",
-      portion: data.portion
-    };
-  },
-};
+// export const predConverter: FirestoreDataConverter<Prediction> = {
+//   toFirestore(pred: WithFieldValue<Prediction>): DocumentData {
+//     return {
+//       assetName: pred.assetName,
+//       dateIn: pred.dateIn,
+//       priceIn: pred.priceIn,
+//       priceOut: pred.priceOut,
+//       cutLoss: pred.cutLoss,
+//       deadLine: pred.deadLine,
+//       dateRelease: pred.dateRelease,
+//       priceRelease: pred.priceRelease,
+//       note: pred.note,
+//       status: pred.status,
+//       portion: pred.portion
+//     };
+//   },
+//   fromFirestore(
+//     snapshot: QueryDocumentSnapshot,
+//     options: SnapshotOptions
+//   ): Prediction {
+//     const data = snapshot.data(options);
+//     console.log('data from firestore' + JSON.stringify(data))
+//     return {
+//       assetName: data.assetName,
+//       ownerId: data.ownerId,
+//       dateIn: data.dateIn,
+//       priceIn: data.priceIn,
+//       priceOut: data.priceOut,
+//       cutLoss: data.cutLoss,
+//       deadLine: data.deadLine,
+//       dateRelease: data.dateRelease,
+//       priceRelease: data.priceRelease,
+//       id: snapshot.id,
+//       note: data.note,
+//       status: data.status ?? "Unknown",
+//       portion: data.portion
+//     };
+//   },
+// };
 
 
 

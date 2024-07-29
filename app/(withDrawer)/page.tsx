@@ -7,9 +7,6 @@ import { Link } from "@nextui-org/react";
 import { serverGetStat } from "../lib/server";
 import BoardNotificationView from "../ui/boardNotiView";
 import QuickIntro from "../ui/quickIntro";
-import { getPivotDates } from "../lib/statistic";
-import { getBonusInfo2 } from "../lib/getStockData";
-
 
 // const spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0"
 const cacheTime = 300
@@ -20,7 +17,6 @@ export default async function Home() {
   // const { pivotWeek, pivotMonth, pivotQuarter, pivotYear, weekEnd, monthEnd, quarterEnd, yearEnd } = await getPivotDates(new Date())
   const stats = await unstable_cache(async () => serverGetStat(), ['getStatsOnHomePage'], { revalidate: cacheTime })()
   const rankData = stats.rankData
-  const test = await getBonusInfo2()
 
   return (
     <>
@@ -33,7 +29,6 @@ export default async function Home() {
     {JSON.stringify(pivotYear.toLocaleString('vi'))}
     {JSON.stringify(yearEnd.toLocaleString('vi'))} */}
     {/* {JSON.stringify(rankData)} */}
-{JSON.stringify(test)}
       <BoardNotificationView />
       <div className="sm:flex sm:p-6 sm:gap-8 sm:justify-start sm:ml-24">
 
