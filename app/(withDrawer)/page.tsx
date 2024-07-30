@@ -9,7 +9,7 @@ import BoardNotificationView from "../ui/boardNotiView";
 import QuickIntro from "../ui/quickIntro";
 
 // const spaces = "\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0\xa0"
-const cacheTime = 300
+const cacheTime = 1
 
 export default async function Home() {
 
