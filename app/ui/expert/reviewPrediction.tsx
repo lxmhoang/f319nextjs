@@ -165,12 +165,13 @@ export default function ReviewPrediction({ doneFetching }: {
         </>
       )} */}
       {(preds && preds.length == 0) && (<> Chưa tạo khuyến nghị nào </>)}
-      {(!wipdata && wipPreds && wipPreds.length > 0) && (<><Spinner /></>)}
+      {(!wipdata && wipPreds && wipPreds.length > 0) && (<>Loading ... </>)}
       {wipdata ? (<>
-        <Label value="Các khuyến nghị đang tiếp diễn" />
+        <Label value="Các khuyến nghị đang tiếp diễn" className="mb-4" />
+        <div><span className="text-yellow-500">*</span> <span className="text-xs"> : đã bao gồm chia cổ tức</span></div>
 
         <div className="">
-        {true && (<Table removeWrapper className="overflow-x-auto mb-4 " color="primary" aria-label="Example table with dynamic content"
+        {true && (<Table removeWrapper className="overflow-x-auto mb-4 mt-4 " color="primary" aria-label="Example table with dynamic content"
           selectionMode="multiple"
           selectedKeys={selectedKeys}
           // onSelectionChange={setSelectedKeys}>
@@ -214,7 +215,7 @@ export default function ReviewPrediction({ doneFetching }: {
                       
                       return (
                         //
-                        <TableCell  className={perfConver(profit).color}>{perfConver(profit).info}*</TableCell>
+                        <TableCell  className={perfConver(profit).color}>{perfConver(profit).info} {(item.bonus && item.bonus.length > 0 ) && <span className="text-yellow-500">*</span>}</TableCell>
                       )
                     }
 
@@ -246,13 +247,15 @@ export default function ReviewPrediction({ doneFetching }: {
 
           Kết thúc</Button>
           
-          </>) : preds ? (<></>) : (<><Spinner /></>)
+          </>) : preds ? (<></>) : (<>Loading ... </>)
       }
 
       <Divider className="mt-8 mb-8" />
 
       {preds && closedPreds && closedPreds.length > 0 ? (<>
         <Label value="Các khuyến nghị đã kết thúc" />
+        {/* {JSON.stringify(closedPreds)} */}
+
         <Table removeWrapper className="overflow-x-auto mb-4 " color="primary" aria-label="Example table with dynamic content">
           <TableHeader className="dark:bg-transparent bg-red-400" columns={masterClosedCols}>
             {(column) => <TableColumn className="dark:bg-slate-800 " key={column.key}>{column.label}</TableColumn>}
@@ -266,15 +269,14 @@ export default function ReviewPrediction({ doneFetching }: {
                     if (columnKey == 'perm') {
                       const value = item.perm.info
                       return (
-                      <div>
-                      {/* <Tooltip> */}
                         <TableCell className={item.perm.color}>{value}</TableCell>
-                      {/* </Tooltip> */}
-                      </div>
                     )
                     }
                     return (
-                      <TableCell>{getKeyValue(item, columnKey) as string}</TableCell>
+                      <TableCell>
+                        
+                        {getKeyValue(item, columnKey) as string}
+                        </TableCell>
                     )
                   }
                 }
@@ -282,7 +284,7 @@ export default function ReviewPrediction({ doneFetching }: {
             )}
           </TableBody>
         </Table>
-      </>) : preds ? (<></>) : (<><Spinner /></>)}
+      </>) : preds ? (<></>) : (<>Loading ... </>)}
     </>
   )
 }
@@ -290,7 +292,7 @@ export default function ReviewPrediction({ doneFetching }: {
 const masterClosedCols = [
   {
     key: "assetName",
-    label: "St",
+    label: "Mã",
   },
   {
     key: "portion",
