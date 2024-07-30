@@ -43,7 +43,10 @@ export function didFollow(user: User, expert: Expert) {
 
 }
 
-export function valueWithBonus(value: number, bonuses: BonusData[]) {
+export function valueWithBonus(value: number, bonuses: BonusData[] | undefined) {
+  if (!bonuses || bonuses.length == 0) {
+    return value
+  }
   var result = value
   
   // console.log('==== BONUS ==== ' + JSON.stringify(bonuses))
@@ -171,7 +174,8 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
     message.push('  max : ' + max + '  min:  ' + min + '  date :  ' + (new Date()).toLocaleString('vi') + '\n')
 
     const toDayValue = true ? min : max
-    const curPerform = true ? toDayValue / pred.priceIn : pred.priceIn / toDayValue
+    const actualValue = valueWithBonus(toDayValue, pred.bonus)
+    const curPerform = true ? actualValue / pred.priceIn : pred.priceIn / actualValue
     const curProfit = (curPerform - 1) * pred.portion / 100 + 1
     message.push('incremental ratio of this pred ===== ' + ((curPerform - 1) * 100).toFixed(2) + '%  profit ' + + ((curProfit - 1) * 100).toFixed(2) + '% \n\n')
     perform = perform * curProfit

@@ -803,13 +803,24 @@ export async function serverCount(name: string) {
     return firestoreCountModal(name)
 }
 
-export async function serverUpdateStats(data: {}) {
+export async function serverSetStats(data: {}) {
 
-    await firestoreSetDoc('stats/' + Date.now(), data)
+    const now = Date.now()
+
+    await firestoreSetDoc('stats/' + now, data)
     await firestoreSetDoc('stats/latest', data, true)
 
-    await databaseSetDoc('stats/' + Date.now(), data)
+    await databaseSetDoc('stats/' + now, data)
     await databaseSetDoc('stats/latest', data)
+}
+
+export async function serverUpdateStats(data: {}) {
+
+    // await firestoreSetDoc('stats/' + Date.now(), data)
+    await firestoreUpdateDoc('stats/latest', data)
+
+    // await databaseSetDoc('stats/' + Date.now(), data)
+    await databaseUpdateDoc('stats/latest', data)
 }
 
 export async function serverGetAllInprogressPred() {

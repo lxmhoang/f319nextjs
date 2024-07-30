@@ -26,15 +26,12 @@ export async function GET(request: Request) {
             // check bonus
             if (!pred.bonus) {
                 const bonus: BonusData[] = await bonusAppliedToPred(pred)
+
                 if (bonus.length > 0 ) {
-
-
                     message.push('bonus found, will update it : ' + JSON.stringify(bonus))
-                    pred.bonus = bonus
-    
+                    pred.bonus = bonus    
                     message.push('bonus : ' + JSON.stringify(bonus))
                     await serverUpdatePredBonus(pred, bonus)
-
                 }
             }
 

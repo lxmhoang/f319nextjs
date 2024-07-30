@@ -1,5 +1,5 @@
 
-import { getExperts, getPredsSince, getRankData, serverMarkExpertExpired, serverUpdateExpertInfo, serverUpdateStats } from "@/app/lib/server";
+import { getExperts, getPredsSince, getRankData, serverMarkExpertExpired, serverSetStats, serverUpdateExpertInfo, serverUpdateStats } from "@/app/lib/server";
 import { getPivotDates } from "@/app/lib/statistic";
 import { contentOf, datesGreaterThan, getPerformanceSince } from "@/app/lib/utils";
 
@@ -108,7 +108,7 @@ export async function GET(request: Request) {
     const data =  { numOfAllExpert, numOfAllSub: numOfAllSub,  sumAllSubValue , numOfSoloExperts, numOfRankExperts, rankData}
 
 
-    await serverUpdateStats(data)
+    await serverSetStats(data)
   } catch (error) {
     return new Response(`Webhook error: ` + JSON.stringify(error), {
       status: 400,
