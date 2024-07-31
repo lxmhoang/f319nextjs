@@ -150,6 +150,8 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
     return (
         <>
             <>
+            {/* {JSON.stringify(selectedStockPrice)}
+            {selectedPrice} */}
                 {/* <div>selected  : {selectedStock.code ?? "undefined"}</div>
          price : {queryPrice.error ? "Error" : queryPrice.isLoading ? 'Loading ' : queryPrice.data ? JSON.stringify(queryPrice.data)  : "No data" } 
         {} */}
@@ -228,12 +230,12 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
 
             <Divider />
             {
-                selectedStock && selectedStockPrice && maxCutLossPrice && minTakeProfitPrice && (
+                selectedStock && selectedStockPrice && selectedPrice && maxCutLossPrice && minTakeProfitPrice && (
                     <form ref={ref} action={dispatchAddtran} className='p-4'  >
 
                         <div className="mb-4 mr-8 block max-w-screen-sm">
                             Giá mua hiện tại (không thể thay đổi)
-                            <TextInput className='w-1/2' type="number" name="tempPriceIn" defaultValue={selectedStockPrice?.high.toString()} disabled />
+                            <TextInput className='w-1/2' type="number" name="tempPriceIn" defaultValue={selectedPrice.toString()} disabled />
                         </div>
                         <div className="mb-2 mr-4 block max-w-screen-sm gap-2" >
                             <Label value={"Chọn giá chốt lãi (dương ít nhất 20%), từ " + minTakeProfitPrice + " trở lên"} />

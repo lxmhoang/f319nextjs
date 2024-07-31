@@ -27,6 +27,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
     [key: string]: {
       high: number;
       low: number;
+      tc: number;
     }
   }>()
   const [predsInfo, setPredsInfo] = useState<{
@@ -252,11 +253,15 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                     // const content = "Giá vào : " + item.priceIn + " Giá ra  : " + item.priceOut
                     const dateInStr = new Date(item.dateIn).toLocaleDateString('vi')
                     const deadLineStr = new Date(item.deadLine).toLocaleDateString('vi')
-                    const curPrice = curPrices && curPrices[item.assetName] ? curPrices[item.assetName].high.toString() : undefined
+                    const curPriceObject = curPrices && curPrices[item.assetName] 
+                    const curPrice = curPriceObject && curPriceObject.high !=0 ? curPriceObject.high : curPriceObject?.tc
+                    
+                    
+                
                     const actualPrice = valueWithBonus(Number(curPrice), item.bonus ?? [])
                     // const bonus = item.bonus ? : 1
                     // const curProfile = curPrice ? Number(100 * Number(curPrice)  / item.priceIn).toFixed(2) : ''
-                    const title = <p className="ml-7">{item.bonus && item.bonus.length > 0 && (<span className="text-yellow-500 ">* </span>)}{curPrice ? (<><span className={perfConver(Number(actualPrice) / item.priceIn).color}>{perfConver(Number(actualPrice) / item.priceIn).info}</span></>) : <></>}  <span className="ml-10 dark:text-zinc-200 text-sm">  {item.portion}%</span> </p>
+                    const title = <p className="ml-1">{item.bonus && item.bonus.length > 0 && (<span className="text-yellow-500 ">* </span>)}{curPrice ? (<><span className={perfConver(Number(actualPrice) / item.priceIn).color}>{item.assetName} {perfConver(Number(actualPrice) / item.priceIn).info}</span></>) : <></>}  <span className="ml-10 dark:text-zinc-200 text-sm"> tỷ trọng vốn {item.portion}%</span> </p>
                     const content = (
                       <div className="flex cols-2 gap-8 mb-5">
                         <div>

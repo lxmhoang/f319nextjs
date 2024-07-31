@@ -17,29 +17,34 @@ export async function GET(request: Request) {
       message.push('pred path : ' + ref.path + '\n')
       const matchedPriceToday = await getTodayMatchedVolume(pred.assetName)
       message.push(' asset ' + pred.assetName + ' priceIn: ' + pred.priceIn + ' priceOut = ' + pred.priceOut + ' cutloss ' + pred.cutLoss + ' deadline ' + new Date(pred.deadLine).toLocaleDateString('vi') + ' portion ' + pred.portion + '% . \n MatchedPriceToday :  ' + matchedPriceToday.toString())
-      const max = Math.max.apply(Math, matchedPriceToday)
-      const min = Math.min.apply(Math, matchedPriceToday)
-      message.push('  max : ' + max + '  min:  ' + min + '  date :  ' + (new Date()).toLocaleDateString('vi') + '\n')
-
-      if (min >= pred.priceOut) {
-
-        message.push('hit price Out, close ' + ref.path + 'with price Release ' + pred.priceOut + '\n')
-        await serverMarkPredWin(pred)
-
-      } else if (min <= pred.cutLoss) {
-
-        message.push('hit cutLoss, close ' + ref.path + ' with price Release ' + pred.cutLoss + '\n')
-        await serverMarkPredCutLoss(pred)
-
-      } else if (datesGreaterThan(new Date(), new Date(pred.deadLine))) {
-        
-        const priceRelease = true ? min / 1000 : max / 1000
-        message.push(' hit deadLine , close ' + ref.path + 'with price Release ' + priceRelease + '\n')
-        await serverMarkPredExpired(pred, priceRelease)
+      if (matchedPriceToday.length > 0) {
+        const max = Math.max.apply(Math, matchedPriceToday)
+        const min = Math.min.apply(Math, matchedPriceToday)
+        message.push('  max : ' + max + '  min:  ' + min + '  date :  ' + (new Date()).toLocaleDateString('vi') + '\n')
+  
+        if (min >= pred.priceOut) {
+  
+          message.push('hit price Out, close ' + ref.path + 'with price Release ' + pred.priceOut + '\n')
+          await serverMarkPredWin(pred)
+  
+        } else if (min <= pred.cutLoss) {
+  
+          message.push('hit cutLoss, close ' + ref.path + ' with price Release ' + pred.cutLoss + '\n')
+          await serverMarkPredCutLoss(pred)
+  
+        } else if (datesGreaterThan(new Date(), new Date(pred.deadLine))) {
+          
+          const priceRelease = true ? min / 1000 : max / 1000
+          message.push(' hit deadLine , close ' + ref.path + 'with price Release ' + priceRelease + '\n')
+          await serverMarkPredExpired(pred, priceRelease)
+  
+        } else {
+          message.push(' still In progress \n')
+          // continue Inprogress
+        }
 
       } else {
-        message.push(' still In progress \n')
-        // continue Inprogress
+        message.push(' truoc phien, chua co data')
       }
     }
 

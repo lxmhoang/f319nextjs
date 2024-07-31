@@ -32,15 +32,16 @@ export async function getRealTimeStockData(stocks: string[]) {
       next: { revalidate: 0 },
     })
     const result = await data.json()
-    let object : {[key: string] : {high: number, low: number}} = {}
+    let object : {[key: string] : {high: number, low: number, tc: number}} = {}
 
-    result.map((d: { a: string, v: number,w : number }) => {
+    result.map((d: { a: string, v: number,w : number, b: number }) => {
       const key = d.a as string
       const value = {
-        high :d.v ,// d.v is hight, d.w is low,
-        low: d.w
+        high :d.v ,// d.v is hight, d.w is low, d.b la tham chieu
+        low: d.w,
+        tc: d.b
       }
-      if (d.v == 0 || d.w == 0) {
+      if (d.v == 0 && d.w == 0 && d.b == 0) {
         console.log(' khong lay duoc gia cua co phieu ' + d.a + '  api ngoai tra ve 0  ' + d.a )
       } else {
         object[key] = value
@@ -58,6 +59,7 @@ export async function getRealTimeStockData(stocks: string[]) {
 export async function getTodayMatchedVolume(stock: string) {
   try {
     const response = await fetch(urlMatchTime + stock + '/matched-vol-by-price',{
+      next: { revalidate: 0 },
       method: "GET",
       headers: {
         "origin": "https://iboard.ssi.com.vn",
@@ -115,35 +117,35 @@ export async function getRealtimeStockList() {
       name: item.cv,
       low: item.l/1000,
       high: item.h/1000,
-      tc: item.r/100
+      tc: item.r/1000
     }
   })
 }
 
-async function getCompanyInfo() {
-  try {
-    const res = await fetch (urlCompanyInfo)
-    if (res.ok) {
-      const json = await res.json()
-      const result = json.Data as companyInfo[]
-      console.log(result[3])
-      return result
-      // console.log('aaaaa ' + JSON.stringify(json))
+// async function getCompanyInfo() {
+//   try {
+//     const res = await fetch (urlCompanyInfo)
+//     if (res.ok) {
+//       const json = await res.json()
+//       const result = json.Data as companyInfo[]
+//       console.log(result[3])
+//       return result
+//       // console.log('aaaaa ' + JSON.stringify(json))
 
-    } else  {
-      throw new Error('Failed to fetch data')
-    }
+//     } else  {
+//       throw new Error('Failed to fetch data')
+//     }
 
-  }
-  catch (err) {
-    throw err
-  }
+//   }
+//   catch (err) {
+//     throw err
+//   }
   
-}
+// }
 
 export default async function getStockData() {
   try {
-    const res = await fetch (urlSSIVNXALL)
+    const res = await fetch (urlSSIVNXALL, {next: { revalidate: 0 },})
     if (res.ok) {
       const json = await res.json()
       const result = json.data as realTimeStockInfo[]
