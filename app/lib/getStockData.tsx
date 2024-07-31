@@ -7,14 +7,15 @@ const hoseCode = '1'
 const hnxCode = '2'
 const hnx30Code = '12'
 const upcomCode = '9'
-const url = 'https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode='
+const urlFloor = 'https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode='
 const urlMatchTime = 'https://iboard-query.ssi.com.vn/stock/'
 const urlRealTime = 'https://banggia.cafef.vn/stockhandler.ashx?userlist='
 const urlBonus = 'https://finance.vietstock.vn/data/eventstypedata'
 const urlCompanyInfo = 'https://s.cafef.vn/ajax/pagenew/databusiness/congtyniemyet.ashx?centerid=0&skip=0&take=2000&major=0'
-
+const urlSSIVNXALL = 'https://iboard-query.ssi.com.vn/v2/stock/group/VNXALL'
 
 type companyInfo = {Symbol: string, CompanyName: string}
+type realTimeStockInfo = { ss: string, cv: string, h: number, l: number, r: number} // r tham chieu
 type stockToday = {Symbol: string, TotalVolume: number, HighPrice: number 
 }
 
@@ -96,19 +97,27 @@ export async function getLocalStockList() {
 }
 
 
-export async function getOnlineStockList() {
-  const stockToday = (await getStockData(1000)).map((item) => item.Symbol)
-  const companyInfo = await getCompanyInfo()
-  const stockTodayWithComName = stockToday.map((item) => {
-    const name = companyInfo.find((it) => it.Symbol == item)?.CompanyName ?? "__"
+export async function getRealtimeStockList() {
+  const stockListInfo = await getStockData()
+  // const companyInfo = await getCompanyInfo()
+  // const stockTodayWithComName = stockToday.map((item) => {
+  //   const name = companyInfo.find((it) => it.Symbol == item)?.CompanyName ?? "__"
 
-      return {
-        code: item,
-        name: name
-      }
+  //     return {
+  //       code: item,
+  //       name: name
+  //     }
 
+  // })
+  return stockListInfo.map ((item) => {
+    return {
+      code: item.ss,
+      name: item.cv,
+      low: item.l/1000,
+      high: item.h/1000,
+      tc: item.r/100
+    }
   })
-  return stockTodayWithComName
 }
 
 async function getCompanyInfo() {
@@ -132,76 +141,98 @@ async function getCompanyInfo() {
   
 }
 
-
-
-export default async function getStockData(minVolume: number) {
+export default async function getStockData() {
   try {
+    const res = await fetch (urlSSIVNXALL)
+    if (res.ok) {
+      const json = await res.json()
+      const result = json.data as realTimeStockInfo[]
+      // console.log('result ')
+      // console.log(result[3])
+      return result
+      // console.log('aaaaa ' + JSON.stringify(json))
 
-    const [responsevn100, responsevn30, responsehose, responsehnx, responsehnx30, responseupcom] = await Promise.all([
-      fetch(url + vn100Code),
-      fetch(url + vn30Code),
-      fetch(url + hoseCode),
-      fetch(url + hnxCode),
-      fetch(url + hnx30Code),
-      fetch(url + upcomCode),
-    ]
+    } else  {
+      throw new Error('Failed to fetch data')
+    }
 
-
-    )
-    const [
-      resultvn100,
-      resultvn30,
-      resulthose,
-      resulthnx,
-      resulthnx30,
-      resultupcom
-    ] = await Promise.all([
-      responsevn100.json(),
-      responsevn30.json(),
-      responsehose.json(),
-      responsehnx.json(),
-      responsehnx30.json(),
-      responseupcom.json()
-    ]);
-    // const resultvn30 = await responsevn30.json();
-    // const resulthose = await responsehose.json();
-    // const resulthnx = await responsehnx.json();
-    // const resulthnx30 = await responsehnx30.json();
-    // const resultupcom = await responseupcom.json();
-
-    const arrvn100 = (resultvn100.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-    const arrvn30 = (resultvn30.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-    const arrvnhose = (resulthose.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-    const arrvnhnx = (resulthnx.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-    const arrvnhnx30 = (resulthnx30.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-    const arrvnupcom = (resultupcom.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-
-    var symbols = arrvn100.map(d => d.Symbol)
-    let merge2 = arrvn100.concat(arrvn30.filter(d => !symbols.includes(d.Symbol)))
-
-    symbols = merge2.map(d => d.Symbol)
-    let merge3 = merge2.concat(arrvnhose.filter(d => !symbols.includes(d.Symbol)))
-
-    symbols = merge3.map(d => d.Symbol)
-    let merge4 = merge3.concat(arrvnhnx.filter(d => !symbols.includes(d.Symbol)))
-
-    symbols = merge4.map(d => d.Symbol)
-    let merge5 = merge4.concat(arrvnhnx30.filter(d => !symbols.includes(d.Symbol)))
-
-    symbols = merge5.map(d => d.Symbol)
-    let merge6 = merge5.concat(arrvnupcom.filter(d => !symbols.includes(d.Symbol)))
-
-
-    console.log("arr length " + merge6.length)
-
-    // console.log(merge6 )
-    return merge6
-  } catch (err) {
+  }
+  catch (err) {
     throw err
-  } finally {
   }
 
 }
+
+
+
+// export default async function getStockData(minVolume: number) {
+//   try {
+
+//     const [responsevn100, responsevn30, responsehose, responsehnx, responsehnx30, responseupcom] = await Promise.all([
+//       fetch(url + vn100Code),
+//       fetch(url + vn30Code),
+//       fetch(url + hoseCode),
+//       fetch(url + hnxCode),
+//       fetch(url + hnx30Code),
+//       fetch(url + upcomCode),
+//     ]
+
+
+//     )
+//     const [
+//       resultvn100,
+//       resultvn30,
+//       resulthose,
+//       resulthnx,
+//       resulthnx30,
+//       resultupcom
+//     ] = await Promise.all([
+//       responsevn100.json(),
+//       responsevn30.json(),
+//       responsehose.json(),
+//       responsehnx.json(),
+//       responsehnx30.json(),
+//       responseupcom.json()
+//     ]);
+//     // const resultvn30 = await responsevn30.json();
+//     // const resulthose = await responsehose.json();
+//     // const resulthnx = await responsehnx.json();
+//     // const resulthnx30 = await responsehnx30.json();
+//     // const resultupcom = await responseupcom.json();
+
+//     const arrvn100 = (resultvn100.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
+//     const arrvn30 = (resultvn30.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
+//     const arrvnhose = (resulthose.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
+//     const arrvnhnx = (resulthnx.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
+//     const arrvnhnx30 = (resulthnx30.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
+//     const arrvnupcom = (resultupcom.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
+
+//     var symbols = arrvn100.map(d => d.Symbol)
+//     let merge2 = arrvn100.concat(arrvn30.filter(d => !symbols.includes(d.Symbol)))
+
+//     symbols = merge2.map(d => d.Symbol)
+//     let merge3 = merge2.concat(arrvnhose.filter(d => !symbols.includes(d.Symbol)))
+
+//     symbols = merge3.map(d => d.Symbol)
+//     let merge4 = merge3.concat(arrvnhnx.filter(d => !symbols.includes(d.Symbol)))
+
+//     symbols = merge4.map(d => d.Symbol)
+//     let merge5 = merge4.concat(arrvnhnx30.filter(d => !symbols.includes(d.Symbol)))
+
+//     symbols = merge5.map(d => d.Symbol)
+//     let merge6 = merge5.concat(arrvnupcom.filter(d => !symbols.includes(d.Symbol)))
+
+
+//     console.log("arr length " + merge6.length)
+
+//     // console.log(merge6 )
+//     return merge6
+//   } catch (err) {
+//     throw err
+//   } finally {
+//   }
+
+// }
 
 // export async function getBonusData(fDate:string , tDate:string, code: string = '') {
 

@@ -5,7 +5,7 @@ import { useFormState } from 'react-dom';
 import { createRef, useEffect, useState } from 'react';
 import { Divider, useDisclosure, Autocomplete, AutocompleteItem, Slider, Button, Link } from '@nextui-org/react';
 import { ConfirmationModal } from '../confirm';
-import { getLocalStockList, getOnlineStockList, getRealTimeStockData } from '../../lib/getStockData';
+import { getRealTimeStockData, getRealtimeStockList } from '../../lib/getStockData';
 import { createNewPrediction } from '@/app/lib/action';
 // import { Button } from '../button';
 import { Datepicker, Label, TextInput } from 'flowbite-react';
@@ -36,13 +36,21 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
 
 
     // const [remainPortion, setRemainPortion] = useState<number>()
-    const [selectedStock, setSelectedStock] = useState<{ code: string, name: string } | undefined>()
-    const [selectedStockPrice, setSelectedStockPrice] = useState<{ high: number, low: number }>()
-    const [stocksData, setStocksData] = useState<{ code: string, name: string }[]>([])
+    const [selectedStock, setSelectedStock] = useState<{ code: string, name: string, high: number, low: number, tc: number } | undefined>()
+
+    const selectedStockPrice = selectedStock ? {
+        high: selectedStock.high,
+        low: selectedStock.low,
+        tc: selectedStock.tc
+    } : undefined
+
+    // const [selectedStockPrice, setSelectedStockPrice] = useState<{ high: number, low: number, tc: number }>()
+    const [stocksData, setStocksData] = useState<{ code: string, name: string, tc: number, high: number, low: number }[]>([])
     // const stockCodes = stocksData.map((item) => item.code)
     const [portion, setPortion] = useState<number>(0)
-    const minTakeProfitPrice = selectedStockPrice ? Math.round(selectedStockPrice.high * 1.2 * 100) / 100 : undefined
-    const maxCutLossPrice = selectedStockPrice ? Math.round(selectedStockPrice.high * 0.8 * 100) / 100 : undefined
+    const selectedPrice = selectedStockPrice ? selectedStockPrice.high != 0 ? selectedStockPrice.high : selectedStockPrice.tc : undefined
+    const minTakeProfitPrice = selectedPrice ? Math.round(selectedPrice * 1.2 * 100) / 100 : undefined
+    const maxCutLossPrice = selectedPrice ? Math.round(selectedPrice * 0.8 * 100) / 100 : undefined
 
     const router = useRouter()
 
@@ -70,8 +78,8 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
         }
 
     }, [addPredictState])
-    
-   
+
+
 
 
 
@@ -87,13 +95,13 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
         const fetchData = async () => {
             // const result = await getLocalStockList() as { code: string, name: string }[]
             try {
-                const result = await getOnlineStockList()
-                console.log('fetched local stock list' + result)
+                const result = await getRealtimeStockList()
+                console.log('fetched online  stock list' + result)
                 setStocksData(result)
             } catch (error) {
-                const result = await getLocalStockList()
-                console.log('fetched local stock list' + result)
-                setStocksData(result)
+                // const result = await getLocalStockList()
+                // console.log('fetched local stock list' + result)
+                // setStocksData(result)
             }
 
         }
@@ -103,27 +111,41 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
 
     const ref = createRef<HTMLFormElement>();
     const codeInputRef = createRef<HTMLInputElement>()
-    useEffect(() => {
-        const fetchData = async () => {
-            console.log('aaaa --- selected stock : ' + JSON.stringify(selectedStock))
-            if (selectedStock) {
-                const result = await getRealTimeStockData([selectedStock.code])
-                const price = result[selectedStock.code]
-                setSelectedStockPrice(price)
-            } else {
-                setSelectedStockPrice(undefined)
-            }
-        }
+    // useEffect(() => {
+    //     // const fetchData = async () => {
+    //     //     console.log('aaaa --- selected stock : ' + JSON.stringify(selectedStock))
+    //     //     if (selectedStock) {
+    //     //         const result = await getRealTimeStockData([selectedStock.code])
+    //     //         const price = result[selectedStock.code]
+    //     //         setSelectedStockPrice(price)
+    //     //     } else {
+    //     //         setSelectedStockPrice(undefined)
+    //     //     }
+    //     // }
 
-        console.log('======== update selected stock ' + selectedStock)
+    //     console.log('======== update selected stock ' + selectedStock)
 
-        ref.current?.reset()
-        fetchData()
+    //     // ref.current?.reset()
+    //     // fetchData()
+    //     if (selectedStock) {
+    //         setSelectedStockPrice(
+    //             {
+    //                 high: selectedStock.high,
+    //                 low: selectedStock.low,
+    //                 tc: selectedStock.tc
+    //             })
+
+    //     }       
 
 
-    }, [selectedStock])
 
+    // }, [selectedStock])
 
+    if (!stocksData) {
+        return (
+            <>Loading ... </>
+        )
+    }
 
     return (
         <>
@@ -144,21 +166,22 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
                 }</div>
                 <div className='flex space-x-4'>
                     <TextInput ref={codeInputRef} className='w-[140px]' onChange={(e) => {
-                        let onlyChar = e.target.value.replace(/[^a-zA-Z0-9]/gm,"")
+                        let onlyChar = e.target.value.replace(/[^a-zA-Z0-9]/gm, "")
                         let value = onlyChar.toUpperCase()
                         if (value.length > 3 && !value.startsWith('FUE')) {
-                            value = value.slice(value.length -3, value.length)
+                            value = value.slice(value.length - 3, value.length)
                         } else if (value.length > 8 && value.startsWith('FUE')) {
-                            value = value.slice(value.length -8, value.length)
+                            value = value.slice(value.length - 8, value.length)
                         }
                         e.target.value = value
                     }} />
                     <Button color='primary' onClick={() => {
                         if (codeInputRef.current) {
-                            const result = stocksData.find((it) => { return it.code == codeInputRef.current!.value})
+                            const result = stocksData.find((it) => { return it.code == codeInputRef.current!.value })
                             console.log('result ' + JSON.stringify(result))
                             // if (result) {
-                                setSelectedStock(result)
+                            setSelectedStock(result)
+                            ref.current?.reset()
 
                             // }
                         }
@@ -213,7 +236,7 @@ export function PredictCreationForm({ remainPortion }: { remainPortion: number }
                             <TextInput className='w-1/2' type="number" name="tempPriceIn" defaultValue={selectedStockPrice?.high.toString()} disabled />
                         </div>
                         <div className="mb-2 mr-4 block max-w-screen-sm gap-2" >
-                            <Label value={"Chọn giá chốt lãi (dương ít nhất 20%), từ " + minTakeProfitPrice + " trở lên ß"} />
+                            <Label value={"Chọn giá chốt lãi (dương ít nhất 20%), từ " + minTakeProfitPrice + " trở lên"} />
                             <TextInput className='w-1/2' step={0.1} type="number" name="takeProfitPrice"
                                 defaultValue={(minTakeProfitPrice + 1).toString()} placeholder={" >=  " + minTakeProfitPrice.toString()} required disabled={selectedStockPrice == undefined}
                             />
