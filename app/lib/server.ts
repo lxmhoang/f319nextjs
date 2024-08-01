@@ -1109,7 +1109,7 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
         })
         )
     }
-    const getDonePredOnly = !(user && didFollow(user, expert) || (user && user.uid == expert.id))
+    const getDonePredOnly = !(user && didFollow(user, expert) || (user && user.uid == expert.id) || user?.isAdmin)
     console.log('getDonePredOnly ' + getDonePredOnly + '  user ' + user)
     // let response = await firestoreQueryCollection<Prediction>('expert/' + expert.id + '/preds', [], predAdminConverter)
     let response = await databaseGetDoc('user/' + expert.id + '/preds')
