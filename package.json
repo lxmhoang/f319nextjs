@@ -9,10 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@aws-amplify/adapter-nextjs": "^1.0.20",
     "@heroicons/react": "^2.1.1",
     "@nextui-org/react": "^2.4.0",
-    "aws-amplify": "^6.0.20",
     "axios": "^1.7.2",
     "browser-image-compression": "^2.0.2",
     "firebase": "^10.9.0",
@@ -21,17 +19,20 @@
     "flowbite-react": "^0.10.1",
     "framer-motion": "^11.0.28",
     "fs": "^0.0.1-security",
+    "luxon": "^3.4.4",
     "net": "^1.0.2",
     "next": "^14.2.2",
     "react": "^18",
     "react-dom": "^18",
     "request": "^2.88.2",
+    "rxjs": "^7.8.1",
     "server-only": "^0.0.1",
     "tls": "^0.0.1",
     "zod": "^3.22.2"
   },
   "devDependencies": {
     "@types/js-cookie": "^3.0.6",
+    "@types/luxon": "^3.4.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

@@ -3,6 +3,8 @@
 import { SessionCookieOptions, getAuth } from "firebase-admin/auth";
 import { cookies } from "next/headers";
 import { createFirebaseAdminApp } from "./adminApp";
+import { redirect } from "next/navigation";
+import { refreshToken } from "../client";
 
 
 export async function getSession() {
@@ -10,21 +12,6 @@ export async function getSession() {
         return cookies().get("__session")?.value;
     } catch (error) {
         return undefined;
-    }
-}
-
-async function isUserAuthenticated(session: string | undefined = undefined) {
-    const _session = session ?? (await getSession());
-    if (!_session) return false;
-
-    const auth = getAuth(adminApp)
-
-    try {
-        const isRevoked = !(await auth.verifySessionCookie(_session, false));
-        return !isRevoked;
-    } catch (error) {
-        console.log("error verifying session" + error);
-        return false;
     }
 }
 
@@ -72,16 +59,16 @@ export async function setClaim(uid: string, data: any) {
 
 
 export async function getUserInfoFromSession(session: string | undefined = undefined) {
+    // throw new Error('auth/session-cookie-expired')
     const _session = session ?? (await getSession());
     if (!_session) return undefined
-
     try {
         const decodedIdToken = await getAuth(adminApp).verifySessionCookie(_session, true);
         const expertPeriod = decodedIdToken["expertPeriod"]
         const expertExpire = decodedIdToken["expertExpire"]
         const rankExpire = decodedIdToken["rankExpire"]
         const isExpert = expertExpire ?
-           Number(expertExpire) > Date.now()
+            Number(expertExpire) > Date.now()
             :
             false
         const isRank = rankExpire ?
@@ -105,38 +92,13 @@ export async function getUserInfoFromSession(session: string | undefined = undef
         console.log(' result of getUserInfoFromSession : ' + JSON.stringify(data))
 
         return data;
-    } catch (error) {
-        console.log("222 error verifying session   " + error);
-        return undefined
-    }
-
-
-
-}
-
-export async function getCurrentUserId() {
-    const session = await getSession();
-    if (!(await isUserAuthenticated(session))) {
-        return null;
-    }
-
-    const decodedIdToken = await getAuth(adminApp).verifySessionCookie(session!);
-    return decodedIdToken.uid
-}
-
-export async function getCurrentUser() {
-
-    const uid = await getCurrentUserId()
-    if (uid) {
-        const currentUser = await getAuth(adminApp).getUser(uid);
-        return currentUser
-    } else {
-        return null
+    } catch (e : any) {
+        throw Error(e.code ?? "no error code")
     }
 }
 
 export async function createSessionCookie(idToken: string, sessionCookieOptions: SessionCookieOptions) {
-    console.log('zzzzz ')
+    console.log('createSessionCookie ')
     const cookie = getAuth(adminApp).createSessionCookie(idToken, sessionCookieOptions);
     return cookie
 }

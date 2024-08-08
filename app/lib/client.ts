@@ -66,8 +66,12 @@ export async function refreshToken(firebaseUser: User | null | undefined) {
     result = await postIdToken(newIdtoken)
 
     console.log('done updating token after creating expert')
+    return {
+      success: true,
+      error: "done post new ID token"
+    }
   } catch (e) {
-    console.log('sth wrong with post new ID token')
+    console.log('sth wrong with post new ID token : ' + JSON.stringify(e))
 
     return {
       success: false,
@@ -75,9 +79,5 @@ export async function refreshToken(firebaseUser: User | null | undefined) {
     }
   }
   
-  return {
-    success: true,
-    error: "done post new ID token"
-  }
 
 }

@@ -3,16 +3,16 @@
 'use server'
 import { Expert, ExpertStatus, expertAdminConverter, expertFromRaw } from "../model/expert";
 import { Prediction, predAdminConverter, predictionFromRaw } from "../model/prediction";
-import { firestoreAddNewModal, firestoreBatchUpdate, firestoreCountModal, firestoreGetModal, firestoreGetRaw, firestoreQueryCollection, firestoreQueryCollectionGroup, firestoreSetDoc, firestoreUpdateDoc } from "./firebaseadmin/adminfirestore";
+import { firestoreAddNewModal, firestoreCountModal, firestoreGetModal, firestoreQueryCollection, firestoreQueryCollectionGroup, firestoreSetDoc, firestoreUpdateDoc } from "./firebaseadmin/adminfirestore";
 
 import { getUserInfoFromSession, getthuquyUID, setClaim } from "@/app/lib/firebaseadmin/adminauth";
-import { bonusAppliedToPred, getRealTimeStockData } from "./getStockData";
+import { getRealTimeStockData } from "./getStockData";
 import { FieldValue, WhereFilterOp } from "firebase-admin/firestore";
 import { User, userAdminConverter } from "../model/user";
 import { Subscription, subscriptionAdminConverter } from "../model/subscription";
 import { cookies } from "next/headers";
-import { addComma, arrayFromData, dataFromArray, didFollow, perfConver, sortByField } from "./utils";
-import { UserNoti, notiAdminConverter } from "../model/noti";
+import { addComma, arrayFromData, dataFromArray, didFollow, perfConver, priceStockInTime, sortByField } from "./utils";
+import { UserNoti } from "../model/noti";
 import { TranType, Transaction, tranAdminConverter, tranTypeText } from "../model/transaction";
 import { getNextMonthMileStone, getNextQuarterMileStone, getNextWeekMileStone, getNextYearMileStone, getPivotDates } from "./statistic";
 import { BoardProps } from "../ui/rank";
@@ -118,7 +118,6 @@ export async function getMyAdvisorProfile() {
         expert: expert,
         expired: expiration
     }
-
 }
 
 export async function clientGetAllMyPreds() {
@@ -233,7 +232,7 @@ export async function closeWIPPreds(ids: string[], rank: boolean = false) {
 
     for (const pred of predsToBeClosed) {
         if (pred.id) {
-            const currentLowPrice = prices[pred.assetName].low
+            const currentLowPrice = priceStockInTime(prices[pred.assetName], 'favorLow', Date.now())// prices[pred.assetName].low
             console.log('begin to closindg pred with assest : ' + pred.assetName + ' price ' + currentLowPrice)
 
             const payload = {
@@ -272,7 +271,7 @@ export async function persistUserInfo(payload: string | undefined) {
         cookies().delete("__session");
         cookies().delete('uInfo')
     } else {
-        const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+        const expiresIn = 60 * 60 * 24 * 14 * 1000; // 14 days
         const userInfo: User = JSON.parse(payload)
         const data = { isExpert: userInfo.isExpert ?? false }
         // const descr = await encrypt(JSON.stringify(data))
@@ -1131,6 +1130,19 @@ export async function viewExpertPreds(user: User | undefined, expert: Expert | u
     // console.log('result ' + JSON.stringify(result))
     return JSON.stringify(result)
 
+}
+
+export async function getAllPredsSince(date: Date, eid: string) {
+    const value = await databaseGetDoc('user/' + eid + '/preds')
+    var array = arrayFromData<Prediction>(value)
+    const preds = array.map((item) => {
+        var pred = item
+        const bonus = arrayFromData<BonusData>(item.bonus)
+        pred.bonus = bonus
+        return pred
+    })
+    const result = preds.filter((item) => { return item.dateIn >= date.getTime()})
+    return result
 }
 
 export async function getPredsSince(date: Date, inProgress: boolean, eid: string) {

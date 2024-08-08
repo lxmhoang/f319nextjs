@@ -25,6 +25,7 @@ import { redirect } from 'next/navigation';
 import { refreshToken } from '@/app/lib/client';
 import { PhoneIcon } from '@heroicons/react/16/solid';
 import { explainExpert, tncExpertType } from '../tnc/explain';
+import { SubmitButton } from '../submitButton';
 
 export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undefined }) {
 
@@ -205,415 +206,420 @@ export function ExpertFormComponent({ expertInfo }: { expertInfo: string | undef
 
     return (
         <div className="p-4">
-            {firebaseUser === undefined  ? <>Loading</>
+            {firebaseUser === undefined ? <>Loading</>
                 :
-                (user?.isExpert && !expert) ? <>Đã là chuyên gia rồi </> : 
+                (user?.isExpert && !expert) ? <>Đã là chuyên gia rồi </> :
 
-                <div className='pl-3 pr-3 sm:pl-10 sm:pr-10 mx-auto'>
-                    {/* {JSON.stringify(state)} */}
-                    {/* {userInfo.user?.expertType} */}
-                    <ConfirmationModal
-                        isOpen={showModal}
-                        onClose={() => { setShowModal(false) }}
-                        onLeftButtonClick={handleTapOkey}
-                        title={""}
-                        message={state.message ?? ""}
-                        leftButtonText='Okey'
-                    />
-                    <div className='mb-8'>
-                        <Blockquote>
-                            {expert ? "Cập nhật thông tin chuyên gia" : "Đăng ký chuyên gia"}
-                        </Blockquote>
-                        {/* <p className='mt-2 text-sm'>Một tài khoản người dùng được đăng ký 1 trong 2 loại chuyên gia là solo hoặc rank. Sau khi chọn rồi sẽ không thể thay đổi, tuy nhiên nếu muốn tham gia tư vấn cả 2 loại thì bạn chỉ cần tạo tài khoản người dùng mới và đăng ký loại chuyên gia thứ 2</p> */}
-                        <p className='mt-2 text-xs'>
-                        Không đưa thông tin có thể gợi ý liên lạc như số điện thoại, facebook ,zalo, telegram ... vào profile chuyên gia, tránh trường hợp lôi kéo người dùng sang nền tảng khác 
-                        </p>
-                        {/* <p className='mt-2 text-xs'> * Để tránh 1 số chuyên gia lôi kéo nhà đầu tư, thông tin đăng ký (ảnh, giới thiệu ngắn) <span className='text-rose-400 font-bold dark:text-amber-500'>không được</span> bao gồm thông tin cá nhân, sdt, group tele, zalo ... dưới mọi hình thức  </p> */}
-                        {/* <p className='text-xs'>Để tránh việc 1 số chuyên gia sau khi có uy tín đã mời gọi nhà đầu tư sang các group zalo, telegram riêng không đảm bảo đồng nhất khuyến nghị, từ 01/07/2023, group chat của mỗi chuyên gia sẽ bị disable, thông tin chuyên gia sẽ không được gợi ý sđt, zalo, tele ... hay bất kỳ thông tin riêng dưới mọi hình thức </p> */}
-                    </div>
-                    <Divider />
-                    <form action={dispatch} className='mt-5' onChange={(e) => {
-                        const formData = new FormData(e.currentTarget)
-                        checkInfoChange(formData)
-                    }}>
+                    <div className='pl-3 pr-3 sm:pl-10 sm:pr-10 mx-auto'>
+                        {/* {JSON.stringify(state)} */}
+                        {/* {userInfo.user?.expertType} */}
+                        <ConfirmationModal
+                            isOpen={showModal}
+                            onClose={() => { setShowModal(false) }}
+                            onLeftButtonClick={handleTapOkey}
+                            title={""}
+                            message={state.message ?? ""}
+                            leftButtonText='Okey'
+                        />
+                        <div className='mb-8'>
+                            <Blockquote>
+                                {expert ? "Cập nhật thông tin chuyên gia" : "Đăng ký chuyên gia"}
+                            </Blockquote>
+                            {/* <p className='mt-2 text-sm'>Một tài khoản người dùng được đăng ký 1 trong 2 loại chuyên gia là solo hoặc rank. Sau khi chọn rồi sẽ không thể thay đổi, tuy nhiên nếu muốn tham gia tư vấn cả 2 loại thì bạn chỉ cần tạo tài khoản người dùng mới và đăng ký loại chuyên gia thứ 2</p> */}
+                            <p className='mt-2 text-xs'>
+                                Không đưa thông tin có thể gợi ý liên lạc như số điện thoại, facebook ,zalo, telegram ... vào profile chuyên gia, tránh trường hợp lôi kéo người dùng sang nền tảng khác
+                            </p>
+                            {/* <p className='mt-2 text-xs'> * Để tránh 1 số chuyên gia lôi kéo nhà đầu tư, thông tin đăng ký (ảnh, giới thiệu ngắn) <span className='text-rose-400 font-bold dark:text-amber-500'>không được</span> bao gồm thông tin cá nhân, sdt, group tele, zalo ... dưới mọi hình thức  </p> */}
+                            {/* <p className='text-xs'>Để tránh việc 1 số chuyên gia sau khi có uy tín đã mời gọi nhà đầu tư sang các group zalo, telegram riêng không đảm bảo đồng nhất khuyến nghị, từ 01/07/2023, group chat của mỗi chuyên gia sẽ bị disable, thông tin chuyên gia sẽ không được gợi ý sđt, zalo, tele ... hay bất kỳ thông tin riêng dưới mọi hình thức </p> */}
+                        </div>
+                        <Divider />
+                        <form action={dispatch} className='mt-5' onChange={(e) => {
+                            const formData = new FormData(e.currentTarget)
+                            checkInfoChange(formData)
+                        }}>
 
-                        <div className="rounded-md bg-black-50">
-                            {/* <input type="hidden" id="uid" name="uid" value={userInfo.uid} /> */}
-                            {/* Name */}
-                            <div className="mb-4 max-w-md">
-                                <label htmlFor="name" className="mb-2 block text-sm font-medium">
-                                    Tên hiển thị <span className='text-rose-500'>*</span>
-                                </label>
-                                <div className="relative mt-2 rounded-md ">
-                                    <div className="relative">
-                                        <TextInput
-                                            // id="name"
-                                            disabled={expert != undefined}
-                                            name="name"
-                                            type="text"
-                                            placeholder="Tên sẽ được hiển thị "
-                                            defaultValue={expert ? expert.name : defaultName ?? ""}
-                                            className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
-                                            required
-                                        />
-                                        <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
-                                    </div>
-                                </div>
-                                <div id="customer-error" aria-live="polite" aria-atomic="true">
-                                    {state.errors?.name &&
-                                        state.errors.name.map((error: string) => (
-                                            <p className="mt-2 text-sm text-red-500" key={error}>
-                                                {error}
-                                            </p>
-                                        ))}
-                                </div>
-                            </div>
-                            <div className="mb-4 max-w-md">
-                                <label htmlFor="phong" className="mb-2 block text-sm font-medium">
-                                    Số điện thoại <span className='text-xs'>  (chỉ dùng cho dịch vụ trợ giúp, sẽ không hiển thị với người dùng) </span>
-                                </label>
-                                <div className="relative mt-2 rounded-md ">
-                                    <div className="relative">
-                                        <TextInput
-                                            // id="name"
-                                            // disabled={expert != undefined}
-                                            name="phoneNumber"
-                                            type="number"
-                                            placeholder="0912345678"
-                                            defaultValue={expert ? expert.phoneNumber : ""}
-                                            className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
-                                            
-
-                                        />
-                                        <PhoneIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
-                                    </div>
-                                </div>
-                                <div id="customer-error" aria-live="polite" aria-atomic="true">
-                                    {state.errors?.name &&
-                                        state.errors.name.map((error: string) => (
-                                            <p className="mt-2 text-sm text-red-500" key={error}>
-                                                {error}
-                                            </p>
-                                        ))}
-                                </div>
-                            </div>
-                            {
-                                (expert) && (
-                                    <>
-                                        <div className="mb-4 max-w-md">
-                                            <div className='block'>
-                                                <div>
-                                                    <Label className='text-md'>{"Loại tài khoản: " + expert.expertType}</Label>
-                                                </div>
-                                                <div>
-                                                    <Label className='text-md'>{"Ngày hết hạn:  " + (expert.expertPeriod == 'yearly' ? (new Date(expert.expertExpire)).toLocaleDateString('vi') : "Trọn đời")}</Label>
-                                                </div>
-                                            </div>
-
-                                        </div>
-
-                                        {expert.expertPeriod == 'yearly' && (
-                                            <div className="ml-8 mb-4 max-w-md">
-                                                <fieldset className="flex max-w-md flex-col gap-4">
-                                                    {/* <legend className="mb-4">Upgrade thời hạn </legend> */}
-                                                    <div className="flex items-center gap-2">
-                                                        <Checkbox id="expertPeriod" name="expertPeriod" defaultChecked={false} value="perm" onChange={(e) => {
-                                                            setUpgrade(e.target.checked)
-                                                        }} />
-                                                        <Label className=''>{"Nâng cấp lên trọn đời"}</Label>
-                                                        {upgrade && <Label className=''>{" phí :  " + convert(fee ?? 0)}</Label>}
-
-                                                    </div>
-                                                </fieldset>
-                                            </div>)
-                                        }
-                                    </>
-                                )
-                            }
-                            {
-                                (expert && expert.expertType == 'solo') && (
-                                    <PlanSection period={period} expert={expert} state={state} upgradeSelected={upgrade} />
-                                )
-                            }
-
-
-                            {!expert && (
-                                <div className="mb-4 mt-8 max-w-md">
-                                    {/* <Label className='text-lg' value={"Chi phí mở tài khoản " + process.env.NEXT_PUBLIC_EXPERT_REG_FEE} /> */}
-                                    <fieldset className="flex max-w-md flex-col gap-4">
-                                        <legend className="mb-4">Chọn loại chuyên gia <span className='text-rose-500'>*</span>    <span onClick={() => {
-                                        setShowExpertTypeExplain(true)
-                                        // alert('kkk')
-                                    }} className='text-cyan-500 ml-1 mr-1 text-xs'>Giải thích</span> </legend>
-                                     
-                                        <div className="flex items-center gap-2">
-                                            <Radio id="expertSoloType" name="expertType" defaultChecked={type == "solo"} value="solo" onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setType("solo")
-                                                    setPeriod(undefined)
-                                                }
-                                            }} />
-                                            <Label className=''>{"Solo, thu nhập từ follower riêng với các gói theo dõi "}</Label>
-                                        </div>
-                                        {
-                                            type == "solo" &&
-                                            <>
-                                                <p className='text-sm ml-12'>Chọn chu kỳ chuyên gia SOLO</p>
-                                                <div className='ml-12'>
-                                                    <Radio id="expertPeriod" name="expertPeriod" defaultChecked={period == "perm"} value="perm" onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setPeriod("perm")
-                                                        }
-                                                    }} />
-                                                    <Label className='text-sm'>{"Trọn đời " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_PERM))}</Label>
-                                                </div>
-
-                                                <div className='ml-12'>
-                                                    <Radio id="expertPeriod" name="expertPeriod" defaultChecked={period == "yearly"} value="yearly" onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setPeriod("yearly")
-                                                        }
-                                                    }} />
-                                                    <Label className='text-sm'>{"Một năm " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_YEAR))}</Label>
-                                                </div>
-                                                <div className='ml-12'>
-                                                    {period && <PlanSection period={period} expert={expert} state={state} upgradeSelected={upgrade} />}
-                                                </div>
-
-                                            </>
-                                        }
-                                        <Divider className='mb-2 mt-2' />
-                                        <div className="flex items-center gap-2">
-                                            <Radio id="expertRankType" name="expertType" defaultChecked={type == "rank"} value="rank" onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setType("rank")
-                                                    setPeriod(undefined)
-                                                }
-                                            }} />
-                                            <Label className=''>{"Rank, thu nhập từ đoạt top performance theo tuần, tháng, quý năm "}
-
-                                            </Label>
-
-                                        </div>
-                                        {
-                                            type == "rank" &&
-                                            <>
-                                                <p className='text-sm ml-12'>Chọn chu kỳ chuyên gia RANK</p>
-                                                <div className='ml-12'>
-                                                    <Radio id="expertPeriod" name="expertPeriod" value="perm" defaultChecked={period == "perm"} onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setPeriod("perm")
-                                                        }
-                                                    }} />
-                                                    <Label className='ml-2'>{"Trọn đời " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_PERM))}</Label>
-                                                </div>
-
-                                                <div className='ml-12'>
-                                                    <Radio id="expertPeriod" name="expertPeriod" value="yearly" defaultChecked={period == "yearly"} onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setPeriod("yearly")
-                                                        }
-                                                    }} />
-                                                    <Label className='ml-2'>{"Một năm " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_YEAR))}</Label>
-                                                </div></>
-                                        }
-                                    </fieldset>
-
-                                    {(!type || !period) && <span className='text-amber-300 text-xs'>Hãy chọn loại chuyên gia và thời hạn </span>}
-                                </div>)}
-
-
-
-
-                            {/* Short intro */}
-                            <div className="mb-4 mt-8 max-w-md">
-                                <label htmlFor="name" className="mb-2 block text-sm font-medium">
-                                    Giới thiệu ngắn
-                                </label>
-                                <div className="relative mt-2 rounded-md">
-                                    <div className="relative">
-                                        <TextInput
-                                            disabled={expert != undefined}
-                                            id="shortIntro"
-                                            name="shortIntro"
-                                            type="text"
-                                            placeholder="Viết giới thiệu ngắn "
-                                            defaultValue={expert ? expert.shortIntro : "Chuyên gia tư vấn " + defaultName}
-                                            className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
-                                            required
-                                        />
-                                        <DocumentTextIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
-                                    </div>
-                                </div>
-                                <div id="customer-error" aria-live="polite" aria-atomic="true">
-                                    {state.errors?.shortIntro &&
-                                        state.errors.shortIntro.map((error: string) => (
-                                            <p className="mt-2 text-sm text-red-500" key={error}>
-                                                {error}
-                                            </p>
-                                        ))}
-                                </div>
-                            </div>
-                            {/* Upload file */}
-                            {/* {expert?.avatar} */}
-
-                            {/* {avatarURL} */}
-                            <div className='mb-4 max-w-md mt-8'>
-                                <label htmlFor="avatarInfo" className="mb-2 block text-sm font-medium">
-                                    Ảnh đại diện
-                                </label>
-                                <div className="m-4">
-                                    {!compressing && avatarURL ?
-                                        (<div >
-                                            <Image src={avatarURL} className='rounded-full'
-
-                                                // style={{ width: '100%', height: 'auto' }}
-                                                priority={true}
-
-                                                alt="avatar of expert"
-                                                width={100}
-                                                height={100}
+                            <div className="rounded-md bg-black-50">
+                                {/* <input type="hidden" id="uid" name="uid" value={userInfo.uid} /> */}
+                                {/* Name */}
+                                <div className="mb-4 max-w-md">
+                                    <label htmlFor="name" className="mb-2 block text-sm font-medium">
+                                        Tên hiển thị <span className='text-rose-500'>*</span>
+                                    </label>
+                                    <div className="relative mt-2 rounded-md ">
+                                        <div className="relative">
+                                            <TextInput
+                                                // id="name"
+                                                disabled={expert != undefined}
+                                                name="name"
+                                                type="text"
+                                                placeholder="Tên sẽ được hiển thị "
+                                                defaultValue={expert ? expert.name : defaultName ?? ""}
+                                                className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
+                                                required
                                             />
-                                        </div>)
-                                        : compressing ?
-                                            <div>
-                                                Compressing ....
-                                                <Spinner />
-                                            </div>
-                                            :
-                                            <> <span className='text-amber-300 text-xs'>Bạn cần upload ảnh đại diện</span></>
-                                    }
+                                            <UserCircleIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
+                                        </div>
+                                    </div>
+                                    <div id="customer-error" aria-live="polite" aria-atomic="true">
+                                        {state.errors?.name &&
+                                            state.errors.name.map((error: string) => (
+                                                <p className="mt-2 text-sm text-red-500" key={error}>
+                                                    {error}
+                                                </p>
+                                            ))}
+                                    </div>
                                 </div>
+                                <div className="mb-4 max-w-md">
+                                    <label htmlFor="phong" className="mb-2 block text-sm font-medium">
+                                        Số điện thoại <span className='text-xs'>  (chỉ dùng cho dịch vụ trợ giúp, sẽ không hiển thị với người dùng) </span>
+                                    </label>
+                                    <div className="relative mt-2 rounded-md ">
+                                        <div className="relative">
+                                            <TextInput
+                                                // id="name"
+                                                // disabled={expert != undefined}
+                                                name="phoneNumber"
+                                                type="number"
+                                                placeholder="0912345678"
+                                                defaultValue={expert ? expert.phoneNumber : ""}
+                                                className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:grey-sky-400 text-sky-400"
 
-                                <input
-                                    type="file"
-                                    placeholder='change avatar'
-                                    accept="image/*"
-                                    onChange={(e) => {
-                                        const file = e.target.files ? e.target.files[0] : undefined;
-                                        if (file) {
-                                            setDidChange(true)
-                                            handleSelectedImage(file)
+
+                                            />
+                                            <PhoneIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
+                                        </div>
+                                    </div>
+                                    <div id="customer-error" aria-live="polite" aria-atomic="true">
+                                        {state.errors?.name &&
+                                            state.errors.name.map((error: string) => (
+                                                <p className="mt-2 text-sm text-red-500" key={error}>
+                                                    {error}
+                                                </p>
+                                            ))}
+                                    </div>
+                                </div>
+                                {
+                                    (expert) && (
+                                        <>
+                                            <div className="mb-4 max-w-md">
+                                                <div className='block'>
+                                                    <div>
+                                                        <Label className='text-md'>{"Loại tài khoản: " + expert.expertType}</Label>
+                                                    </div>
+                                                    <div>
+                                                        <Label className='text-md'>{"Ngày hết hạn:  " + (expert.expertPeriod == 'yearly' ? (new Date(expert.expertExpire)).toLocaleDateString('vi') : "Trọn đời")}</Label>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+
+                                            {expert.expertPeriod == 'yearly' && (
+                                                <div className="ml-8 mb-4 max-w-md">
+                                                    <fieldset className="flex max-w-md flex-col gap-4">
+                                                        {/* <legend className="mb-4">Upgrade thời hạn </legend> */}
+                                                        <div className="flex items-center gap-2">
+                                                            <Checkbox id="expertPeriod" name="expertPeriod" defaultChecked={false} value="perm" onChange={(e) => {
+                                                                setUpgrade(e.target.checked)
+                                                            }} />
+                                                            <Label className=''>{"Nâng cấp lên trọn đời"}</Label>
+                                                            {upgrade && <Label className=''>{" phí :  " + convert(fee ?? 0)}</Label>}
+
+                                                        </div>
+                                                    </fieldset>
+                                                </div>)
+                                            }
+                                        </>
+                                    )
+                                }
+                                {
+                                    (expert && expert.expertType == 'solo') && (
+                                        <PlanSection period={period} expert={expert} state={state} upgradeSelected={upgrade} />
+                                    )
+                                }
+
+
+                                {!expert && (
+                                    <div className="mb-4 mt-8 max-w-md">
+                                        {/* <Label className='text-lg' value={"Chi phí mở tài khoản " + process.env.NEXT_PUBLIC_EXPERT_REG_FEE} /> */}
+                                        <fieldset className="flex max-w-md flex-col gap-4">
+                                            <legend className="mb-4">Chọn loại chuyên gia <span className='text-rose-500'>*</span>    <span onClick={() => {
+                                                setShowExpertTypeExplain(true)
+                                                // alert('kkk')
+                                            }} className='text-cyan-500 ml-1 mr-1 text-xs'>Giải thích</span> </legend>
+
+                                            <div className="flex items-center gap-2">
+                                                <Radio id="expertSoloType" name="expertType" defaultChecked={type == "solo"} value="solo" onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setType("solo")
+                                                        setPeriod(undefined)
+                                                    }
+                                                }} />
+                                                <Label className=''>{"Solo, thu nhập từ follower riêng với các gói theo dõi "}</Label>
+                                            </div>
+                                            {
+                                                type == "solo" &&
+                                                <>
+                                                    <p className='text-sm ml-12'>Chọn chu kỳ chuyên gia SOLO</p>
+                                                    <div className='ml-12'>
+                                                        <Radio id="expertPeriod" name="expertPeriod" defaultChecked={period == "perm"} value="perm" onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setPeriod("perm")
+                                                            }
+                                                        }} />
+                                                        <Label className='text-sm'>{"Trọn đời " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_PERM))}</Label>
+                                                    </div>
+
+                                                    <div className='ml-12'>
+                                                        <Radio id="expertPeriod" name="expertPeriod" defaultChecked={period == "yearly"} value="yearly" onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setPeriod("yearly")
+                                                            }
+                                                        }} />
+                                                        <Label className='text-sm'>{"Một năm " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_SOLO_YEAR))}</Label>
+                                                    </div>
+                                                    <div className='ml-12'>
+                                                        {period && <PlanSection period={period} expert={expert} state={state} upgradeSelected={upgrade} />}
+                                                    </div>
+
+                                                </>
+                                            }
+                                            <Divider className='mb-2 mt-2' />
+                                            <div className="flex items-center gap-2">
+                                                <Radio id="expertRankType" name="expertType" defaultChecked={type == "rank"} value="rank" onChange={(e) => {
+                                                    if (e.target.checked) {
+                                                        setType("rank")
+                                                        setPeriod(undefined)
+                                                    }
+                                                }} />
+                                                <Label className=''>{"Rank, thu nhập từ đoạt top performance theo tuần, tháng, quý năm "}
+
+                                                </Label>
+
+                                            </div>
+                                            {
+                                                type == "rank" &&
+                                                <>
+                                                    <p className='text-sm ml-12'>Chọn chu kỳ chuyên gia RANK</p>
+                                                    <div className='ml-12'>
+                                                        <Radio id="expertPeriod" name="expertPeriod" value="perm" defaultChecked={period == "perm"} onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setPeriod("perm")
+                                                            }
+                                                        }} />
+                                                        <Label className='ml-2'>{"Trọn đời " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_PERM))}</Label>
+                                                    </div>
+
+                                                    <div className='ml-12'>
+                                                        <Radio id="expertPeriod" name="expertPeriod" value="yearly" defaultChecked={period == "yearly"} onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setPeriod("yearly")
+                                                            }
+                                                        }} />
+                                                        <Label className='ml-2'>{"Một năm " + addComma(Number(process.env.NEXT_PUBLIC_EXPERT_REG_FEE_RANK_YEAR))}</Label>
+                                                    </div></>
+                                            }
+                                        </fieldset>
+
+                                        {(!type || !period) && <span className='text-amber-300 text-xs'>Hãy chọn loại chuyên gia và thời hạn </span>}
+                                    </div>)}
+
+
+
+
+                                {/* Short intro */}
+                                <div className="mb-4 mt-8 max-w-md">
+                                    <label htmlFor="name" className="mb-2 block text-sm font-medium">
+                                        Giới thiệu ngắn
+                                    </label>
+                                    <div className="relative mt-2 rounded-md">
+                                        <div className="relative">
+                                            <TextInput
+                                                disabled={expert != undefined}
+                                                id="shortIntro"
+                                                name="shortIntro"
+                                                type="text"
+                                                placeholder="Viết giới thiệu ngắn "
+                                                defaultValue={expert ? expert.shortIntro : "Chuyên gia tư vấn " + defaultName}
+                                                className="peer block w-full rounded-md boreder border-gray-200 py-2 pl-10 text-sm outline-2 placeholder:text-grey-500 text-sky-500"
+                                                required
+                                            />
+                                            <DocumentTextIcon className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-gray-500 peer-focus:text-  -900" />
+                                        </div>
+                                    </div>
+                                    <div id="customer-error" aria-live="polite" aria-atomic="true">
+                                        {state.errors?.shortIntro &&
+                                            state.errors.shortIntro.map((error: string) => (
+                                                <p className="mt-2 text-sm text-red-500" key={error}>
+                                                    {error}
+                                                </p>
+                                            ))}
+                                    </div>
+                                </div>
+                                {/* Upload file */}
+                                {/* {expert?.avatar} */}
+
+                                {/* {avatarURL} */}
+                                <div className='mb-4 max-w-md mt-8'>
+                                    <label htmlFor="avatarInfo" className="mb-2 block text-sm font-medium">
+                                        Ảnh đại diện
+                                    </label>
+                                    <div className="m-4">
+                                        {!compressing && avatarURL ?
+                                            (<div >
+                                                <Image src={avatarURL} className='rounded-full'
+
+                                                    // style={{ width: '100%', height: 'auto' }}
+                                                    priority={true}
+
+                                                    alt="avatar of expert"
+                                                    width={100}
+                                                    height={100}
+                                                />
+                                            </div>)
+                                            : compressing ?
+                                                <div>
+                                                    Compressing ....
+                                                    <Spinner />
+                                                </div>
+                                                :
+                                                <> <span className='text-amber-300 text-xs'>Bạn cần upload ảnh đại diện</span></>
                                         }
-                                    }}
-                                />
-                                {/* <div>
+                                    </div>
+
+                                    <input
+                                        type="file"
+                                        placeholder='change avatar'
+                                        accept="image/*"
+                                        onChange={(e) => {
+                                            const file = e.target.files ? e.target.files[0] : undefined;
+                                            if (file) {
+                                                setDidChange(true)
+                                                handleSelectedImage(file)
+                                            }
+                                        }}
+                                    />
+                                    {/* <div>
                         {!avatarURL &&  <span className='text-red-400 text-sm'>Hãy upload ảnh đại diện</span>}
                         </div> */}
 
-                            </div>
-                        </div>
-                        {expert == undefined &&
-                            (<div className=" justify-start gap-4 mt-12">
-                                <div className="flex items-center gap-2">
-                                    <Checkbox id="accept" checked={acceptTNC} onChange={(e) => {
-                                        setAcceptTNC(e.target.checked)
-
-                                    }} />
-                                    <Label htmlFor="accept" className="flex">
-                                        Tôi đã đọc và đồng ý với  <span onClick={() => {
-                                        setShowTNC(true)
-                                        // alert('kkk')
-                                    }} className='text-cyan-500 ml-1 mr-1'>điều khoản và điều kiện</span> của trang web
-                                        
-                                    </Label>
                                 </div>
-                                {!acceptTNC && <> <span className='text-amber-300 text-xs'>Bạn cần đồng ý với điều khoản sử dụng</span></>}
-                            </div>)}
-                        {(fee != undefined && fee > amount) && <span className='text-rose-400 text-sm'>Phí đăng ký là {addComma(fee)} trong khi số tiền của bạn là {addComma(amount)}, vui lòng nạp thêm <Link
-                            href="/profile/deposit"
-                            className="px-1 text-sm font-medium text-cyan-600 dark:text-cyan-500"
-                        >
-                            ở đây
-                        </Link> </span>}
+                            </div>
+                            {expert == undefined &&
+                                (<div className=" justify-start gap-4 mt-12">
+                                    <div className="flex items-center gap-2">
+                                        <Checkbox id="accept" checked={acceptTNC} onChange={(e) => {
+                                            setAcceptTNC(e.target.checked)
 
+                                        }} />
+                                        <Label htmlFor="accept" className="flex">
+                                            Tôi đã đọc và đồng ý với  <span onClick={() => {
+                                                setShowTNC(true)
+                                                // alert('kkk')
+                                            }} className='text-cyan-500 ml-1 mr-1'>điều khoản và điều kiện</span> của trang web
 
-                        <div className="flex justify-start gap-4 mt-12">
-                            <Link
-                                href="/"
-                                className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
+                                        </Label>
+                                    </div>
+                                    {!acceptTNC && <> <span className='text-amber-300 text-xs'>Bạn cần đồng ý với điều khoản sử dụng</span></>}
+                                </div>)}
+                            {(fee != undefined && fee > amount) && <span className='text-rose-400 text-sm'>Phí đăng ký là {addComma(fee)} trong khi số tiền của bạn là {addComma(amount)}, vui lòng nạp thêm <Link
+                                href="/profile/deposit"
+                                className="px-1 text-sm font-medium text-cyan-600 dark:text-cyan-500"
                             >
-                                Cancel
-                            </Link>
-                            <Button type="submit" color='primary' isDisabled={(fee == undefined || fee > amount) || (!acceptTNC && !expert) || compressing || !avatarURL || (expert != undefined && !didChange && !fileInside)}>{expert ? "Update thông tin " +
-                                ((fee && fee > 0) ? convert(fee ?? 0) : "") : "Đăng ký với chi phí: " + addComma(fee ?? 0)}</Button>
-                        </div>
-                    </form>
+                                ở đây
+                            </Link> </span>}
 
-                </div>
+
+                            <div className="flex justify-start gap-4 mt-12">
+                                <Link
+                                    href="/"
+                                    className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
+                                >
+                                    Cancel
+                                </Link>
+
+                                <SubmitButton pendingText={'Đang tạo  ... '} disabled={(fee == undefined || fee > amount) || (!acceptTNC && !expert) || compressing || !avatarURL || (expert != undefined && !didChange && !fileInside)} color="indigo" > {expert ? "Update thông tin " +
+                                    ((fee && fee > 0) ? convert(fee ?? 0) : "") : "Đăng ký với chi phí: " + addComma(fee ?? 0)} </SubmitButton>
+
+
+                                {/* <Button type="submit" color='primary' isDisabled={(fee == undefined || fee > amount) || (!acceptTNC && !expert) || compressing || !avatarURL || (expert != undefined && !didChange && !fileInside)}>{expert ? "Update thông tin " +
+                                ((fee && fee > 0) ? convert(fee ?? 0) : "") : "Đăng ký với chi phí: " + addComma(fee ?? 0)}</Button> */}
+                            </div>
+                        </form>
+
+                    </div>
             }
 
 
-      <Modal className='dark' isOpen={showTNC} onOpenChange={undefined}
-        scrollBehavior={"inside"} onClose={() => {setShowTNC(!showTNC)}}>
-      
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex flex-col gap-1">Điều khoản và điều kiện đăng ký chuyên gia </ModalHeader>
-              <ModalBody>
-                    {explainExpert()} 
-              </ModalBody>
-              <ModalFooter>
-                <ButtonReact color="primary" onPress={() => {
-                  setShowTNC(false)
-                  
-                  }}>
-                  OK
-                </ButtonReact>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
-      <Modal className='dark' isOpen={showExpertTypeExplain} onOpenChange={undefined}
-        scrollBehavior={"inside"} onClose={() => {setShowExpertTypeExplain(!showExpertTypeExplain)}}>
-      
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader className="flex gap-1"> Hai loại chuyên gia   </ModalHeader>
-              <ModalBody>
-                    {tncExpertType(false)} 
-              </ModalBody>
-              <ModalFooter className='flex justify-around'>
-                <ButtonReact color="primary" onPress={() => {
-                  setShowExpertTypeExplain(false)
-                  
-                  }}>
-                  Đã hiểu 
-                </ButtonReact>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+            <Modal className='dark' isOpen={showTNC} onOpenChange={undefined}
+                scrollBehavior={"inside"} onClose={() => { setShowTNC(!showTNC) }}>
+
+                <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader className="flex flex-col gap-1">Điều khoản và điều kiện đăng ký chuyên gia </ModalHeader>
+                            <ModalBody>
+                                {explainExpert()}
+                            </ModalBody>
+                            <ModalFooter>
+                                <ButtonReact color="primary" onPress={() => {
+                                    setShowTNC(false)
+
+                                }}>
+                                    OK
+                                </ButtonReact>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
+            <Modal className='dark' isOpen={showExpertTypeExplain} onOpenChange={undefined}
+                scrollBehavior={"inside"} onClose={() => { setShowExpertTypeExplain(!showExpertTypeExplain) }}>
+
+                <ModalContent>
+                    {(onClose) => (
+                        <>
+                            <ModalHeader className="flex gap-1"> Hai loại chuyên gia   </ModalHeader>
+                            <ModalBody>
+                                {tncExpertType(false)}
+                            </ModalBody>
+                            <ModalFooter className='flex justify-around'>
+                                <ButtonReact color="primary" onPress={() => {
+                                    setShowExpertTypeExplain(false)
+
+                                }}>
+                                    Đã hiểu
+                                </ButtonReact>
+                            </ModalFooter>
+                        </>
+                    )}
+                </ModalContent>
+            </Modal>
         </div>
     );
 }
 
 
-function PlanSection({ period, expert, state , upgradeSelected }: { period: "perm" | "yearly" | undefined, expert: Expert | undefined, state: RegisterExpertFormState , upgradeSelected: boolean}) {
-    const disableInputPermPerice =    ((
-        (!expert && period != "perm" ) ||
-        (expert && expert.expertPeriod != 'perm') 
-    ) && 
-    !upgradeSelected)
+function PlanSection({ period, expert, state, upgradeSelected }: { period: "perm" | "yearly" | undefined, expert: Expert | undefined, state: RegisterExpertFormState, upgradeSelected: boolean }) {
+    const disableInputPermPerice = ((
+        (!expert && period != "perm") ||
+        (expert && expert.expertPeriod != 'perm')
+    ) &&
+        !upgradeSelected)
 
-    const defaultValueForPermPrice = (expert && expert.expertPeriod == 'perm') ? 
-    expert.permPrice : 
-        !expert ? 5000000 : 
-         expert.monthlyPrice ? expert.monthlyPrice * 10 : 5000000
+    const defaultValueForPermPrice = (expert && expert.expertPeriod == 'perm') ?
+        expert.permPrice :
+        !expert ? 5000000 :
+            expert.monthlyPrice ? expert.monthlyPrice * 10 : 5000000
 
     console.log('disableInputPermPerice ' + disableInputPermPerice)
 
 
     return (
         <>
-        {/* {JSON.stringify(expert)} */}
+            {/* {JSON.stringify(expert)} */}
             <p className='text-sm'>Chọn các gói theo dõi, đây sẽ là thu nhập của bạn</p>
             {/* monthly  price */}
-            
+
             <div className="mb-4 max-w-md mt-4">
                 <label htmlFor="customer" className="mb-2 block text-sm font-medium">
                     Ra giá gói theo dõi theo tháng

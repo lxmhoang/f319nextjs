@@ -5,6 +5,7 @@ import { getUserInfoFromSession } from './firebaseadmin/adminauth';
 import { Prediction } from '../model/prediction';
 import { getExpert, getMyWIPPreds, serverAddANewPred } from './server';
 import { getRealTimeStockData } from './getStockData';
+import { inTradingTime, priceStockInTime } from './utils';
 
 
 // Add prediction
@@ -75,8 +76,7 @@ export async function createNewPrediction(assetName: string | undefined, selecte
   }
 
   const stockPrice = await getRealTimeStockData([assetName])
-  const curPrice = stockPrice[assetName].high 
-
+  const curPrice = priceStockInTime(stockPrice[assetName], 'favorHigh' , Date.now()) 
   const gap = curPrice - selectedStockPrice
 
   if (gap > 0.5 || gap < -0.5) {

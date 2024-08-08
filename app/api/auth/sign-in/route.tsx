@@ -15,7 +15,8 @@ export async function POST(request: NextRequest) {
   // }
 
   // console.log('========== idtoken posted' + JSON.stringify(idToken))
-  const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 days
+  // const expiresIn = 60 * 60 * 24 * 2 * 7 * 1000; // 14 days
+  const expiresIn = 1000 * 60  * 5  //5 min
 
 
 

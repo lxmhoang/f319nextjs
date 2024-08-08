@@ -7,7 +7,7 @@ import { getRealTimeStockData } from "@/app/lib/getStockData";
 import { Prediction, PredictionReview } from "@/app/model/prediction";
 import { Button, Label, Spinner, Toast } from "flowbite-react";
 import { clientGetAllMyPreds, closeWIPPreds } from "@/app/lib/server";
-import { perfConver, valueWithBonus } from "@/app/lib/utils";
+import { perfConver, priceStockInTime, valueWithBonus } from "@/app/lib/utils";
 
 
 export default function ReviewPrediction({ doneFetching }: {
@@ -118,6 +118,7 @@ export default function ReviewPrediction({ doneFetching }: {
         if (!curPrice) {
           throw new Error('can not get real time stock data of asset ' + pred.assetName)
         }
+        const actualCurPrice = priceStockInTime(curPrice, 'favorLow')
         const predAge = (new Date()).getTime() - pred.dateIn
         console.log("predAge : " + predAge)
         return {
@@ -131,8 +132,8 @@ export default function ReviewPrediction({ doneFetching }: {
           status: pred.status,
           bonus: pred.bonus,
 
-          curPrice: curPrice.low.toFixed(2),
-          curStatus: valueWithBonus(curPrice.low, pred.bonus ?? [])  / pred.priceIn ,
+          curPrice: actualCurPrice.toFixed(2),
+          curStatus: valueWithBonus(actualCurPrice, pred.bonus ?? [])  / pred.priceIn ,
           portion: pred.portion.toString() + '%',
           disableClose: predAge < 1000 * 5 * 24 * 3600
         }

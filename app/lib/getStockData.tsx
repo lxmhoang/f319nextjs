@@ -1,53 +1,57 @@
 "use server"
 
 import { promises as fs } from 'fs';
-const vn100Code = '21'
-const vn30Code = '11'
-const hoseCode = '1'
-const hnxCode = '2'
-const hnx30Code = '12'
-const upcomCode = '9'
-const urlFloor = 'https://dev-s.cafef.vn/ajax/ajaxliveboard.ashx?floorcode='
-const urlMatchTime = 'https://iboard-query.ssi.com.vn/stock/'
-const urlRealTime = 'https://banggia.cafef.vn/stockhandler.ashx?userlist='
-const urlBonus = 'https://finance.vietstock.vn/data/eventstypedata'
-const urlCompanyInfo = 'https://s.cafef.vn/ajax/pagenew/databusiness/congtyniemyet.ashx?centerid=0&skip=0&take=2000&major=0'
+const urlSSIStock = 'https://iboard-query.ssi.com.vn/v2/stock/'
+// const urlRealTime = 'https://banggia.cafef.vn/stockhandler.ashx?userlist='
 const urlSSIVNXALL = 'https://iboard-query.ssi.com.vn/v2/stock/group/VNXALL'
 
-type companyInfo = {Symbol: string, CompanyName: string}
-type realTimeStockInfo = { ss: string, cv: string, h: number, l: number, r: number} // r tham chieu
-type stockToday = {Symbol: string, TotalVolume: number, HighPrice: number 
-}
+type realTimeStockInfo = { ss: string, cv: string, h: number, l: number, r: number, o: number, mp: number, pcp: number } // r tham chieu, mp dong cua
 
 import axios from 'axios'
 import { Prediction, PredictionReview } from '../model/prediction';
-import { possibleBonusTimeRangeWithPredInfo } from './utils';
+import { possibleBonusTimeRangeWithPredInfo, StockPriceRT } from './utils';
 
 
 export async function getRealTimeStockData(stocks: string[]) {
   try {
     const param = stocks
-    console.log("params " + param)
-    const data = await fetch(urlRealTime + param, {
-      next: { revalidate: 0 },
-    })
-    const result = await data.json()
-    let object : {[key: string] : {high: number, low: number, tc: number}} = {}
+    // console.log("params " + param)
+    const responses = await Promise.all(stocks.map(async code => {
+      const res = await fetch(urlSSIStock + code, { next: { revalidate: 0 } })
+      const json = await res.json()
+      const data = json.data
+      // console.log('data  aaaa' + JSON.stringify(data))
+      const priceRT: StockPriceRT = {
+        code: code,
+        name: data.cv,
+        high: data.h/1000,
+        low: data.l/1000,
+        tc: data.r/1000,
+        open: data.o/1000,
+        close: data.mp/1000,
+        preClosed: data.pcp/1000
+      }
 
-    result.map((d: { a: string, v: number,w : number, b: number }) => {
-      const key = d.a as string
-      const value = {
-        high :d.v ,// d.v is hight, d.w is low, d.b la tham chieu
-        low: d.w,
-        tc: d.b
-      }
-      if (d.v == 0 && d.w == 0 && d.b == 0) {
-        console.log(' khong lay duoc gia cua co phieu ' + d.a + '  api ngoai tra ve 0  ' + d.a )
-      } else {
-        object[key] = value
-      }
+      return priceRT
+
+    }
+    )
+    )
+
+    // const data = await fetch(urlRealTime + param, {
+    //   next: { revalidate: 0 },
+    // })
+    // const result = await data.json()
+    let object: { [key: string]: StockPriceRT } = {}
+    responses.map((item) => {
+      if (item.low == 0 && item.high == 0 && item.tc == 0) {
+        console.log(' khong lay duoc gia cua co phieu ' + item.code + '  api ngoai tra ve 0  ' )
+      } else [
+        object[item.code] = item
+
+      ]
     })
-    console.log("getRealTimeStockData " + JSON.stringify(object))
+
 
     return object
   }
@@ -58,13 +62,14 @@ export async function getRealTimeStockData(stocks: string[]) {
 
 export async function getTodayMatchedVolume(stock: string) {
   try {
-    const response = await fetch(urlMatchTime + stock + '/matched-vol-by-price',{
+    const response = await fetch(urlSSIStock + stock + '/matched-vol-by-price', {
       next: { revalidate: 0 },
       method: "GET",
       headers: {
         "origin": "https://iboard.ssi.com.vn",
         "cache-control": "no-cache",
-      }})
+      }
+    })
     if (!response.ok) {
       throw new Error('Failed to fetch data')
     }
@@ -74,87 +79,38 @@ export async function getTodayMatchedVolume(stock: string) {
       data: {
         price: number,
         stockSymbol: string
-        // "buyUpVol": 1500,
-        // "changeType": "U",
-        // "sellDownVol": 0,
-        // "totalVol": 1500,
-        // "unknownVol": 0
-
       }[]
     }
 
-    return resBody.data.map((item) => item.price/1000)
+    return resBody.data.map((item) => item.price / 1000)
   }
   catch (err) {
     throw err
   }
 }
 
-export async function getLocalStockList() {
-
-  const string = await fs.readFile(process.cwd() + '/public/stockListnew.json', 'utf-8')
-  // const array =  string.split(',')
-  const array =  JSON.parse(string)
-  return array
-}
-
-
-export async function getRealtimeStockList() {
-  const stockListInfo = await getStockData()
-  // const companyInfo = await getCompanyInfo()
-  // const stockTodayWithComName = stockToday.map((item) => {
-  //   const name = companyInfo.find((it) => it.Symbol == item)?.CompanyName ?? "__"
-
-  //     return {
-  //       code: item,
-  //       name: name
-  //     }
-
-  // })
-  return stockListInfo.map ((item) => {
-    return {
-      code: item.ss,
-      name: item.cv,
-      low: item.l/1000,
-      high: item.h/1000,
-      tc: item.r/1000
-    }
-  })
-}
-
-// async function getCompanyInfo() {
-//   try {
-//     const res = await fetch (urlCompanyInfo)
-//     if (res.ok) {
-//       const json = await res.json()
-//       const result = json.Data as companyInfo[]
-//       console.log(result[3])
-//       return result
-//       // console.log('aaaaa ' + JSON.stringify(json))
-
-//     } else  {
-//       throw new Error('Failed to fetch data')
-//     }
-
-//   }
-//   catch (err) {
-//     throw err
-//   }
-  
-// }
-
-export default async function getStockData() {
+export async function getVNXALLStockData() {
   try {
-    const res = await fetch (urlSSIVNXALL, {next: { revalidate: 0 },})
+    const res = await fetch(urlSSIVNXALL, { next: { revalidate: 0 }, })
     if (res.ok) {
       const json = await res.json()
-      const result = json.data as realTimeStockInfo[]
-      // console.log('result ')
-      // console.log(result[3])
-      return result
-      // console.log('aaaaa ' + JSON.stringify(json))
+      const data = json.data as realTimeStockInfo[]
+      const list = data.map((item) => {
+        const obj: StockPriceRT = {
+          code: item.ss,
+          name: item.cv,
+          high: item.h / 1000,
+          low: item.l / 1000,
+          tc: item.r / 1000,
+          open: item.o / 1000,
+          close: item.mp / 1000,
+          preClosed: item.pcp / 1000
+        }
+        return obj
+      })
+      return list
 
-    } else  {
+    } else {
       throw new Error('Failed to fetch data')
     }
 
@@ -167,102 +123,27 @@ export default async function getStockData() {
 
 
 
-// export default async function getStockData(minVolume: number) {
-//   try {
 
-//     const [responsevn100, responsevn30, responsehose, responsehnx, responsehnx30, responseupcom] = await Promise.all([
-//       fetch(url + vn100Code),
-//       fetch(url + vn30Code),
-//       fetch(url + hoseCode),
-//       fetch(url + hnxCode),
-//       fetch(url + hnx30Code),
-//       fetch(url + upcomCode),
-//     ]
-
-
-//     )
-//     const [
-//       resultvn100,
-//       resultvn30,
-//       resulthose,
-//       resulthnx,
-//       resulthnx30,
-//       resultupcom
-//     ] = await Promise.all([
-//       responsevn100.json(),
-//       responsevn30.json(),
-//       responsehose.json(),
-//       responsehnx.json(),
-//       responsehnx30.json(),
-//       responseupcom.json()
-//     ]);
-//     // const resultvn30 = await responsevn30.json();
-//     // const resulthose = await responsehose.json();
-//     // const resulthnx = await responsehnx.json();
-//     // const resulthnx30 = await responsehnx30.json();
-//     // const resultupcom = await responseupcom.json();
-
-//     const arrvn100 = (resultvn100.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-//     const arrvn30 = (resultvn30.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-//     const arrvnhose = (resulthose.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-//     const arrvnhnx = (resulthnx.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-//     const arrvnhnx30 = (resulthnx30.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-//     const arrvnupcom = (resultupcom.Data as stockToday[]).filter(d => d.TotalVolume > minVolume)
-
-//     var symbols = arrvn100.map(d => d.Symbol)
-//     let merge2 = arrvn100.concat(arrvn30.filter(d => !symbols.includes(d.Symbol)))
-
-//     symbols = merge2.map(d => d.Symbol)
-//     let merge3 = merge2.concat(arrvnhose.filter(d => !symbols.includes(d.Symbol)))
-
-//     symbols = merge3.map(d => d.Symbol)
-//     let merge4 = merge3.concat(arrvnhnx.filter(d => !symbols.includes(d.Symbol)))
-
-//     symbols = merge4.map(d => d.Symbol)
-//     let merge5 = merge4.concat(arrvnhnx30.filter(d => !symbols.includes(d.Symbol)))
-
-//     symbols = merge5.map(d => d.Symbol)
-//     let merge6 = merge5.concat(arrvnupcom.filter(d => !symbols.includes(d.Symbol)))
-
-
-//     console.log("arr length " + merge6.length)
-
-//     // console.log(merge6 )
-//     return merge6
-//   } catch (err) {
-//     throw err
-//   } finally {
-//   }
-
-// }
-
-// export async function getBonusData(fDate:string , tDate:string, code: string = '') {
-
-//   var data: BonusData[] = await fetchBonusData(fDate, tDate, code)
-//   return JSON.stringify(data)
-
-// }
-
-export async function fetchBonusData(fDate:string , tDate:string, code: string = '') {
+ async function fetchBonusData(fDate: string, tDate: string, code: string = '') {
   var data: BonusData[] = []
-  const channels = [ '13', '14', '15']
+  const channels = ['13', '14', '15']
 
   for (const channel of channels) {
-    const bonus = await getBonusInChannel(channel,fDate , tDate, code)
+    const bonus = await getBonusInChannel(channel, fDate, tDate, code)
     data.push(...bonus)
   }
   return data
 }
 
-async function getBonusInChannel(channel: string, fDate:string , tDate:string, code: string = '') {
+async function getBonusInChannel(channel: string, fDate: string, tDate: string, code: string = '') {
   var page = 0
   var data: BonusData[] = []
   do {
     page += 1
-    console.log('channel    ' + channel + '     page :   ' + page) 
+    console.log('channel    ' + channel + '     page :   ' + page)
     var dataPage = await getBonusInPage(channel, page, fDate, tDate, code)
     const transform = dataPage.data.map((item) => {
-      const result : BonusData = {
+      const result: BonusData = {
         id: item.EventID.toString(),
         EventID: item.EventID,
         ChannelID: channel,
@@ -286,18 +167,18 @@ async function getBonusInChannel(channel: string, fDate:string , tDate:string, c
 
   } while (dataPage.end == false)
 
-  return  data
+  return data
 
 }
 
 const reqTokenVietStock = '20hpo4ABlvS1SejdZAriCKUCMn9OYzDjtBRxGcyA0AlIIbabjOSPLlQjQlLelQRskI12TEoCfnZXVdLIfY4zFpy3v7YXTDs0CfTHlIF8Z9o1'
 
- async function getBonusInPage(channel:string, page: number, fDate: string, tDate:string, code: string, reqToken:string = reqTokenVietStock) {
+async function getBonusInPage(channel: string, page: number, fDate: string, tDate: string, code: string, reqToken: string = reqTokenVietStock) {
   // 13 tra co tuc tien mat * , RateTypeID = 1
   // 14 thuong co phieu *, RateTypeID = 2
   // 15 tra co tuc bang co phieu * , RateTypeID = 1
   // 16 phat hanh them
-  const response = await axios.post<[Bonus[],[number]]>('https://finance.vietstock.vn/data/eventstypedata', {
+  const response = await axios.post<[Bonus[], [number]]>('https://finance.vietstock.vn/data/eventstypedata', {
     eventTypeID: '1',
     channelID: channel,
     fDate: fDate,
@@ -320,23 +201,23 @@ const reqTokenVietStock = '20hpo4ABlvS1SejdZAriCKUCMn9OYzDjtBRxGcyA0AlIIbabjOSPL
 
   if (response.data) {
     console.log('response :  ' + JSON.stringify(response.data))
-  
+
     const data = response.data[0]
     const total = response.data[1][0]
     return {
-      data : data,
-      end: data[data.length-1].Row == total
+      data: data,
+      end: data[data.length - 1].Row == total
     }
 
   } else {
     return {
-      data : [],
-      end:true
+      data: [],
+      end: true
     }
 
   }
   // console.log(' ---- ' + data[data.length-1].Row  + '  =====   ' + total)
- 
+
 }
 
 
@@ -346,9 +227,9 @@ export async function bonusAppliedToPred(pred: Prediction) {
 
   const leftStr = possibleTime.possibleGDKHQTimeStart.toLocaleDateString('en-CA')
   const rightStr = possibleTime.possibleGDKHQTimeEnd.toLocaleDateString('en-CA')
-  console.log('       =======  aaaaaaaa       ' + leftStr +   '    =====      ' + rightStr )
+  console.log('       =======  aaaaaaaa       ' + leftStr + '    =====      ' + rightStr)
   const bonus = await fetchBonusData(leftStr, rightStr, pred.assetName)
   console.log('bonus applied :  ' + JSON.stringify(bonus))
-  return  bonus
-  
+  return bonus
+
 }

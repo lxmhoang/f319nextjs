@@ -11,10 +11,11 @@ import { TextInput } from 'flowbite-react';
 import { actionFeedback } from '@/app/lib/actions/actionFeedBack';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { SubmitButton } from '../submitButton';
 
 
 interface TransCreationProps {
-  user: User,
+  user: User | undefined,
 }
 
 export default function FeedbackForm(Props: TransCreationProps) {
@@ -99,13 +100,7 @@ export default function FeedbackForm(Props: TransCreationProps) {
           
           </div>
           <div className="mt-6 flex justify-start gap-4">
-          {/* <Link
-            href="/"
-            className="flex h-10 items-center rounded-lg bg-gray-100 px-4 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-200"
-          >
-            Cancel
-          </Link> */}
-          <Button type="submit" aria-disabled={user == undefined}>Gửi</Button>
+          <SubmitButton  color="indigo"  pendingText={'Đang gửi ... '} > Gửi </SubmitButton>
         </div>
         </div>
 

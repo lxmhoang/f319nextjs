@@ -32,7 +32,7 @@ export function didFollow(user: User, expert: Expert) {
     return (
       item.eid == expert.id) && (new Date(item.endDate) >= new Date() || item.perm == true)
   })
-  console.log('follow Info ' + JSON.stringify(user.following))
+  // console.log('follow Info ' + JSON.stringify(user.following))
   if (!followInfo) {
     return false
   }
@@ -48,7 +48,7 @@ export function valueWithBonus(value: number, bonuses: BonusData[] | undefined) 
     return value
   }
   var result = value
-  
+
   // console.log('==== BONUS ==== ' + JSON.stringify(bonuses))
   for (const bonus of bonuses) {
     if (bonus.RateTypeID == 2) {
@@ -56,19 +56,19 @@ export function valueWithBonus(value: number, bonuses: BonusData[] | undefined) 
       if (rate.split(':').length != 2) {
         throw new Error('rate is in wrong format ' + rate)
       }
-      console.log('==== rate ==== ' + JSON.stringify(rate))
+      // console.log('==== rate ==== ' + JSON.stringify(rate))
 
       const arg1 = Number(rate.split(':')[0])
       const arg2 = Number(rate.split(':')[1])
-      const mutiple = 1 + Number(arg2/arg1)
+      const mutiple = 1 + Number(arg2 / arg1)
       result = result * mutiple
 
-      console.log('==== result ==== ' + value + '  ' + arg1 + '  ' + arg2 + '  ' + result )
+      // console.log('==== result ==== ' + value + '  ' + arg1 + '  ' + arg2 + '  ' + result)
     } else if (bonus.RateTypeID == 1) {
       const percentage = Number(bonus.Rate)
       const addInValue = 10000 * percentage / 100
-     
-      result = result + addInValue
+
+      result = result + addInValue / 1000
     }
   }
 
@@ -90,8 +90,8 @@ export function perfConver(per: number) {
 }
 
 export function possibleBonusTimeRangeWithPredInfo(buyDate: Date, sellDate: Date) {
-  
-  
+
+
   var addDate = 2
   // const buyDay = buyDate.getDay()
   // switch (buyDay) {
@@ -111,39 +111,39 @@ export function possibleBonusTimeRangeWithPredInfo(buyDate: Date, sellDate: Date
   // }  
   const possibleGDKHQTimeStart = new Date(buyDate.getTime() + addDate * 1000 * 3600 * 24)
 
-  console.log('buyyyy day   ====  ' + buyDate + ' possibleGDKHQTime start ' + possibleGDKHQTimeStart) 
+  // console.log('buyyyy day   ====  ' + buyDate + ' possibleGDKHQTime start ' + possibleGDKHQTimeStart)
 
   const sellDay = sellDate.getDay()
   var subtractDate = 2
   switch (sellDay) {
-    case 0 : 
-    subtractDate = 3
-    break;
-    case 1 : 
-    subtractDate = 4
-    break;
-    case 2 : // thu 3
-    subtractDate = 5
-    break;
-    case 3 : // thu 4
-    case 4 : // thu nam
-    case 5 : // thu sau
-    case 6 : // thu 7
-    subtractDate = 2
-    break;
-  }  
+    case 0:
+      subtractDate = 3
+      break;
+    case 1:
+      subtractDate = 4
+      break;
+    case 2: // thu 3
+      subtractDate = 5
+      break;
+    case 3: // thu 4
+    case 4: // thu nam
+    case 5: // thu sau
+    case 6: // thu 7
+      subtractDate = 2
+      break;
+  }
 
-  const possibleGDKHQTimeEnd = new Date(sellDate.getTime()  - subtractDate * 1000 * 3600 * 24)
+  const possibleGDKHQTimeEnd = new Date(sellDate.getTime() - subtractDate * 1000 * 3600 * 24)
 
-  possibleGDKHQTimeStart.setUTCHours(-7,0,0,0)
-  possibleGDKHQTimeEnd.setUTCHours(-7,0,0,0)
+  possibleGDKHQTimeStart.setUTCHours(-7, 0, 0, 0)
+  possibleGDKHQTimeEnd.setUTCHours(-7, 0, 0, 0)
 
-  console.log('buyyyy day   ====  ' + buyDate + ' possibleGDKHQTime start ' + possibleGDKHQTimeStart) 
-  console.log('sell day   ====  ' + sellDate + ' possibleGDKHQTime End ' +  possibleGDKHQTimeEnd) 
+  // console.log('buyyyy day   ====  ' + buyDate + ' possibleGDKHQTime start ' + possibleGDKHQTimeStart)
+  // console.log('sell day   ====  ' + sellDate + ' possibleGDKHQTime End ' + possibleGDKHQTimeEnd)
 
 
 
-  return {possibleGDKHQTimeStart, possibleGDKHQTimeEnd}
+  return { possibleGDKHQTimeStart, possibleGDKHQTimeEnd }
 
 }
 
@@ -169,6 +169,9 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
     const matchedPriceToday = await getTodayMatchedVolume(pred.assetName)
     message.push(' asset ' + pred.assetName + ' priceIn: ' + pred.priceIn + ' priceOut = ' + pred.priceOut + ' cutloss ' + pred.cutLoss + ' deadline ' + pred.deadLine.toLocaleString('vi') + ' portion ' + pred.portion + '% . \n MatchedPriceToday :  ' + matchedPriceToday.toString())
 
+    if (matchedPriceToday.length == 0) {
+      continue;
+    }
     const max = Math.max.apply(Math, matchedPriceToday)
     const min = Math.min.apply(Math, matchedPriceToday)
     message.push('  max : ' + max + '  min:  ' + min + '  date :  ' + (new Date()).toLocaleString('vi') + '\n')
@@ -201,6 +204,8 @@ export async function getPerformanceSince(date: Date, data: Prediction[]) {
 }
 
 import imageCompression from "browser-image-compression";
+
+import { DateTime } from "luxon";
 const defaultOptions = {
   maxSizeMB: 1,
 };
@@ -217,11 +222,11 @@ export function sortByField<T, Key extends keyof T>(data: T[], field: Key) {
 
   return data.toSorted((n1, n2) => {
     if (n1[field] > n2[field]) {
-      return 1;
+      return -1;
     }
 
     if (n1[field] < n2[field]) {
-      return -1;
+      return 1;
     }
     return 0;
   })
@@ -260,6 +265,56 @@ interface IDwise {
   id?: string;
 }
 
+export function inTradingTime(time: number) {
+  const date = DateTime.fromMillis(time).setZone('Asia/Ho_Chi_Minh')
+  const day = date.weekday
+  if (day == 7 || day == 6) {
+    return false
+  }
+
+  if (date.hour < 9 || date.hour >= 15) {
+    return false
+  }
+
+  return true
+
+}
+
+
+export function priceStockInTime(price: StockPriceRT, favor: 'favorHigh' | 'favorLow', time: number = Date.now()) {
+
+  const dongcuahoacthamchieu = price.close == 0 ? price.tc : price.close
+
+  // const test =   moment.tz("Asia/Ho_Chi_Minh").format()
+  if (price.high == 0 && price.low == 0) {
+    // ngay truoc phien, tra ve gia tham chieu hoac gia dong cua
+    return dongcuahoacthamchieu
+  }
+  if (inTradingTime(time)) {
+    if (favor == 'favorHigh') {
+      return price.high == 0 ? dongcuahoacthamchieu : price.high
+      // if (price.high == 0) { return dongcuahoacthamchieu }
+    } else {
+      return price.low == 0 ? dongcuahoacthamchieu : price.low
+      // if (price.low == 0) { return dongcuahoacthamchieu }
+    }
+  } else {
+    return dongcuahoacthamchieu
+  }
+
+
+}
+
+export type StockPriceRT = {
+  code: string,
+  name: string,
+  high: number;
+  low: number;
+  tc: number;
+  open: number;
+  close: number;
+  preClosed: number;
+}
 
 export function dataFromArray<Type extends IDwise>(array: Type[]) {
 

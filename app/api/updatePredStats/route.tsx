@@ -1,6 +1,6 @@
 
-import { bonusAppliedToPred, fetchBonusData, getTodayMatchedVolume } from "@/app/lib/getStockData"
-import { serverCount, serverGetAllInprogressPred, serverMarkPredCutLoss, serverMarkPredExpired, serverMarkPredWin, serverUpdatePredBonus, serverUpdateStats } from "@/app/lib/server"
+import { getTodayMatchedVolume } from "@/app/lib/getStockData"
+import { serverCount, serverGetAllInprogressPred, serverMarkPredCutLoss, serverMarkPredExpired, serverMarkPredWin, serverUpdateStats } from "@/app/lib/server"
 import { contentOf, datesGreaterThan } from "@/app/lib/utils"
 
 
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
         const min = Math.min.apply(Math, matchedPriceToday)
         message.push('  max : ' + max + '  min:  ' + min + '  date :  ' + (new Date()).toLocaleDateString('vi') + '\n')
   
-        if (min >= pred.priceOut) {
+        if (max >= pred.priceOut) {
   
           message.push('hit price Out, close ' + ref.path + 'with price Release ' + pred.priceOut + '\n')
           await serverMarkPredWin(pred)
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         }
 
       } else {
-        message.push(' truoc phien, chua co data')
+        message.push(' truoc phien, chua co data hoac ko ai nhom ngo co phieu nay')
       }
     }
 

@@ -5,7 +5,7 @@ import { useAppContext } from "@/app/lib/context";
 import { useEffect, useState } from "react";
 import { AlertModal, ConfirmationModal, initAlertState } from "../confirm";
 import { Button } from "../button";
-import { addComma, perfConver, valueWithBonus } from "@/app/lib/utils";
+import { addComma, perfConver, priceStockInTime, StockPriceRT, valueWithBonus } from "@/app/lib/utils";
 import { Prediction } from "@/app/model/prediction";
 import { Expert } from "@/app/model/expert";
 import { login, refreshToken } from "@/app/lib/client";
@@ -24,11 +24,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
   const router = useRouter()
   const { user, firebaseUser } = useAppContext()
   const [curPrices, setCurPrices] = useState<{
-    [key: string]: {
-      high: number;
-      low: number;
-      tc: number;
-    }
+    [key: string]: StockPriceRT
   }>()
   const [predsInfo, setPredsInfo] = useState<{
     needFollow: boolean;
@@ -254,7 +250,12 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                     const dateInStr = new Date(item.dateIn).toLocaleDateString('vi')
                     const deadLineStr = new Date(item.deadLine).toLocaleDateString('vi')
                     const curPriceObject = curPrices && curPrices[item.assetName] 
-                    const curPrice = curPriceObject && curPriceObject.high !=0 ? curPriceObject.high : curPriceObject?.tc
+                    if (!curPriceObject) {
+                      return (<AccordionItem id={item.id} key={item.id} title={'--'}><p className="text-sky-400">{'-----'}</p></AccordionItem>)
+
+                    }
+                    const curPrice = priceStockInTime(curPriceObject, 'favorHigh') 
+                    // curPriceObject && curPriceObject.high !=0 ? curPriceObject.high : curPriceObject?.tc
                     
                     
                 
@@ -295,7 +296,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                             (item.bonus && item.bonus.length > 0) && (
                               <>
                                 <Divider className="mt-5 mb-1" />
-                                <p className="text-xs text-yellow-500">Cổ tức</p>
+                                <p className="text-sm text-yellow-500">Cổ tức</p>
                               </>
                             )
                           }
@@ -335,7 +336,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                                 <Divider className="mt-5 mb-1" />
                                 {
                                   item.bonus.map((bo) => {
-                                    return <p key={bo.id} className="text-xs text-yellow-500">{bo.Note}</p>
+                                    return <p key={bo.id} className="text-sm text-yellow-500">{bo.Note}</p>
                                   })
                                   // JSON.stringify(item.bonus)
                                 }
@@ -406,7 +407,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                         (item.bonus && item.bonus.length > 0) && (
                           <>
                             <Divider className="mt-5 mb-1" />
-                            <p className="text-xs text-yellow-500">Cổ tức</p>
+                            <p className="text-sm text-yellow-500">Cổ tức</p>
                           </>
                         )
                       }
@@ -448,7 +449,7 @@ export default function ExpertDetail({ expertData }: { expertData: string }) {
                             <Divider className="mt-5 mb-1" />
                             {
                               item.bonus.map((bo) => {
-                                return <p key={bo.id} className="text-xs text-yellow-500">{bo.Note}</p>
+                                return <p key={bo.id} className="text-sm text-yellow-500">{bo.Note}</p>
                               })
                               // JSON.stringify(item.bonus)
                             }

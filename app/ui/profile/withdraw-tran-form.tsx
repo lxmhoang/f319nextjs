@@ -13,6 +13,7 @@ import { actionWithDraw } from '@/app/lib/actions/actionWithDraw';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { addComma } from '@/app/lib/utils';
+import { SubmitButton } from '../submitButton';
 
 
 interface TransCreationProps {
@@ -102,8 +103,8 @@ export default function WithDrawTransCreationForm(Props: TransCreationProps) {
 
           </div>
         <div className="mt-6 flex justify-start gap-4">
-
-          <Button type="submit" aria-disabled={user == undefined}>Rút tiền về tài khoản </Button>
+ <SubmitButton  color="indigo"  pendingText={'Đang xử lý ...'}>Rút tiền về tài khoản</SubmitButton>
+          {/* <Button type="submit" aria-disabled={user == undefined}>Rút tiền về tài khoản </Button> */}
         </div>
           
         </div>

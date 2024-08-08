@@ -1,5 +1,5 @@
 
-import { getExperts, getPredsSince, getRankData, serverMarkExpertExpired, serverSetStats, serverUpdateExpertInfo, serverUpdateStats } from "@/app/lib/server";
+import { getAllPredsSince, getExperts, getPredsSince, getRankData, serverMarkExpertExpired, serverSetStats, serverUpdateExpertInfo, serverUpdateStats } from "@/app/lib/server";
 import { getPivotDates } from "@/app/lib/statistic";
 import { contentOf, datesGreaterThan, getPerformanceSince } from "@/app/lib/utils";
 
@@ -54,27 +54,30 @@ export async function GET(request: Request) {
       message.push('start checking performance of this expert ; ' + expert.name)
       // var perform = 1.0
       const eid = expert.id
-      let donePreds = await getPredsSince(minDate
-        , false, eid) 
-      message.push('number of done Preds ' + donePreds.length)
+      // let donePreds = await getPredsSince(minDate
+      //   , false, eid) 
+      // let allpred = await getPredsSince(minDate, false, eid)
+      let allpred = await getAllPredsSince(minDate, eid)
       message.push('Kiem tra expert id : ' + eid + ' name ' + expert.name )
 
 
       message.push('Tinh toan performance theo tuan ' )
 
-      const weekData = await getPerformanceSince(pivotWeek, donePreds)
+      const weekData = await getPerformanceSince(pivotWeek, allpred)
       message.push(...weekData.message)
 
       message.push('Tinh toan performance theo thang ' )
-      const monthData = await getPerformanceSince(pivotMonth, donePreds)
+      const monthData = await getPerformanceSince(pivotMonth, allpred)
       message.push(...monthData.message)
 
       message.push('Tinh toan performance theo quy ' )
-      const quarterData = await getPerformanceSince(pivotQuarter, donePreds)
+      const quarterData = await getPerformanceSince(pivotQuarter, allpred)
       message.push(...quarterData.message)
 
       message.push('Tinh toan performance theo nam ' )
-      const yearData = await getPerformanceSince(pivotYear, donePreds)
+
+      const yearData = await getPerformanceSince(pivotYear, allpred)
+
       message.push(...yearData.message)
 
       const perInfo = {
